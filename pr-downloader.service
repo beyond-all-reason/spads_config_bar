@@ -1,0 +1,15 @@
+[Unit]
+Description=pr-Downloader
+After=network.target
+
+StartLimitIntervalSec=300
+StartLimitBurst=3
+
+[Service]
+User=uberserver
+Type=oneshot
+ExecStart=/usr/games/pr-downloader --filesystem-writepath /home/uberserver/builds/spads/var/spring/data byar:test
+StandardOutput=journal
+Restart=on-failure
+RestartSec=5s
+

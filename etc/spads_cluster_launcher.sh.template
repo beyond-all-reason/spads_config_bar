@@ -1,0 +1,60 @@
+#!/bin/bash
+
+# Some notes on cluster launchers:
+# Documentation: https://springrts.com/phpbb/viewtopic.php?p=596209#p596209
+# IMPORTANT: AutoRegister;ClusterManager plugins must be present and loaded!
+# CMD_registationEmail: 
+#    the email address used to register each cluster instance username automatically, note 
+#    that the cluster instance needs admin powers on uberserver to autoregister new accounts
+# CMD_baseGamePort:
+#    the port the dedicated spring server will run on, should be forwarded or open, and all 
+#    instances will use increasing numbers of this host 
+#    (e.g. host 4 will use CMD_baseGamePort+4, e.g. 53200)
+# CMD_baseAutoHostPort: 
+#    the port that SPADS will use to comminicate with the dedicated server, will be used 
+#    incrementally for instances, but does not have to be open to outside. Make sure the port 
+#    ranges do not overlap with baseGamePort
+# CMD_lobbyLogin: 
+#    the username of the cluster manager instance
+# CMD_lobbyPassword: 
+#    the password of the cluster manager instance in plaintext
+# if your engine is located here: 
+# /home/eru/spads/var/spring/spring_bar_.BAR.104.0.1-1714-g321b911_linux-64-minimal-portable/ 
+# then see the two presets below: 
+# CMD_enginesBaseDir: 
+#    the path to the base dir of the engine, with trailing slash, e.g.
+#    CMD_enginesBaseDir=/home/eru/spads/var/spring/ 
+# CMD_engineDir: 
+#    the name of the directory where current engine is, with trailing slash, e.g.: 
+#    spring_bar_.BAR.104.0.1-1714-g321b911_linux-64-minimal-portable/
+# CMD_springDataDir: 
+#    where the maps and game is located, with trailing slash, e.g.: 
+#    /home/eru/spads/var/spring/data
+# CMD_localLanIp: 
+#    if you plan to play from the same LAN as the autohosts are located, you need to specify this, 
+#    e.g. 192.168.1.102
+# CMD_hostRegion:
+#    The region name of the hosted battle, will be put into the battleName hosting preset in 
+#    hostingpresets.conf like:  
+#    battleName:%CMD_hostRegion%%ClustInstNb2% 
+#    e.g. CMD_hostRegion="EU - " with the quotes and the spaces will be EU - 02 for instance 2
+# Dont forget the trailing backslashes at the ends of lines!
+
+
+perl ../spads.pl spads_cluster.conf \
+	CMD_lobbyLogin=[teh]cluster1 \
+	CMD_lobbyPassword=****** \
+	CMD_registationEmail=mysterme@gmail.com \
+	CMD_baseGamePort=53200 \
+	CMD_baseAutoHostPort=53100 \
+	CMD_hostRegion="EU - " \
+	CMD_enginesBaseDir=/home/eru/spads/var/spring/ \
+	CMD_engineDir=spring_bar_.BAR.104.0.1-1828-g1f481b7_linux-64-minimal-portable/ \
+	CMD_springDataDir=/home/eru/spads/var/spring/data \
+	CMD_endGameCommandPath=/home/eru/spads/upload_replay.sh \
+	CMD_localLanIp=192.168.1.102 \
+	CMD_maxInstances=99 \
+	CMD_targetSpares=1 \
+	
+
+

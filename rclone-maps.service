@@ -1,0 +1,11 @@
+[Unit]
+Description=rclone maps from google drive to spads maps location
+After=network.target
+
+[Service]
+User=uberserver
+Type=oneshot
+ExecStart=/usr/bin/rclone sync maps:BYAR-maps /home/uberserver/builds/spads/var/spring/data/maps
+StandardOutput=journal
+
+

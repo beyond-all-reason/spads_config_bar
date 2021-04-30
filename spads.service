@@ -1,0 +1,11 @@
+[Unit]
+Description=Spads
+After=network.target
+
+[Service]
+User=uberserver
+WorkingDirectory=/home/uberserver/builds/spads
+ExecStart=/usr/local/bin/perl spads.pl /home/uberserver/builds/spads/etc/spads.conf
+
+[Install]
+WantedBy=default.target 

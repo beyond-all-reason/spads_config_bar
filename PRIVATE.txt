@@ -1,0 +1,6 @@
+ssh uberserver@road-flag.bnr.la
+
+wget http://imolarpg.dyndns.org/bar/spads210409.tar
+
+tar -xvf spads210409.tar
+

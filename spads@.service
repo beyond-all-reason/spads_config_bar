@@ -1,0 +1,10 @@
+[Unit]
+Description=Spads
+After=network.target
+
+[Service]
+User=ross
+WorkingDirectory=/home/ross/builds/spads
+ExecStart=/usr/local/bin/perl spads.pl /home/ross/builds/spads/etc/spads.conf hostid=%I
+[Install]
+WantedBy=default.target
