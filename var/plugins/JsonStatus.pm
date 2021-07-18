@@ -9,7 +9,7 @@ use Tie::RefHash;
 
 use SpadsPluginApi;
 
-my $pluginVersion='0.3';
+my $pluginVersion='0.4';
 my $requiredSpadsVersion='0.12.30';
 
 sub getVersion { return $pluginVersion; }
@@ -65,9 +65,24 @@ sub processRequest {
     $cmd=~s/[\r\n]*$//g;
     if($cmd eq 'getBattleLobbyStatus') {
       my ($r_clientsStatus,undef,$r_globalStatus)=::getBattleLobbyStatus({accessLevel => 10});
+      my $lobby=getLobbyInterface();
+      foreach my $r_client (@{$r_clientsStatus}) {
+        next if($r_client->{Name} =~ / \(bot\)$/);
+        $r_client->{Country}=$lobby->{users}{$r_client->{Name}}{country};
+      }
       print $sock encode_json({clients => $r_clientsStatus, status => $r_globalStatus});
     }elsif($cmd eq 'getGameStatus') {
       my ($r_clientsStatus,undef,$r_globalStatus)=::getGameStatus({accessLevel => 10});
+      if(defined $r_clientsStatus) {
+        my $r_runningBattle=getRunningBattle();
+        foreach my $r_client (@{$r_clientsStatus}) {
+          next if($r_client->{Name} =~ / \(bot\)$/);
+          $r_client->{ID}=$r_runningBattle->{users}{$r_client->{Name}}{accountId};
+          $r_client->{Rank}=$r_runningBattle->{users}{$r_client->{Name}}{status}{rank};
+          $r_client->{Skill}=$r_runningBattle->{scriptTags}{'game/players/'.lc($r_client->{Name}).'/skill'};
+          $r_client->{Country}=$r_runningBattle->{users}{$r_client->{Name}}{country};
+        }
+      }
       print $sock encode_json({clients => $r_clientsStatus, status => $r_globalStatus});
     }elsif($cmd eq 'getFullStatus') {
       my ($r_clientsStatusBattle,undef,$r_globalStatusBattle)=::getBattleLobbyStatus({accessLevel => 10});
