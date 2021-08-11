@@ -2,6 +2,8 @@
 import perl
 import traceback
 import sys
+import json
+import base64
 
 # perl.BarManager is the Perl representation of the BarManager plugin module
 # We will use this object to call the plugin API
@@ -104,9 +106,14 @@ class BarManager:
 
 	def onGameEnd(self, endGameData):
 		# The \%endGameData parameter is a reference to a hash containing all the data stored by SPADS concerning the game that just ended.
+		# TODO: Send all of this lovely endGameData dict as a base64 encoded json to the bot account called AutohostMonitor as a private message
 		try:
 			spads.slog("onGameEnd",3)
 			spads.slog("endGameData" + str(endGameData),3)
+			GDRjson = json.dumps(endGameData).encode('utf-8')
+			b64 = base64.b64encode(GDRjson)
+			spads.sayPrivate('AutohostMonitor', b64)
+			
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()))
 	
@@ -199,6 +206,7 @@ class BarManager:
 		# $user is the name of the user who called the command
 		# \@params is a reference to an array containing the parameters of the command		
 		# $commandResult indicates the result of the command (if it is defined and set to 0 then the command failed, in all other cases the command succeeded)
+		# todo: say the results of the changed stuff in battle room
 		try:
 			spads.slog("postSpadsCommand: " + ','.join(map(str,[command,source,user,params,commandResult])),3)
 		except Exception as e:
