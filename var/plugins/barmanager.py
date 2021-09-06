@@ -279,20 +279,21 @@ class BarManager:
 	def onSpringStop(self, springPid):
 		# This callback is called each time the Spring process ends.
 		try:
+			spadsConf = spads.getSpadsConf()
 			spads.slog("onSpringStop: springPid=" + str(springPid), 3)
 			instanceDir = spadsConf["instanceDir"]
 			# Check for spring has crashed, and save the script and the infolog.txt
-			infologlines = open(instanceDir + "/log/infolog.txt").readlines()
+			infologlines = open(instanceDir + "/infolog.txt").readlines()
 			for line in infologlines:
 				for pattern in pluginParams['crashInfologPatterns'].split('|'):
 					if pattern in line:
 						for crashFileToSave in pluginParams['crashFilesToSave'].split('|'):
 							outf = open(os.path.join(CrashDir, pluginParams['crashFilePattern'] % (
-							int(time.time()), crashFileToSave)), 'w')
-							outf.write(''.join(open(os.path.join(instanceDir, 'log', crashFileToSave)).readlines()))
+								int(time.time()), crashFileToSave)), 'w')
+							outf.write(''.join(open(os.path.join(instanceDir, crashFileToSave)).readlines()))
 							outf.close()
-
 						break
+
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
@@ -376,6 +377,7 @@ class BarManager:
 		return rotationMaps  # The callback must return a reference to a new array containing the filtered map names
 
 	def addStartScriptTags(self, additionalData):
+		global AiProfiles
 		'''
 			[ai1]
 			{
@@ -393,15 +395,30 @@ class BarManager:
 				ShortName = BARb;
 				Team = 2;
 				Version = stable;
-		}'''
-		try:
-			if len(aiProfiles) > 0:
-				extra = {}
-				for botname, aiprofile in aiProfiles.items():
-					extra[botname] = {'options': aiprofile}
-					spads.slog("Setting AI profile" + aiprofile['profile'] + ' for ' + botname, 3)
+		}
+		  [AI0]
+		  {
+			Name=BARbarianAI(1);
+			ShortName=BARb;
+			Team=1;
+			Host=0;
+			[options]
+			{
+			  testtag=testvalue;
+			}
+		  }
+		
+		'''
 
-				return {'aiData': extra}
+		try:
+			spads.slog("addStartScriptTags: "+ str(AiProfiles), 3)
+			if len(AiProfiles) > 0:
+				extraaitags = {}
+				for botname, aiprofile in AiProfiles.items():
+					extraaitags[botname] = {'options': aiprofile}
+					spads.slog("Setting AI profile" + str(extraaitags) + ' for ' + botname, 3)
+
+				return {'aiData': extraaitags}
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 		return {}
@@ -429,7 +446,7 @@ def hMyCommand(source, user, params, checkOnly):
 
 
 # This is the handler for our new command
-def hAiProfile(source, user, params, checkOnly):  # !aiProfile AiBotName profilejson
+def hAiProfile(source, user, params, checkOnly):  # !aiProfile BARbarianAI(1) {"testtag":"testvalue"}
 	try:
 		# checkOnly is true if this is just a check for callVote command, not a real command execution
 		if checkOnly:
