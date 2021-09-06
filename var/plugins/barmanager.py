@@ -23,12 +23,14 @@ DBGLEVEL = 3
 
 pluginParams = {}
 #---------------- Battleroom Variables to Track --------------
-AisPresent = {} # dunno the format yet, should support script tags to set AI profiles
+AiProfiles = {} # dict of BotName : {username : Owner, profile: Defensive} dunno the format yet, should support script tags to set AI profiles
 isBattleLocked = False
 BattleState = {}
 myBattleID = None
 playersInMyBattle = {}
 
+
+aiProfiles = {} # there are multiple ai profiles one can set, especially for barbarians, This info is currently discarded, but could use a new command
 
 
 spadsConf = None #  {'lobbyReconnectDelay': 15, 'banList': 'empty', 'mapLink': 'http://springfiles.com/search_result.php?search=%m&select=select_all', 'promoteMsg': '%pplayer(s) needed for battle "%b" [%o, %a] (%u)', 'autoLock': 'off', 'lobbyPassword': 'petike', 'lobbyFollowRedirect': '1', 'lobbyHost': 'bar.teifion.co.uk', 'allowedLocalAIs': 'E323AI;HughAI;KAIK;RAI', 'logGameChat': '1', 'msgFloodAutoKick': '15;7', 'masterChannel': 'autohosts', 'allowGhostMaps': '0', 'maxBots': '16', 'lobbyInterfaceLogLevel': '5', 'opOnMasterChannel': '0', 'teamSize': 6, 'lobbyPort': '8200', 'commandsFile': 'commands.conf', 'unlockSpecDelay': '5;30', 'logPvChat': '1', 'extraBox': '0', 'alertDuration': '72', 'privacyTrustLevel': '130', 'springServer': '/home/eru/spads/var/spring/spring_bar_.BAR.104.0.1-1956-g0092498_linux-64-minimal-portable/spring-headless', 'simpleEventLogLevel': '5', 'springDataDir': '/home/eru/spads/var/spring/data', 'autoBlockColors': '0', 'autoManagedSpringDir': '/home/eru/spads/var/spring', 'rotationManual': 'random', 'rotationType': 'map;certified', 'defaultPreset': 'team', 'spoofProtection': 'warn', 'minPlayers': 1, 'welcomeMsgInGame': 'Hi %u (%d), welcome to %n .', 'shareId': '', 'autoCallvote': '1', 'ircColors': '0', 'voteMode': 'normal', 'autoStart': 'on', 'reCallVoteDelay': 10, 'springServerType': 'headless', 'promoteChannels': 'main', 'autoHostPort': '53199', 'welcomeMsg': 'Hi %u (%d), welcome to %n .', 'maxAutoHostMsgLength': '240', 'rotationEndGame': 'off', 'logBattleJoinLeave': '1', 'cmdFloodAutoIgnore': '8;8;4', 'pluginsDir': '/home/eru/spads/var/plugins', 'autoSpecExtraPlayers': '1', 'autoLearnMaps': '1', 'voteTime': 45, 'springConfig': '', 'description': 'Team Game Global Settings', 'advertDelay': '15', 'logChanChat': '0', 'kickFloodAutoBan': '5;120;5', 'dataDumpDelay': 60, 'clanMode': 'tag(5);pref(5)', 'nbTeams': 2, 'rotationEmpty': 'random', 'alertDelay': '6', 'lobbyLogin': '[teh]host15', 'botsRank': '3', 'hostingPreset': 'enginetesting', 'noSpecDraw': '0', 'autoManagedSpringVersion': '', 'battlePreset': 'team', 'autoAddBotNb': 0, 'freeSettings': 'autoLock;teamSize(1-8)', 'maxSpecs': '', 'colorSensitivity': 55, 'autoReloadArchivesMinDelay': 30, 'endGameAwards': '1', 'ghostMapLink': 'http://springfiles.com/search_result.php?search=%m&select=select_all', 'broadcastChannels': 'autohosts', 'maxChatMessageLength': 1024, 'logDir': '/home/eru/spads/var/spads_host15/log', 'autoBlockBalance': '1', 'autoHostInterfaceLogLevel': '5', 'hideMapPresets': '0', 'kickBanDuration': '300', 'maxBytesSent': 49000, 'logBattleChat': '1', 'useWin32Process': '0', 'map': 'Comet Catcher Remake 1.8', 'allowMapOptionsValues': '1', 'autoSaveBoxes': '2', 'voteRingDelay': '0', 'allowModOptionsValues': '1', 'eventModel': 'auto', 'promoteDelay': '600', 'maxLocalBots': '16', 'votePvMsgDelay': '0', 'maxRemoteBots': '16', 'statusFloodAutoKick': '24;8', 'userDataRetention': '-1;-1;-1', 'autoSetVoteMode': '1', 'logGameServerMsg': '1', 'instanceDir': '/home/eru/spads/var/spads_host15', 'maxLowPrioBytesSent': 48000, 'allowSettingsShortcut': '1', 'autoStop': 'gameOver', 'skillMode': 'TrueSkill', 'rankMode': 'account', 'localLanIp': '192.168.1.102', 'minTeamSize': '1', 'rotationDelay': 600, 'idShareMode': 'off', 'logChanJoinLeave': '0', 'forceHostIp': '', 'spadsLogLevel': '5', 'autoLockClients': 64, 'endGameCommandEnv': '', 'speedControl': '2', 'endGameCommand': '', 'autoLoadPlugins': 'BarManager;AutoRegister;JsonStatus;InGameMute', 'restoreDefaultPresetDelay': '30', 'springieEmulation': 'warn', 'logGameJoinLeave': '1', 'sendRecordPeriod': 5, 'noSpecChat': '0', 'autoLockRunningBattle': '0', 'balanceMode': 'clan;skill', 'updaterLogLevel': '5', 'varDir': '/home/eru/spads/var', 'midGameSpecLevel': '0', 'handleSuggestions': '0', 'unitsyncDir': '/home/eru/spads/var/spring/spring_bar_.BAR.104.0.1-1956-g0092498_linux-64-minimal-portable/', 'endGameCommandMsg': '', 'etcDir': '/home/eru/spads/etc', 'localBots': 'joe 0 E323AI;jim core#FF0000 KAIK', 'minRingDelay': '20', 'minVoteParticipation': '50', 'advertMsg': '', 'maxChildProcesses': '32', 'autoRestartForUpdate': 'off', 'forwardLobbyToGame': '1', 'nbPlayerById': 1, 'autoLoadMapPreset': '0', 'autoFixColors': 'advanced', 'preset': 'team', 'alertLevel': 130, 'autoBalance': 'advanced', 'maxSpecsImmuneLevel': '100', 'floodImmuneLevel': 100, 'autoUpdateRelease': '', 'mapList': 'all', 'autoUpdateDelay': '300'}
@@ -99,7 +101,9 @@ class BarManager:
 		
 		# We declare our new command and the associated handler
 		spads.addSpadsCommandHandler({'myCommand': hMyCommand})
-
+		
+		spads.addSpadsCommandHandler({'aiProfile': hAiProfile})
+		
 		spads.addLobbyCommandHandler({"JOINEDBATTLE": hJOINEDBATTLE})
 		spads.addLobbyCommandHandler({"LEFTBATTLE": hLEFTBATTLE})
 
@@ -363,7 +367,20 @@ class BarManager:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()),0)
 		
 		return rotationMaps # The callback must return a reference to a new array containing the filtered map names
-
+	
+	def addStartScriptTags(self,additionalData):
+		try:	
+			if len (aiProfiles) > 0:
+				extra = {}
+				for botname, aiprofile in aiProfiles.items():
+					extra[botname]={'Profile':aiprofile['profile']}
+					spads.slog("Setting AI profile" + aiprofile['profile'] +' for ' + botname ,3)		
+	
+				return {'aiData':extra}
+		except Exception as e:
+			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()),0)
+		return {}
+	
 # This is the handler for our new command
 def hMyCommand(source,user,params,checkOnly):
 
@@ -386,6 +403,31 @@ def hMyCommand(source,user,params,checkOnly):
 	# We log the command call as notice message
 	spads.slog("User %s called command myCommand with parameter(s) \"%s\"" % (user,paramsString),3)
 
+
+# This is the handler for our new command
+def hAiProfile(source,user,params,checkOnly): # !aiProfile AiBotName Profilename
+	# FUCK NO ENCODE ALL THIS IN The NAME OF THE AI BOT!
+	# checkOnly is true if this is just a check for callVote command, not a real command execution
+	if checkOnly :
+		return 1 # no need to check CV
+	
+	# Fix strings received from Perl if needed
+	# This is in case Inline::Python handles Perl strings as byte strings instead of normal strings
+	# (this step can be skipped if your Inline::Python version isn't afffected by this bug)
+	user=spads.fix_string(user)
+	for i in range(len(params)):
+		params[i]=spads.fix_string(params[i])
+		
+	getbattle first!
+	if params[0] in AiProfiles:
+		if user == AiProfiles: 
+	# We join the parameters provided (if any), using ',' as delimiter
+	paramsString = ','.join(params)
+
+	# We log the command call as notice message
+	spads.slog("User %s called command myCommand with parameter(s) \"%s\"" % (user,paramsString),3)
+
+	
 def hLEFTBATTLE(command,battleID,userName):
 	try:
 		if battleID == myBattleID and playersInMyBattle[userName]:
