@@ -15,13 +15,8 @@ spads = perl.BarManager
 # ------------------ Instance global "constants" -------------
 
 BMP = "BarManager|"
-
-SpringCrashInfologPatterns = [
-	'Spring: caught content_error:']  # add any text here that we would like to catch as a crash, preferably, this should be in the barmanager config though
 CrashDir = ""
-
 DBGLEVEL = 3
-
 pluginParams = {}
 # ---------------- Battleroom Variables to Track --------------
 AiProfiles = {}  # dict of BotName : {username : Owner, profile: Defensive} dunno the format yet, should support script tags to set AI profiles
@@ -39,7 +34,6 @@ spadsConf = None  # {'lobbyReconnectDelay': 15, 'banList': 'empty', 'mapLink': '
 
 # ------------------ JSON OBJECT INFO ------------------
 # Each json string will contain a dict, for example, for a votestart
-#
 
 # This is the first version of the plugin
 pluginVersion = '0.1'
@@ -57,29 +51,22 @@ globalPluginParams = {'crashDir': ['notNull'], 'crashFilePattern': ['notNull'], 
 					  'commandsFile': ['notNull'],
 					  'helpFile': ['notNull']
 					  }
-# { 'commandsFile': ['BarManagerCmd.conf'],
-# 'helpFile': ['BarManagerHelp.dat'] }
 presetPluginParams = None
-
 
 # This is how SPADS gets our version number (mandatory callback)
 def getVersion(pluginObject):
 	return pluginVersion
 
-
 # This is how SPADS determines if the plugin is compatible (mandatory callback)
 def getRequiredSpadsVersion(pluginName):
 	return requiredSpadsVersion
-
 
 # This is how SPADS finds what settings we need in our configuration file (mandatory callback for configurable plugins)
 def getParams(pluginName):
 	return [globalPluginParams, presetPluginParams]
 
-
 def jsonGzipBase64(toencode):
 	return base64.b64encode(zlib.compress(json.dumps(toencode).encode("utf-8"))).decode()
-
 
 def SendBattleState():
 	try:
@@ -88,7 +75,6 @@ def SendBattleState():
 		spads.slog(barmanagermessage, DBGLEVEL)
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
-
 
 def BattleStateChanged(changedKey, changedValue):
 	try:
@@ -490,10 +476,10 @@ def hAiProfile(source, user, params, checkOnly):  # !aiProfile BARbarianAI(1) {"
 					profileInfo = json.loads(profileInfo)
 					if type(profileInfo) != type({}):
 						raise
+					AiProfiles[botName] = profileInfo
 				except:
 					spads.sayBattle("Unable to parse profile info json dict: %s"%(profileInfo))
 					return
-				AiProfiles[botName] = profileInfo
 				spads.sayBattle("AI %s options are set to %s" % (botName, profileInfo))
 		# We log the command call as notice message
 		spads.slog("User %s called command hAiProfile with parameter(s) \"%s\"" % (user, ','.join(params)), 3)
@@ -523,7 +509,7 @@ def hSplitBattle(source, user, params, checkOnly):
 
 def hREMOVEBOT(command, battleID, botName):
 	try:
-		if battleID == myBattleID and AiProfiles[botName]:
+		if battleID == myBattleID and botName in AiProfiles:
 			del AiProfiles[botName]
 	except:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
