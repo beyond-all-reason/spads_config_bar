@@ -77,7 +77,7 @@ def getParams(pluginName):
 	return [globalPluginParams, presetPluginParams]
 
 
-def json_gzip_base64(toencode):
+def jsonGzipBase64(toencode):
 	return base64.b64encode(zlib.compress(json.dumps(toencode).encode("utf-8"))).decode()
 
 
@@ -102,6 +102,14 @@ def BattleStateChanged(changedKey, changedValue):
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
+def refreshBattleState():
+	spadsConf = spads.getSpadsConf()
+	BattleState['autoBalance'] = spadsConf['autoBalance']
+	BattleState['teamSize'] = str(spadsConf['teamSize'])
+	BattleState['nbTeams'] = str(spadsConf['nbTeams'])
+	BattleState['balanceMode'] = spadsConf['balanceMode']
+	BattleState['preset'] = spadsConf['preset']
+	SendBattleState()
 
 # This is the class implementing the plugin
 class BarManager:
@@ -112,11 +120,13 @@ class BarManager:
 		# We declare our new command and the associated handler
 		spads.addSpadsCommandHandler({'myCommand': hMyCommand})
 		spads.addSpadsCommandHandler({'aiProfile': hAiProfile})
+		spads.addSpadsCommandHandler({'splitbattle': hSplitBattle})
 
-		# Declare handler for lobby commands
+		# Declare handler for lobby commands (see https://springrts.com/dl/LobbyProtocol/ProtocolDescription.html)
 		spads.addLobbyCommandHandler({"JOINEDBATTLE": hJOINEDBATTLE})
 		spads.addLobbyCommandHandler({"LEFTBATTLE": hLEFTBATTLE})
 		spads.addLobbyCommandHandler({"REMOVEBOT": hREMOVEBOT})
+		spads.addLobbyCommandHandler({"UPDATEBATTLEINFO": hUPDATEBATTLEINFO })
 
 		# We call the API function "slog" to log a notice message (level 3) when the plugin is loaded
 		spads.slog("Plugin loaded (version %s)" % pluginVersion, 3)
@@ -153,6 +163,7 @@ class BarManager:
 
 	def onBattleOpened(self):
 		global myBattleID  # todo: this is the slipperiest slope of all
+		global BattleState
 		try:
 			spads.slog("Battle Opened", 3)
 			# spads.queueLobbyCommand(["!preset coop","!map DSDR"])
@@ -196,6 +207,9 @@ class BarManager:
 			myBattle = lobbyInterface.getBattle()
 			myBattleID = myBattle['battleId']
 			spads.slog("My BattleID is:" + str(myBattleID), 3)  #
+			BattleState['locked'] = 'unlocked' # this is assumed by server when opening a battleroom
+			refreshBattleState()
+
 
 		# for k,v in lobbyInterface:
 		#	spads.slog(str((k,v)), 3)
@@ -215,7 +229,7 @@ class BarManager:
 		try:
 			spads.slog("onGameEnd", 3)
 			spads.slog("endGameData" + str(endGameData), 3)
-			spads.sayPrivate('AutohostMonitor', 'endGameData ' + json_gzip_base64(endGameData))
+			spads.sayPrivate('AutohostMonitor', 'endGameData ' + jsonGzipBase64(endGameData))
 
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
@@ -232,7 +246,7 @@ class BarManager:
 		# todo: send the updated preset to all battle participants
 		try:
 			spads.slog("onPresetApplied: " + str(oldPresetName) + " -> " + str(newPresetName), 3)
-			BattleStateChanged('preset', newPresetName)
+			refreshBattleState()
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
@@ -328,9 +342,9 @@ class BarManager:
 		try:
 			spads.slog("postSpadsCommand: " + ','.join(map(str, [command, source, user, params, commandResult])), 3)
 			if command == "lock":
-				BattleStateChanged("locked", "on")
+				BattleStateChanged("locked", "locked")
 			elif command == "unlock":
-				BattleStateChanged("locked", "off")
+				BattleStateChanged("locked", "unlocked")
 			elif command == "set":  # autoLock|autoStart|autoBalance|autoFixColors|nbTeams|balanceMode|clanMode|locked|preset
 				lowercommand = params[0].lower()
 				if lowercommand == 'autobalance':
@@ -343,7 +357,7 @@ class BarManager:
 					BattleStateChanged("teamSize", params[1])
 
 			elif command == "vote":
-
+				# todo: also pass vote status here!
 				if params[0] in ['yes', 'y', 'no', 'n', 'blank', 'b']:
 					if params[0] == 'yes':
 						pass
@@ -454,7 +468,7 @@ def hAiProfile(source, user, params, checkOnly):  # !aiProfile BARbarianAI(1) {"
 		lobbyInterface = spads.getLobbyInterface()
 		battle = lobbyInterface.getBattle()
 
-		# spads.slog(str(lobbyInterface.getBattle()),  3)
+		spads.slog(str(lobbyInterface.getBattle()),  3)
 		# 'users': {'[teh]host15': {'color': {'green': 255, 'red': 255, 'blue': 255}, 'battleStatus': {'team': 0, 'ready': '1', 'sync': 1, 'side': 0, 'bonus': 0, 'id': 0, 'mode': '0'}, 'port': None, 'ip': None},
 		# 			'[teh]Behe_Chobby3': {'port': None, 'scriptPass': '070b4b5f', 'ip': None, 'battleStatus': {'team': 0, 'id': 0, 'bonus': 0, 'mode': '1', 'ready': '0', 'sync': 2, 'side': 0}, 'color': {'red': 255, 'blue': 0, 'green': 255}}},
 		# 			'modHash': '-1321904802', 'founder': '[teh]host15',
@@ -487,10 +501,38 @@ def hAiProfile(source, user, params, checkOnly):  # !aiProfile BARbarianAI(1) {"
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
+def hSplitBattle(source, user, params, checkOnly):
+	# checkOnly is true if this is just a check for callVote command, not a real command execution
+	if checkOnly:
+		# MyCommand is a basic command, we have nothing to check in case of callvote
+		return 1
+
+	# Fix strings received from Perl if needed
+	# This is in case Inline::Python handles Perl strings as byte strings instead of normal strings
+	# (this step can be skipped if your Inline::Python version isn't afffected by this bug)
+	user = spads.fix_string(user)
+	for i in range(len(params)):
+		params[i] = spads.fix_string(params[i])
+
+	# We join the parameters provided (if any), using ',' as delimiter
+	paramsString = ','.join(params)
+
+	# We log the command call as notice message
+	spads.slog("User %s called command hSplitBattle with parameter(s) \"%s\"" % (user, paramsString), 3)
+
+
 def hREMOVEBOT(command, battleID, botName):
 	try:
 		if battleID == myBattleID and AiProfiles[botName]:
 			del AiProfiles[botName]
+	except:
+		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+
+def hUPDATEBATTLEINFO(command, battleID, spectatorCount, locked, mapHash, mapName):
+	try:
+		spads.slog(str(['hUPDATEBATTLEINFO',battleID,locked]),  3)
+		if battleID == myBattleID:
+			BattleStateChanged("locked","locked" if locked == '1' else 'unlocked')
 	except:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
