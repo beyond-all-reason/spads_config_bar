@@ -90,7 +90,7 @@ sub processRequest {
       print $sock encode_json({battleLobby => {clients => $r_clientsStatusBattle, status => $r_globalStatusBattle},
                                game => {clients => $r_clientsStatusGame, status => $r_globalStatusGame}});
     }else{
-      slog('Invalid request from '.$sock->peerhost().": $cmd",2);
+      slog('Invalid request from '.$sock->peerhost(),2); # remove the .": $cmd" part as printing binary to terminal breaks char encoding
     }
   }
   removeSocket($sock);
