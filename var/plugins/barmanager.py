@@ -15,7 +15,6 @@ spads = perl.BarManager
 # ------------------ Instance global "constants" -------------
 
 BMP = "BarManager|"
-CrashDir = ""
 DBGLEVEL = 3
 pluginParams = {}
 # ---------------- Battleroom Variables to Track --------------
@@ -82,7 +81,7 @@ def BattleStateChanged(changedKey, changedValue):
 			BattleState[changedKey] = changedValue
 			SendBattleState()
 		else:
-			spads.slog("No change in battle state: %s:%s" % (changedKey, changedValue), 3)
+			spads.slog("No change in battle state: %s:%s" % (changedKey, changedValue), DBGLEVEL)
 
 
 	except Exception as e:
@@ -102,7 +101,7 @@ class BarManager:
 
 	# This is our constructor, called when the plugin is loaded by SPADS (mandatory callback)
 	def __init__(self, context):
-
+		global DBGLEVEL
 		# We declare our new command and the associated handler
 		spads.addSpadsCommandHandler({'myCommand': hMyCommand})
 		spads.addSpadsCommandHandler({'aiProfile': hAiProfile})
@@ -151,7 +150,7 @@ class BarManager:
 		global myBattleID  # todo: this is the slipperiest slope of all
 		global BattleState
 		try:
-			spads.slog("Battle Opened", 3)
+			spads.slog("Battle Opened", DBGLEVEL)
 			# spads.queueLobbyCommand(["!preset coop","!map DSDR"])
 			# spads.addTimer("initrandommap",5, 0, lambda : spads.queueLobbyCommand(["map Talus"]))
 			# spads.addTimer("yell",5, 0, lambda : spads.sayPrivate("[teh]Beherith","hi"))
@@ -213,7 +212,7 @@ class BarManager:
 		# The \%endGameData parameter is a reference to a hash containing all the data stored by SPADS concerning the game that just ended.
 		# TODO: Send all of this lovely endGameData dict as a base64 encoded json to the bot account called AutohostMonitor as a private message
 		try:
-			spads.slog("onGameEnd", 3)
+			spads.slog("onGameEnd", DBGLEVEL)
 			spads.slog("endGameData" + str(endGameData), 3)
 			spads.sayPrivate('AutohostMonitor', 'endGameData ' + jsonGzipBase64(endGameData))
 
@@ -223,7 +222,7 @@ class BarManager:
 	def onJoinBattleRequest(self, userName, ipAddr):
 		# todo: send whole battle state to user
 		try:
-			spads.slog("onJoinBattleRequest:" + str(userName), 3)
+			spads.slog("onJoinBattleRequest:" + str(userName), DBGLEVEL)
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 		return 0  # return 1 if the user isnt allowed to join (return string for reason)
@@ -231,7 +230,7 @@ class BarManager:
 	def onPresetApplied(self, oldPresetName, newPresetName):
 		# todo: send the updated preset to all battle participants
 		try:
-			spads.slog("onPresetApplied: " + str(oldPresetName) + " -> " + str(newPresetName), 3)
+			spads.slog("onPresetApplied: " + str(oldPresetName) + " -> " + str(newPresetName), DBGLEVEL)
 			refreshBattleState()
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
@@ -239,7 +238,7 @@ class BarManager:
 	def onPrivateMsg(self, userName, message):
 		# todo: nothing yet
 		try:
-			spads.slog("onPrivateMsg: " + str([userName, message]), 3)
+			spads.slog("onPrivateMsg: " + str([userName, message]), DBGLEVEL)
 
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
@@ -251,7 +250,7 @@ class BarManager:
 		# \@command is an array reference containing the command for which a vote is requested
 		# \%remainingVoters is a reference to a hash containing the players allowed to vote. This hash is indexed by player names. Perl plugins can filter these players by removing the corresponding entries from the hash directly, but Python plugins must use the alternate method based on the return value described below.
 		try:
-			spads.slog("onVoteRequest: " + ','.join(map(str, [source, user, command, remainingVoters])), 3)
+			spads.slog("onVoteRequest: " + ','.join(map(str, [source, user, command, remainingVoters])), DBGLEVEL)
 
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
@@ -260,10 +259,10 @@ class BarManager:
 	def onVoteStart(self, user, command):
 		# command is an array reference containing the command for which a vote is started
 		try:
-			spads.slog("onVoteStart: " + ','.join(map(str, [user, command])), 3)
+			spads.slog("onVoteStart: " + ','.join(map(str, [user, command])), DBGLEVEL)
 			barmanagermessage = BMP + json.dumps({"onVoteStart": {'user': user, 'command': command}})
 			spads.sayBattle(barmanagermessage)
-			spads.slog(barmanagermessage, 3)
+			spads.slog(barmanagermessage, DBGLEVEL)
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
@@ -271,7 +270,7 @@ class BarManager:
 		# This callback is called each time a vote poll is stoped.
 		# $voteResult indicates the result of the vote: -1 (vote failed), 0 (vote cancelled), 1 (vote passed)
 		try:
-			spads.slog("onVoteStop: voteResult=" + str(voteResult), 3)
+			spads.slog("onVoteStop: voteResult=" + str(voteResult), DBGLEVEL)
 
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
@@ -280,15 +279,18 @@ class BarManager:
 		# This callback is called each time the Spring process ends.
 		try:
 			spadsConf = spads.getSpadsConf()
-			spads.slog("onSpringStop: springPid=" + str(springPid), 3)
+			spads.slog("onSpringStop: springPid=" + str(springPid), DBGLEVEL)
 			instanceDir = spadsConf["instanceDir"]
+			pluginParams = spads.getPluginConf()
+
+			crashDir = os.path.join(spadsConf['varDir'], 'log', pluginParams['crashDir'])
 			# Check for spring has crashed, and save the script and the infolog.txt
 			infologlines = open(instanceDir + "/infolog.txt").readlines()
 			for line in infologlines:
 				for pattern in pluginParams['crashInfologPatterns'].split('|'):
 					if pattern in line:
 						for crashFileToSave in pluginParams['crashFilesToSave'].split('|'):
-							outf = open(os.path.join(CrashDir, pluginParams['crashFilePattern'] % (
+							outf = open(os.path.join(crashDir, pluginParams['crashFilePattern'] % (
 								int(time.time()), crashFileToSave)), 'w')
 							outf.write(''.join(open(os.path.join(instanceDir, crashFileToSave)).readlines()))
 							outf.close()
@@ -300,7 +302,7 @@ class BarManager:
 	def onSpringStart(self, springPid):
 		# This callback is called each time a Spring process is launched to host a game.
 		try:
-			spads.slog("onSpringStart: springPid=" + str(springPid), 3)
+			spads.slog("onSpringStart: springPid=" + str(springPid), DBGLEVEL)
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
@@ -312,7 +314,7 @@ class BarManager:
 		# The return value must be the reason for preventing the game from starting (for example "too many players for current map"), or 1 if no reason can be given, or undef to allow the game to start.
 		# todo: dont allow startpostype = (fixed or random) on maps with less start positions than players!
 		try:
-			spads.slog("preGameCheck: " + ','.join(map(str, [force, checkOnly, automatic])), 3)
+			spads.slog("preGameCheck: " + ','.join(map(str, [force, checkOnly, automatic])), DBGLEVEL)
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 		return None  #
@@ -326,7 +328,7 @@ class BarManager:
 		# $commandResult indicates the result of the command (if it is defined and set to 0 then the command failed, in all other cases the command succeeded)
 		# todo: say the results of the changed stuff in battle room
 		try:
-			spads.slog("postSpadsCommand: " + ','.join(map(str, [command, source, user, params, commandResult])), 3)
+			spads.slog("postSpadsCommand: " + ','.join(map(str, [command, source, user, params, commandResult])), DBGLEVEL)
 			if command == "lock":
 				BattleStateChanged("locked", "locked")
 			elif command == "unlock":
@@ -361,16 +363,14 @@ class BarManager:
 		# \@params is a reference to an array containing the parameters of the command
 		# This callback must return 0 to prevent the command from being processed by other plugins and SPADS core, or 1 to allow it.
 		try:
-			spads.slog("preSpadsCommand: " + ','.join(map(str, [command, source, user, params])), 3)
+			spads.slog("preSpadsCommand: " + ','.join(map(str, [command, source, user, params])), DBGLEVEL)
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 		return 1
 
 	def filterRotationMaps(self, rotationMaps):
 		try:
-			spads.slog("filterRotationMaps: rotationMaps=" + str(rotationMaps), 3)
-		# for map in rotationMaps:
-		#	spads.slog(str(str(map)),3)
+			spads.slog("filterRotationMaps: rotationMaps=" + str(rotationMaps), DBGLEVEL)
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
@@ -454,7 +454,7 @@ def hAiProfile(source, user, params, checkOnly):  # !aiProfile BARbarianAI(1) {"
 		lobbyInterface = spads.getLobbyInterface()
 		battle = lobbyInterface.getBattle()
 
-		spads.slog(str(lobbyInterface.getBattle()),  3)
+		spads.slog(str(lobbyInterface.getBattle()),  DBGLEVEL)
 		# 'users': {'[teh]host15': {'color': {'green': 255, 'red': 255, 'blue': 255}, 'battleStatus': {'team': 0, 'ready': '1', 'sync': 1, 'side': 0, 'bonus': 0, 'id': 0, 'mode': '0'}, 'port': None, 'ip': None},
 		# 			'[teh]Behe_Chobby3': {'port': None, 'scriptPass': '070b4b5f', 'ip': None, 'battleStatus': {'team': 0, 'id': 0, 'bonus': 0, 'mode': '1', 'ready': '0', 'sync': 2, 'side': 0}, 'color': {'red': 255, 'blue': 0, 'green': 255}}},
 		# 			'modHash': '-1321904802', 'founder': '[teh]host15',
@@ -516,7 +516,7 @@ def hREMOVEBOT(command, battleID, botName):
 
 def hUPDATEBATTLEINFO(command, battleID, spectatorCount, locked, mapHash, mapName):
 	try:
-		spads.slog(str(['hUPDATEBATTLEINFO',battleID,locked]),  3)
+		spads.slog(str(['hUPDATEBATTLEINFO',battleID,locked]),  DBGLEVEL)
 		if battleID == myBattleID:
 			BattleStateChanged("locked","locked" if locked == '1' else 'unlocked')
 	except:
@@ -534,7 +534,7 @@ def hLEFTBATTLE(command, battleID, userName):
 def hJOINEDBATTLE(command, battleID, userName, battlestatus=0):
 	try:
 		if battleID == myBattleID:
-			spads.slog("JOINEDBATTLE" + str([command, battleID, myBattleID, userName, battlestatus]), 3)
+			spads.slog("JOINEDBATTLE" + str([command, battleID, myBattleID, userName, battlestatus]), DBGLEVEL)
 			SendBattleState()
 			playersInMyBattle[userName] = battlestatus
 	except Exception as e:
