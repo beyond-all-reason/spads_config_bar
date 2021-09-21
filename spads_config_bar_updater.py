@@ -36,7 +36,7 @@ def execute(commandstr):
 
 # Step 2, copy over all non-tracked git files from here
 # ignorelist:
-ignorefiletypes = ['.zip', '.7z', '.git','.gitattributes', '.gitignore', 'spads_config_bar_updater.py','.pyc']
+ignorefiletypes = ['.zip', '.7z', '.git','.gitattributes', '.gitignore', 'spads_config_bar_updater.py','.pyc', '.timer', '.service']
 
 def recursecopy(workdir):
 	return 
