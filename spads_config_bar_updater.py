@@ -4,7 +4,7 @@ import os
 import sys
 import argparse
 
-parser = argparse.ArgumentParser(description='Update the spads configuration setup. Checkout this repo into spads_config_bar folder, next to the etc and var folders of spads.')
+parser = argparse.ArgumentParser(description='Update the spads configuration setup. Checkout this repo into spads_config_bar folder, next to the etc and var folders of spads. Example: python spads_config_bar_updater.py -c -u http://imolarpg.dyndns.org/bar/spring_bar_.BAR105.105.1.1-475-gd112b9e_linux-64-minimal-portable.7z')
 parser.add_argument('-s', '--spadspath',  default = "../", help = "path to the /spads folder, by default this should be inside the spads folder")
 parser.add_argument('-x', '--haltonerror', action = "store_true", help = "Program will halt on any non-zero exit code")
 parser.add_argument('-d', '--dry', action = "store_true", help = "just print commands dont actually execute them")
@@ -18,7 +18,6 @@ parser.add_argument('-e', '--enginedir', default =  "../var/spring/", help = "Th
 print (parser.description)
 
 args = parser.parse_args()
-args.dry = True
 print(args)
 
 def execute(commandstr):
@@ -58,7 +57,7 @@ def configupdate(args):
 						ignore = True
 				if not ignore:
 					fullpath  = os.path.join(root,filename)
-					print (fullpath)
+					#print (fullpath)
 					execute("cp %s ../%s"%(fullpath,fullpath)) 
 
 
@@ -99,7 +98,7 @@ def updateengine(args):
 	newenginedir = os.path.splitext(enginezipname)[0]
 	
 	targetpath = os.path.join(args.enginedir,newenginedir)
-	execute("7za x -d%s %s"%(targetpath, enginezipname)) # unzip to target
+	execute("7za x -o%s %s"%(targetpath, enginezipname)) # unzip to target
 	
 	for filename in ['pr-downloader', 'libunitsync.so', 'spring', 'spring-dedicated', 'spring-headless']:
 		execute("chmod +x " + os.path.join(targetpath, filename) ) 
