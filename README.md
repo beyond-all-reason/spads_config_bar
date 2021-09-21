@@ -90,4 +90,8 @@ Make sure instancedir and instancedir/log exists (e.g. /spads/var/spads_host01/l
 
 Disable plugins if not installed (autoloadplugins in spads.conf)
 
+# Spadsupdater packages required:
 
+needs p7zip-full to be able to update engine easily
+
+and perl cpan Inline::Python for BarManager
