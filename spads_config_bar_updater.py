@@ -5,9 +5,11 @@ import sys
 import argparse
 
 parser = argparse.ArgumentParser(description='Update the spads configuration setup. Checkout this repo into spads_config_bar folder, next to the etc and var folders of spads. Example: python spads_config_bar_updater.py -c -u http://imolarpg.dyndns.org/bar/spring_bar_.BAR105.105.1.1-475-gd112b9e_linux-64-minimal-portable.7z')
-parser.add_argument('-s', '--spadspath',  default = "../", help = "path to the /spads folder, by default this should be inside the spads folder")
+#parser.add_argument('-s', '--spadspath',  default = "../", help = "path to the /spads folder, by default this should be inside the spads folder")
 parser.add_argument('-x', '--haltonerror', action = "store_true", help = "Program will halt on any non-zero exit code")
 parser.add_argument('-d', '--dry', action = "store_true", help = "just print commands dont actually execute them")
+
+parser.add_argument('-s', '--spadssettingsupdate', action = 'store_true', help = "Sync spads settings with those of the github repo at: https://github.com/beyond-all-reason/spads_config_bar.git")
 
 parser.add_argument('-u', '--updateengine', help = "Give a url to an engine build, download and install it, from https://github.com/beyond-all-reason/spring/releases")
 parser.add_argument('-c', '--clusterupdateengine', action = "store_true", help = "Should we also update the paths in the cluster engine path")
@@ -60,8 +62,8 @@ def configupdate(args):
 					#print (fullpath)
 					execute("cp %s ../%s"%(fullpath,fullpath)) 
 
-
-configupdate(args)
+if args.spadssettingsupdate:
+	configupdate(args)
 
 # step 3, somehow trigger a restart of spads onupdate
 
@@ -110,7 +112,7 @@ def updateengine(args):
 			# CMD_engineDir=spring_bar_.BAR.104.0.1-1978-gcd328de_linux-64-minimal-portable/ \ 
 			foundenginedir = ""
 			for i,line in enumerate(clflines):
-				if 'CMD_engineDir' in line:
+				if 'CMD_engineDir' in line.partition('#')[0]:
 					clflines[i] =  line.partition('=')[0] + '=' + newenginedir + '/' + line.rpartition ('/')[2]
 					foundenginedir = clflines[i]
 			if foundenginedir != '':
