@@ -19,10 +19,17 @@ DBGLEVEL = 3
 pluginParams = {}
 # ---------------- Battleroom Variables to Track --------------
 AiProfiles = {}  # dict of BotName : {username : Owner, profile: Defensive} dunno the format yet, should support script tags to set AI profiles
+aiList = {}
 isBattleLocked = False
-BattleState = {}
+ChobbyState = {}
+
+TachyonBattle = {"boss":"", 'preset':"", 'ailist' : [], 'teamSize' : 6, 'nbTeams':2} # https://github.com/beyond-all-reason/teiserver/blob/master/documents/tachyon/types.md#battle
+timerTachyonBattle = False # do we have a timer set to update the game?
+
 myBattleID = None
 playersInMyBattle = {}
+
+whoIsBoss = None
 
 aiProfiles = {}  # there are multiple ai profiles one can set, especially for barbarians, This info is currently discarded, but could use a new command
 
@@ -67,19 +74,19 @@ def getParams(pluginName):
 def jsonGzipBase64(toencode):
 	return base64.b64encode(zlib.compress(json.dumps(toencode).encode("utf-8"))).decode()
 
-def SendBattleState():
+def SendChobbyState():
 	try:
-		barmanagermessage = BMP + json.dumps({"BattleStateChanged": BattleState})
+		barmanagermessage = BMP + json.dumps({"BattleStateChanged": ChobbyState})
 		spads.sayBattle(barmanagermessage)
 		spads.slog(barmanagermessage, DBGLEVEL)
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
-def BattleStateChanged(changedKey, changedValue):
+def ChobbyStateChanged(changedKey, changedValue):
 	try:
-		if changedKey not in BattleState or (changedKey in BattleState and BattleState[changedKey] != changedValue):
-			BattleState[changedKey] = changedValue
-			SendBattleState()
+		if changedKey not in ChobbyState or (changedKey in ChobbyState and ChobbyState[changedKey] != changedValue):
+			ChobbyState[changedKey] = changedValue
+			SendChobbyState()
 		else:
 			spads.slog("No change in battle state: %s:%s" % (changedKey, changedValue), DBGLEVEL)
 
@@ -87,14 +94,49 @@ def BattleStateChanged(changedKey, changedValue):
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
-def refreshBattleState():
+def refreshChobbyState():
 	spadsConf = spads.getSpadsConf()
-	BattleState['autoBalance'] = spadsConf['autoBalance']
-	BattleState['teamSize'] = str(spadsConf['teamSize'])
-	BattleState['nbTeams'] = str(spadsConf['nbTeams'])
-	BattleState['balanceMode'] = spadsConf['balanceMode']
-	BattleState['preset'] = spadsConf['preset']
-	SendBattleState()
+	ChobbyState['autoBalance'] = spadsConf['autoBalance']
+	ChobbyState['teamSize'] = str(spadsConf['teamSize'])
+	updateTachyonBattle('teamSize',spadsConf['teamSize'] )
+	ChobbyState['nbTeams'] = str(spadsConf['nbTeams'])
+	updateTachyonBattle('nbTeams',spadsConf['nbTeams'] )
+
+	ChobbyState['balanceMode'] = spadsConf['balanceMode']
+	ChobbyState['preset'] = spadsConf['preset']
+	updateTachyonBattle('preset',spadsConf['preset'] )
+	SendChobbyState()
+
+def sendTachyonBattle():
+	global timerTachyonBattle, TachyonBattle
+	try:
+		timerTachyonBattle = False
+		bsjson = json.dumps(TachyonBattle)
+		spads.slog("Trying to update tachyonbattlestatus " + bsjson,DBGLEVEL)
+		spads.queueLobbyCommand(["c.battle.update","TEifionisgonnakillme", json.dumps(TachyonBattle)])
+	except Exception as e:
+		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+
+
+def updateTachyonBattle(key, value):
+	global timerTachyonBattle
+	# Manages the Tachyon Battle State, a list of keys are passed which update the dicts
+	try:
+		if key not in TachyonBattle or TachyonBattle[key] != value:
+			TachyonBattle[key] = value
+
+
+			#spads.queueLobbyCommand() # message = "c.telemetry.log_client_event  " .. cmdName .. " " ..args.." ".. machineHash .. "\n"
+			if not timerTachyonBattle:
+				spads.addTimer("TachyonBattleTimer", 3, 0, sendTachyonBattle)
+				timerTachyonBattle = True
+			return True
+
+		#lets set a timer to update every 5 secs only :)
+
+	except Exception as e:
+		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+	return False
 
 # This is the class implementing the plugin
 class BarManager:
@@ -111,6 +153,7 @@ class BarManager:
 		spads.addLobbyCommandHandler({"JOINEDBATTLE": hJOINEDBATTLE})
 		spads.addLobbyCommandHandler({"LEFTBATTLE": hLEFTBATTLE})
 		spads.addLobbyCommandHandler({"REMOVEBOT": hREMOVEBOT})
+		spads.addLobbyCommandHandler({"ADDBOT": hADDBOT})
 		spads.addLobbyCommandHandler({"UPDATEBATTLEINFO": hUPDATEBATTLEINFO })
 
 		# We call the API function "slog" to log a notice message (level 3) when the plugin is loaded
@@ -148,7 +191,7 @@ class BarManager:
 
 	def onBattleOpened(self):
 		global myBattleID  # todo: this is the slipperiest slope of all
-		global BattleState
+		global ChobbyState
 		try:
 			spads.slog("Battle Opened", DBGLEVEL)
 			# spads.queueLobbyCommand(["!preset coop","!map DSDR"])
@@ -192,8 +235,8 @@ class BarManager:
 			myBattle = lobbyInterface.getBattle()
 			myBattleID = myBattle['battleId']
 			spads.slog("My BattleID is:" + str(myBattleID), 3)  #
-			BattleState['locked'] = 'unlocked' # this is assumed by server when opening a battleroom
-			refreshBattleState()
+			ChobbyState['locked'] = 'unlocked' # this is assumed by server when opening a battleroom
+			refreshChobbyState()
 
 
 		# for k,v in lobbyInterface:
@@ -231,7 +274,7 @@ class BarManager:
 		# todo: send the updated preset to all battle participants
 		try:
 			spads.slog("onPresetApplied: " + str(oldPresetName) + " -> " + str(newPresetName), DBGLEVEL)
-			refreshBattleState()
+			refreshChobbyState()
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
@@ -329,27 +372,33 @@ class BarManager:
 		# todo: say the results of the changed stuff in battle room
 		try:
 			spads.slog("postSpadsCommand: " + ','.join(map(str, [command, source, user, params, commandResult])), DBGLEVEL)
+			global whoIsBoss
 			if command == "lock":
-				BattleStateChanged("locked", "locked")
+				ChobbyStateChanged("locked", "locked")
 			elif command == "unlock":
-				BattleStateChanged("locked", "unlocked")
+				ChobbyStateChanged("locked", "unlocked")
 			elif command == "set":  # autoLock|autoStart|autoBalance|autoFixColors|nbTeams|balanceMode|clanMode|locked|preset
 				lowercommand = params[0].lower()
 				if lowercommand == 'autobalance':
-					BattleStateChanged("autoBalance", params[1])
+					ChobbyStateChanged("autoBalance", params[1])
 				elif lowercommand == 'balancemode':
-					BattleStateChanged("balanceMode", params[1])
+					ChobbyStateChanged("balanceMode", params[1])
 				elif lowercommand == 'nbteams':
-					BattleStateChanged("nbTeams", params[1])
+					ChobbyStateChanged("nbTeams", params[1])
 				elif lowercommand == 'teamsize':
-					BattleStateChanged("teamSize", params[1])
+					ChobbyStateChanged("teamSize", params[1])
 
 			elif command == "vote":
 				# todo: also pass vote status here!
 				if params[0] in ['yes', 'y', 'no', 'n', 'blank', 'b']:
 					if params[0] == 'yes':
 						pass
-
+			elif command == "boss":
+				if len(params) == 0:
+					whoIsBoss = None
+				else:
+					whoIsBoss = params[0]
+				updateTachyonBattle('boss',whoIsBoss)
 
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
@@ -506,11 +555,39 @@ def hSplitBattle(source, user, params, checkOnly):
 	# We log the command call as notice message
 	spads.slog("User %s called command hSplitBattle with parameter(s) \"%s\"" % (user, paramsString), 3)
 
+def updatebotlist():
+	lobbyInterface = spads.getLobbyInterface()
+	battle = lobbyInterface.getBattle()
+	spads.slog(str(battle['bots']), DBGLEVEL)
+	bots = {} if 'bots' not in battle else battle['bots']
+	uniquebottypes = []
+	for botname, botinfo in bots.items():
+		if botinfo['aiDll'] not in uniquebottypes:
+			uniquebottypes.append(botinfo['aiDll'])
+	updateTachyonBattle('botlist', uniquebottypes)
+
+
+# botlist = [] if 'botList' not in battle else battle['botList']
+# 'users': {'[teh]host15': {'color': {'green': 255, 'red': 255, 'blue': 255}, 'battleStatus': {'team': 0, 'ready': '1', 'sync': 1, 'side': 0, 'bonus': 0, 'id': 0, 'mode': '0'}, 'port': None, 'ip': None},
+# 			'[teh]Behe_Chobby3': {'port': None, 'scriptPass': '070b4b5f', 'ip': None, 'battleStatus': {'team': 0, 'id': 0, 'bonus': 0, 'mode': '1', 'ready': '0', 'sync': 2, 'side': 0}, 'color': {'red': 255, 'blue': 0, 'green': 255}}},
+# 			'modHash': '-1321904802', 'founder': '[teh]host15',
+# {'bots': {'Bot1': {'owner': '[teh]Behe_Chobby3', 'color': {'red': 0, 'blue': 255, 'green': 0}, 'aiDll': 'BARb|stable', 'battleStatus': {'ready': '1', 'sync': 1, 'side': 0, 'id': 1, 'bonus': 0, 'mode': '1', 'team': 1}}}, 'battleId': '268', 'botList': ['Bot1']}
 
 def hREMOVEBOT(command, battleID, botName):
 	try:
-		if battleID == myBattleID and botName in AiProfiles:
-			del AiProfiles[botName]
+		if battleID == myBattleID:
+			if botName in AiProfiles:
+				del AiProfiles[botName]
+			updatebotlist()
+
+	except:
+		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+
+def hADDBOT(command, battleID, name, owner, battleStatus, teamColor, aidll):
+	try:
+		updatebotlist()
+
+
 	except:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
@@ -518,15 +595,19 @@ def hUPDATEBATTLEINFO(command, battleID, spectatorCount, locked, mapHash, mapNam
 	try:
 		spads.slog(str(['hUPDATEBATTLEINFO',battleID,locked]),  DBGLEVEL)
 		if battleID == myBattleID:
-			BattleStateChanged("locked","locked" if locked == '1' else 'unlocked')
+			ChobbyStateChanged("locked","locked" if locked == '1' else 'unlocked')
 	except:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
 def hLEFTBATTLE(command, battleID, userName):
+	global whoIsBoss
 	try:
 		if battleID == myBattleID and playersInMyBattle[userName]:
 			spads.slog("LEFTBATTLE" + str([command, battleID, userName]), 3)
 			del playersInMyBattle[userName]
+			if whoIsBoss == userName:
+				whoIsBoss = None
+				updateTachyonBattle("boss","")
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
@@ -535,8 +616,9 @@ def hJOINEDBATTLE(command, battleID, userName, battlestatus=0):
 	try:
 		if battleID == myBattleID:
 			spads.slog("JOINEDBATTLE" + str([command, battleID, myBattleID, userName, battlestatus]), DBGLEVEL)
-			SendBattleState()
+			SendChobbyState()
 			playersInMyBattle[userName] = battlestatus
+			#spads.queueLobbyCommand(["SAYBATTLEEX", "hello dude"])
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
