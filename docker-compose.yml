@@ -1,0 +1,44 @@
+version: "3"
+services:
+  spads:
+    image: public.ecr.aws/w6o6x2e9/spads
+    build:
+      context: .
+    network_mode: 'host'
+    environment:
+      - "SPADS_OWNER_LOBBY_LOGIN=xxxx"
+      - "SPADS_LOBBY_LOGIN=xxxx"
+      - "SPADS_LOBBY_PASSWORD=xxxx"
+      - "SPADS_LOBBY_HOST=xxxx"
+      - "SPRING_DATADIR=/spring-data"
+      - "SPRING_WRITEDIR=/spring-data"
+      - "SPADS_REGISTRATION_EMAIL=some@email.com"
+      - "SPADS_BASEAUTOHOST_PORT=53100"
+      - "SPADS_BASEGAME_PORT=53200"
+      - "SPADS_BATTLENAME_PREFIX=DE - "
+      - "SPADS_LAN_IP=192.168.0.3"
+      - "SPADS_ARGS=--tls-cert-trust" #172.17.0.1:d16c22c1ab3c9d3d1991918077fbd6f23f4147087b48efd3671b1d2b32145680
+      - "SPADS_MAX_INSTANCES=6"
+      - "SPADS_TARGET_SPARES=1"
+      - "SPADS_CLUSTER_PRESETS=team"
+    volumes:
+      - spring_data:/spring-data
+      - spads_cache:/opt/spads/var
+      - spring_engines:/spring-engines
+
+  games-updater:
+    command: /usr/bin/sync-all.sh
+    image: public.ecr.aws/w6o6x2e9/spads-services:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.services
+    environment:
+      RCLONE_DRIVE_TOKEN: '{"access_token":"ya29.a0ARrdaM9VtH5TFvRoumVu65I7ueOL9BKUe7Yl-qodi_b7iLtpHRqkAXHAkJaLNiVuSt4yrAGSTN2Z3ePsAP2FslgJNQheY_Q4e8_R4tgHoRDilp5hrj8cMrGw0fSxLWBSt8yWDa7K8V5w39j-t5D5aBoyeGdV","token_type":"Bearer","refresh_token":"1//0hU6MGqk6O8_BCgYIARAAGBESNwF-L9IrXrG0tnDA_SuOYjE7EufdX2LFPvIeB91w8KV2vUpSdt_BY5o44krDvZH6O99K_sZacXI","expiry":"2021-09-29T03:09:15.240635882Z"}'
+    volumes:
+      - spring_data:/spring-data
+      - spring_engines:/spring-engines
+
+volumes:
+  spring_data:
+  spring_engines:
+  spads_cache:

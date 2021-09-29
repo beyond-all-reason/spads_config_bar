@@ -1,0 +1,28 @@
+# syntax=docker/dockerfile:1
+FROM alpine
+
+WORKDIR /tmp
+
+# gcompat required for pr-downloader
+RUN apk update && apk upgrade \
+ && apk add --no-cache gcompat jq curl p7zip \
+ && apk add --no-cache --virtual .build-deps unzip \
+ && curl -SLO https://downloads.rclone.org/rclone-current-linux-amd64.zip \
+ && unzip rclone-current-linux-amd64.zip \
+ && cd rclone-*-linux-amd64 \
+ && cp rclone /usr/bin/ \
+ && apk del .build-deps \
+ && rm -rf /tmp/* /var/cache/apk
+
+COPY docker/update-engine.sh /usr/bin/
+COPY docker/sync-maps.sh /usr/bin/
+COPY docker/sync-all.sh /usr/bin/
+
+RUN addgroup -g 1000 spads \
+ && adduser --disabled-password --gecos "" --ingroup "spads" --uid "1000" spads \
+ && mkdir /spring-engines /spring-data \
+ && chown spads:spads -R /home/spads /spring-engines /spring-data
+
+USER spads
+
+WORKDIR /spring-data
