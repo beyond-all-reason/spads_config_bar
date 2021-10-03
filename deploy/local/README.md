@@ -4,9 +4,14 @@
 
 2. Create users for spads and testing, respectively
 
-3. Edit the environment variables at `docker-compose.yml`.
+3. Configure it:
 
-4. Run
+```
+cp .env.sample .env
+$EDITOR .env
+```
+
+4. Run:
 
 ```
 docker-compose up games-updater

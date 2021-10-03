@@ -16,6 +16,9 @@ RUN apt-get update \
    python \
    python3-pycurl \
    p7zip-full \
+   jq \
+   openssh-client \
+   sshpass \
    libio-socket-ssl-perl \
    libdbi-perl \
    libinline-python-perl \
@@ -24,21 +27,18 @@ RUN apt-get update \
  && rm -rf /var/run/apt \
  && useradd -m spads
 
-RUN mkdir -p /opt/spads /spring-data
+RUN mkdir -p /opt/spads /spring-data /spring-engines
 
 COPY docker/spadsInstaller.auto /opt/spads
+COPY docker/update-engine.sh /opt/
 COPY docker/scripts/*.sh /opt/
-COPY docker/scripts/*.sh /opt/
+COPY upload_replay.sh /opt/
 
-RUN chown -R spads:spads /opt /spring-data
+RUN chown -R spads:spads /opt /spring-data /spring-engines
 
 USER spads
 
-RUN mkdir -p /opt/spring \
- && cd /opt/spring \
- && curl -SLO 'https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR105%7D105.1.1-475-gd112b9e/spring_bar_.BAR105.105.1.1-475-gd112b9e_linux-64-minimal-portable.7z' \
- && 7z x 'spring_bar_.BAR105.105.1.1-475-gd112b9e_linux-64-minimal-portable.7z' \
- && rm 'spring_bar_.BAR105.105.1.1-475-gd112b9e_linux-64-minimal-portable.7z'
+RUN /opt/update-engine.sh
 
 WORKDIR /opt/spads/
 
