@@ -1,0 +1,14 @@
+release:unstable
+etcDir:etc
+varDir:var
+logDir:log
+springBinariesType:custom
+unitsyncPath:/opt/spring/libunitsync.so
+baseDataDir:/opt/spring
+mapModDataDir:/spring-data
+springServerType:dedicated
+springServer:/opt/spring/spring-dedicated
+modName:~Beyond\ All\ Reason\ test-\d+-.......
+lobbyLogin:%SPADS_LOBBY_LOGIN%
+lobbyPassword:%SPADS_LOBBY_PASSWORD%
+owner:%SPADS_OWNER_LOBBY_LOGIN%
