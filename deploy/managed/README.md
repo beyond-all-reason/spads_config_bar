@@ -12,24 +12,38 @@ sudo chmod +x /usr/local/bin/docker-compose
 sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 ```
 
-6. Pull the image
+6. Create a `.env` file and edit it:
 
 ```
-curl -SLO https://raw.githubusercontent.com/beyond-all-reason/spads_config_bar/f2e61505034eccac7f84ff55cb93b49f147c9388/docker-compose.yml
+curl -SL https://raw.githubusercontent.com/beyond-all-reason/spads_config_bar/main/.env.sample -o .env
+$EDITOR .env
+```
+
+7. Pull the image
+
+```
+curl -SLO https://raw.githubusercontent.com/beyond-all-reason/spads_config_bar/main/docker-compose.yml
 docker-compose pull
 ```
 
-7. **OR** Build the image
+8. **OR** Build the image
 ```
 git clone 'https://github.com/badosu/spads_config_bar'
 cd spads_config_bar
 docker-compose build spads games-updater
 ```
 
-8. Edit the `docker-compose.yml` file environment variables
 9. Run it
 
 ```
 docker-compose up games-updater
 docker-compose up spads
 ```
+10. Keep your maps/engines/games updated:
+
+```
+touch ~/games-updater.log
+crontab -e
+```
+
+Add: `0,30 * * * * docker-compose run games-updater >> ~/games-updater.log`

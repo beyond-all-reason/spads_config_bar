@@ -24,5 +24,5 @@ perl /opt/spads/spads.pl /opt/spads/etc/spads_cluster.conf \
   CMD_maxInstances=$SPADS_MAX_INSTANCES \
   CMD_targetSpares=$SPADS_TARGET_SPARES \
   CMD_clusters=$SPADS_CLUSTER_PRESETS \
+  CMD_endGameCommandPath=/opt/upload_replay.sh \
   $SPADS_ARGS
-  #CMD_endGameCommandPath=/home/eru/spads/upload_replay.sh \
