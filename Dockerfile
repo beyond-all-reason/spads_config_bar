@@ -23,6 +23,8 @@ RUN apt-get update \
    libdbi-perl \
    libinline-python-perl \
    libdbd-sqlite3-perl \
+   vim \
+   less \
  && apt-get autoremove \
  && rm -rf /var/run/apt \
  && useradd -m spads
