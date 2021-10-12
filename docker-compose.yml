@@ -6,6 +6,8 @@ services:
       - .env
     build:
       context: .
+      args:
+        SPADS_PLUGINS: "AutoRegister;ClusterManager;JsonStatus;InGameMute;Resign"
     network_mode: 'host'
     environment:
       - "SPRING_DATADIR=/spring-data"

@@ -1,12 +1,9 @@
 #!/bin/bash
 
-set -x
-
 cp -R /spads_etc/* /opt/spads/etc
 cp -R /spads_var/* /opt/spads/var
 
 mkdir -p /opt/spads/var/log
-mkdir -p /opt/spads/var/plugins
 mkdir -p /opt/spads/var/spring
 
 perl /opt/spads/spads.pl /opt/spads/etc/spads_cluster.conf \
@@ -25,4 +22,6 @@ perl /opt/spads/spads.pl /opt/spads/etc/spads_cluster.conf \
   CMD_targetSpares=$SPADS_TARGET_SPARES \
   CMD_clusters=$SPADS_CLUSTER_PRESETS \
   CMD_endGameCommandPath=/opt/upload_replay.sh \
+  CMD_autoLoadPlugins="$SPADS_PLUGINS" \
+  sequentialUnitsync=1 \
   $SPADS_ARGS

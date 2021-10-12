@@ -29,14 +29,14 @@ RUN apt-get update \
  && rm -rf /var/run/apt \
  && useradd -m spads
 
-RUN mkdir -p /opt/spads /spring-data /spring-engines
+RUN mkdir -p /opt/spads /spring-data /spring-engines /spads_var /spads_etc
 
 COPY docker/spadsInstaller.auto /opt/spads
 COPY docker/update-engine.sh /opt/
 COPY docker/scripts/*.sh /opt/
 COPY upload_replay.sh /opt/
 
-RUN chown -R spads:spads /opt /spring-data /spring-engines
+RUN chown -R spads:spads /opt /spring-data /spring-engines /spads_var /spads_etc
 
 USER spads
 
@@ -49,6 +49,10 @@ RUN curl -SLO http://planetspads.free.fr/spads/installer/spadsInstaller.tar \
  && rm spadsInstaller.tar \
  && perl /opt/spads/spadsInstaller.pl
 
+ARG SPADS_PLUGINS
+ENV SPADS_PLUGINS=${SPADS_PLUGINS:-""}
+
+RUN /opt/install-spads-plugins.sh $SPADS_PLUGINS /spads_var/plugins
 COPY etc /spads_etc/
 COPY var /spads_var/
 
