@@ -1,6 +1,11 @@
 #!/bin/bash
 
-set -x
+_term() {
+  echo "Caught SIGTERM signal!"
+  kill -TERM "$child" 2>/dev/null
+}
+
+trap _term SIGTERM
 
 cp -R /spads_etc/* /opt/spads/etc
 cp -R /spads_var/* /opt/spads/var
@@ -26,3 +31,6 @@ perl /opt/spads/spads.pl /opt/spads/etc/spads_cluster.conf \
   CMD_clusters=$SPADS_CLUSTER_PRESETS \
   CMD_endGameCommandPath=/opt/upload_replay.sh \
   $SPADS_ARGS
+
+child=$!
+wait "$child"

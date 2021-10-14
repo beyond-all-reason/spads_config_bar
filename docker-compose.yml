@@ -1,7 +1,7 @@
 version: "3"
 services:
   spads:
-    image: public.ecr.aws/w6o6x2e9/spads
+    image: badosu/spads:latest
     env_file:
       - .env
     build:
@@ -18,9 +18,12 @@ services:
 
   games-updater:
     command: /usr/bin/sync-all.sh
-    image: public.ecr.aws/w6o6x2e9/spads-services:latest
+    image: badosu/spads-services:latest
     env_file:
       - .env
+    environment:
+      - "SPRING_DATADIR=/spring-data"
+      - "SPRING_WRITEDIR=/spring-data"
     build:
       context: .
       dockerfile: Dockerfile.services
