@@ -20,7 +20,7 @@ from collections import Counter
 from datetime import datetime
 
 spads=perl.CaptainsDraftPlugin
-pluginVersion='0.1'
+pluginVersion='0.2'
 requiredSpadsVersion='0.12.29'
 globalPluginParams = {
     'commandsFile': ['notNull'],
