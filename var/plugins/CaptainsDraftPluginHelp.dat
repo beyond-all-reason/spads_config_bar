@@ -1,9 +1,3 @@
-[add]
-!add - Captains Draft: add yourself to the player pool
-
-[remove]
-!remove - Captains Draft: remove yourself from the player pool
-
 [draft]
 !draft - Captains Draft: begin mode where captains pick players
 
