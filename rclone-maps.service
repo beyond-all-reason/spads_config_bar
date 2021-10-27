@@ -5,7 +5,7 @@ After=network.target
 [Service]
 User=ubuntu
 Type=oneshot
-ExecStart=/usr/bin/rclone sync --drive-shared-with-me BYAR-maps:BYAR-maps /home/ubuntu/spads/var/spring/data
+ExecStart=/usr/bin/rclone sync --drive-shared-with-me BYAR-maps:BYAR-maps /home/ubuntu/spads/var/spring/data/maps
 StandardOutput=journal
 
 
