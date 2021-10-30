@@ -6,8 +6,9 @@ latest_engine=`readlink latest | sed -e 's/.*\///g'`
 latest_remote_engine=`echo $latest_url | sed -e 's/.*\///g' -e 's/\.7z$//g'`
 
 echo "Latest remote $latest_remote_engine"
+echo "Latest local $latest_engine"
 
-if [ -z $latest_engine ] || [ $latest_engine -ne $latest_remote_engine ]; then
+if [ -z $latest_engine ] || [ "$latest_engine" != "$latest_remote_engine" ]; then
   echo "> Updating to latest engine"
 
   mkdir /spring-engines/$latest_remote_engine
