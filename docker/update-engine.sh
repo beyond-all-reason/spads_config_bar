@@ -16,6 +16,7 @@ if [ -z $latest_engine ] || [ "$latest_engine" != "$latest_remote_engine" ]; the
   curl -SLO $latest_url
   7z x *.7z
   rm *.7z
+  unlink /spring-engines/latest
   ln -s -f /spring-engines/$latest_remote_engine /spring-engines/latest
 
   echo "> Engine updated successfully to $latest_remote_engine"
