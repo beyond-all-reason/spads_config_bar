@@ -55,6 +55,7 @@ class CaptainsDraftPlugin:
 
     def onLobbyConnected(self, _lobbyInterface):
         spads.addLobbyCommandHandler({"CLIENTBATTLESTATUS": self.clientBattleStatusChange})
+        self.reset()
 
     def onUnload(self, reason):
         spads.removeLobbyCommandHandler(['CLIENTBATTLESTATUS'])
