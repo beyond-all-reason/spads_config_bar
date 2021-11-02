@@ -3,8 +3,8 @@
 
 # Author: Jazcash
 
-# Usage: !preset captainsdraft
-# AllyTeam 3 represents the list of 'added' players. When the captainsdraft preset is enabled, all current players get added and moved to AllyTeam 3
+# Usage: !preset draft
+# AllyTeam 3 represents the list of 'added' players. When the draft preset is enabled, all current players get added and moved to AllyTeam 3
 # Players can 'unadd' at any time by simply becoming a spectator
 # !draft must be called to begin the drafting phase. An even number of players is required to begin drafting with at least 6 players minimum
 # The two highest TS players are then automatically made captains of each team
@@ -20,7 +20,7 @@ from collections import Counter
 from datetime import datetime
 
 spads=perl.CaptainsDraftPlugin
-pluginVersion='0.2'
+pluginVersion='0.3'
 requiredSpadsVersion='0.12.29'
 globalPluginParams = {
     'commandsFile': ['notNull'],
@@ -43,15 +43,27 @@ def getParams(pluginName):
 
 class CaptainsDraftPlugin:
     def __init__(self, context):
-        self.reset()
+        spads.slog("Plugin loaded (version %s)" % pluginVersion, 3)
 
+        self.load()
+
+    def load(self):
         spads.addLobbyCommandHandler({"CLIENTBATTLESTATUS": self.clientBattleStatusChange})
         spads.addSpadsCommandHandler({
             'draft': self.draft,
             'pick': self.pick
         })
 
-        spads.slog("Plugin loaded (version %s)" % pluginVersion, 3)
+        self.reset()
+
+    def onLobbyConnected(self, _lobbyInterface):
+        self.load()
+
+    def onUnload(self, reason):
+        spads.removeLobbyCommandHandler(['CLIENTBATTLESTATUS'])
+        spads.removeSpadsCommandHandler(["draft", "pick"])
+
+        spads.slog("Plugin unloaded", 3)
 
     def reset(self):
         self.state = "disabled" # disabled, adding, drafting, ready
@@ -63,15 +75,6 @@ class CaptainsDraftPlugin:
         self.teamA = set()
         self.teamB = set()
 
-    def onLobbyConnected(self, _lobbyInterface):
-        self.__init__()
-
-    def onUnload(self, reason):
-        spads.removeLobbyCommandHandler(['CLIENTBATTLESTATUS'])
-        spads.removeSpadsCommandHandler(["draft", "pick"])
-
-        spads.slog("Plugin unloaded", 3)
-
     def onBattleClosed(self):
         self.reset()
 
@@ -80,7 +83,7 @@ class CaptainsDraftPlugin:
         self.resetToAddingState()
 
     def onPresetApplied(self, oldPresetName, newPresetName):
-        if (newPresetName == "captainsdraft"):
+        if (newPresetName == "draft"):
             self.disable()
             self.enable()
         else:
@@ -309,7 +312,7 @@ class CaptainsDraftPlugin:
                 "isAdded": userName in self.addedPlayers,
                 "isTeamA": userName in self.teamA,
                 "isTeamB": userName in self.teamB,
-                "isSpec": battleStatus["mode"] == "0",
+                "isSpec": battleStatus["mode"] == 0,
                 "allyTeamId": battleStatus["team"]
             }
         except Exception as e:
