@@ -43,21 +43,19 @@ def getParams(pluginName):
 
 class CaptainsDraftPlugin:
     def __init__(self, context):
-        spads.slog("Plugin loaded (version %s)" % pluginVersion, 3)
-
-        self.load()
-
-    def load(self):
-        spads.addLobbyCommandHandler({"CLIENTBATTLESTATUS": self.clientBattleStatusChange})
         spads.addSpadsCommandHandler({
             'draft': self.draft,
             'pick': self.pick
         })
 
-        self.reset()
+        if (spads.getLobbyState() > 3):
+            self.onLobbyConnected(lobbyInterface)
+
+        spads.slog("Plugin loaded (version %s)" % pluginVersion, 3)
 
     def onLobbyConnected(self, _lobbyInterface):
-        self.load()
+        spads.addLobbyCommandHandler({"CLIENTBATTLESTATUS": self.clientBattleStatusChange})
+        self.reset()
 
     def onUnload(self, reason):
         spads.removeLobbyCommandHandler(['CLIENTBATTLESTATUS'])
