@@ -56,8 +56,9 @@ perl ../spads.pl spads_cluster.conf \
 	CMD_localLanIp=192.168.1.102 \
 	CMD_maxInstances=99 \
 	CMD_targetSpares=1 \
-	CMD_autoLoadPlugins=AutoRegister;ClusterManager;JsonStatus;InGameMute;DynamicMapRotation;BarManager;CaptainsDraftPlugin\ 
 	CMD_clusters= \
+	CMD_autoLoadPlugins=AutoRegister;ClusterManager;JsonStatus;InGameMute;DynamicMapRotation;BarManager;CaptainsDraftPlugin\ 
+
 	
 	
 
