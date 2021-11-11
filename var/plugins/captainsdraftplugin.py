@@ -43,49 +43,71 @@ def getParams(pluginName):
 
 class CaptainsDraftPlugin:
     def __init__(self, context):
-        spads.addSpadsCommandHandler({
-            'draft': self.draft,
-            'pick': self.pick
-        })
+        try:
+            spads.addSpadsCommandHandler({
+                'draft': self.draft,
+                'pick': self.pick
+            })
 
-        if (spads.getLobbyState() > 3):
-            self.onLobbyConnected(lobbyInterface)
+            if (spads.getLobbyState() > 3):
+                self.onLobbyConnected(lobbyInterface)
 
-        spads.slog("Plugin loaded (version %s)" % pluginVersion, 3)
+            spads.slog("Plugin loaded (version %s)" % pluginVersion, 3)
+        except Exception as e:
+            spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
     def onLobbyConnected(self, _lobbyInterface):
-        spads.addLobbyCommandHandler({"CLIENTBATTLESTATUS": self.clientBattleStatusChange})
-        self.reset()
+        try:
+            spads.addLobbyCommandHandler({"CLIENTBATTLESTATUS": self.clientBattleStatusChange})
+            self.reset()
+        except Exception as e:
+            spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
     def onUnload(self, reason):
-        spads.removeLobbyCommandHandler(['CLIENTBATTLESTATUS'])
-        spads.removeSpadsCommandHandler(["draft", "pick"])
+        try:
+            spads.removeLobbyCommandHandler(['CLIENTBATTLESTATUS'])
+            spads.removeSpadsCommandHandler(["draft", "pick"])
 
-        spads.slog("Plugin unloaded", 3)
+            spads.slog("Plugin unloaded", 3)
+        except Exception as e:
+            spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
     def reset(self):
-        self.state = "disabled" # disabled, adding, drafting, ready
-        self.addedPlayers = set()
-        self.playerPool = set()
-        self.teamApicking = False
-        self.teamAcap = ""
-        self.teamBcap = ""
-        self.teamA = set()
-        self.teamB = set()
+        try:
+            self.state = "disabled" # disabled, adding, drafting, ready
+            self.addedPlayers = set()
+            self.playerPool = set()
+            self.teamApicking = False
+            self.teamAcap = ""
+            self.teamBcap = ""
+            self.teamA = set()
+            self.teamB = set()
+        except Exception as e:
+            spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
     def onBattleClosed(self):
-        self.reset()
+        try:
+            self.reset()
+        except Exception as e:
+            spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
     def onSpringStop(self):
-        spads.sayBattle(f"Game ended, returning to adding state")
-        self.resetToAddingState()
+        try:
+            if (self.state != "disabled"):
+                spads.sayBattle(f"Game ended, returning to adding state")
+                self.resetToAddingState()
+        except Exception as e:
+            spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
     def onPresetApplied(self, oldPresetName, newPresetName):
-        if (newPresetName == "draft"):
-            self.disable()
-            self.enable()
-        else:
-            self.disable()
+        try:
+            if (newPresetName == "draft"):
+                self.disable()
+                self.enable()
+            else:
+                self.disable()
+        except Exception as e:
+            spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
     def onLeftBattle(self, userName):
         try:
@@ -243,7 +265,10 @@ class CaptainsDraftPlugin:
             spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
     def clientBattleStatusChange(self, command, userName, battleStatus, teamColor):
-        self.fixPlayerStatus(userName)
+        try:
+            self.fixPlayerStatus(userName)
+        except Exception as e:
+            spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
     def fixPlayerStatuses(self):
         try:
