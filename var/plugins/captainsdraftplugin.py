@@ -20,7 +20,7 @@ from collections import Counter
 from datetime import datetime
 
 spads=perl.CaptainsDraftPlugin
-pluginVersion='0.3'
+pluginVersion='0.4'
 requiredSpadsVersion='0.12.29'
 globalPluginParams = {
     'commandsFile': ['notNull'],
@@ -250,9 +250,10 @@ class CaptainsDraftPlugin:
 
     def assignCaptainsBySkill(self):
         try:
-            sortedPlayersBySkill = Counter(playerNameSkill).most_common()
-            self.teamAcap = sortedPlayersBySkill[0][0]
-            self.teamBcap = sortedPlayersBySkill[1][0]
+            playerPoolList = list(self.playerPool)
+            playerPoolList.sort(key=lambda x: playerNameSkill[x], reverse=True)
+            self.teamAcap = playerPoolList[0]
+            self.teamBcap = playerPoolList[1]
             self.teamA.add(self.teamAcap)
             self.teamB.add(self.teamBcap)
             self.playerPool.discard(self.teamAcap)
