@@ -192,6 +192,7 @@ class CaptainsDraftPlugin:
 
     def pick(self, source, user, params, checkOnly):
         try:
+
             if (self.state != "drafting"):
                 spads.answer(f"Cannot pick player while Captains Draft is in the {self.state} state")
                 return 0
@@ -200,7 +201,15 @@ class CaptainsDraftPlugin:
                 spads.sayBattle(f"You must pick a player, e.g. !pick bob")
                 return 0
 
-            pickedPlayer = params[0]
+            lobbyInterface = spads.getLobbyInterface()
+            usersInBattle = list(lobbyInterface.battle['users'])
+            matchingUsers = perl.cleverSearch(params[0], usersInBattle)
+
+            if (len(matchingUsers) == 0):
+                spads.sayBattle(f"Player {params[0]} not found")
+                return 0
+
+            pickedPlayer = matchingUsers[0]
             cap = self.teamAcap if self.teamApicking else self.teamBcap
             otherCap = self.teamAcap if not self.teamApicking else self.teamBcap
 
