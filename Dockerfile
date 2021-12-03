@@ -21,13 +21,15 @@ RUN apt-get update \
    sshpass \
    libio-socket-ssl-perl \
    libdbi-perl \
-   libinline-python-perl \
    libdbd-sqlite3-perl \
+   cpanminus build-essential git python3-dev python3-distutils \
    vim \
    less \
  && apt-get autoremove \
  && rm -rf /var/run/apt \
  && useradd -m spads
+
+RUN cpanm https://github.com/niner/inline-python-pm.git
 
 RUN mkdir -p /opt/spads /spring-data /spring-engines
 
