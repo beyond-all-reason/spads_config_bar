@@ -116,7 +116,7 @@ def sendTachyonBattle():
 		timerTachyonBattle = False
 		bsjson = json.dumps(TachyonBattle)
 		spads.slog("Trying to update tachyonbattlestatus " + bsjson,DBGLEVEL)
-		spads.queueLobbyCommand(["c.battle.update","TEifionisgonnakillme", json.dumps(TachyonBattle)])
+		spads.queueLobbyCommand(["c.battle.update_host", json.dumps(TachyonBattle)])
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
