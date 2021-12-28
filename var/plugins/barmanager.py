@@ -260,7 +260,7 @@ class BarManager:
 		try:
 			spads.slog("onGameEnd", DBGLEVEL)
 			spads.slog("endGameData" + str(endGameData), 3)
-			#spads.sayPrivate('AutohostMonitor', 'endGameData ' + jsonBase64(endGameData))
+			spads.sayPrivate('AutohostMonitor', 'endGameData ' + jsonBase64(endGameData))
 
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
