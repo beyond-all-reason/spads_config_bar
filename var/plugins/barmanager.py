@@ -72,10 +72,10 @@ def getParams(pluginName):
 	return [globalPluginParams, presetPluginParams]
 
 def jsonGzipBase64(toencode):
-	return base64.b64encode(zlib.compress(json.dumps(toencode).encode("utf-8"))).decode() 
+	return base64.urlsafe_b64encode(zlib.compress(json.dumps(toencode).encode("utf-8"))).decode() 
 
 def jsonBase64(toencode):
-	return base64.b64encode(json.dumps(toencode).encode("utf-8")).decode()
+	return base64.urlsafe_b64encode(json.dumps(toencode).encode("utf-8")).decode()
 
 def SendChobbyState():
 	try:
