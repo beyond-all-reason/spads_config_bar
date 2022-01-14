@@ -143,28 +143,28 @@ def sendTachyonBattleTitle():
 						break
 			presettotitledict = {'ffa':"Free-for-all",'team':'Teams','coop':'PvE','duel':"Duel"}
 			if TachyonBattle['preset'] == 'ffa':
-				newbattletitle += " " + "FFA"
+				newbattletitle += " | FFA"
 				if len(bottypes) > 0:
 					newbattletitle += " vs " + ", ".join(bottypes[0:3])
 
 			if TachyonBattle['preset'] == 'duel':
-				newbattletitle += " " + "Duel"
+				newbattletitle += " | Duel"
 				if len(bottypes) > 0:
 					newbattletitle += " vs " + ", ".join(bottypes[0:3])
 
 			if TachyonBattle['preset'] == 'team':
-				newbattletitle += " " + "Teams"
+				newbattletitle += " | Teams"
 				if len(bottypes) > 0:
 					newbattletitle += " vs " + ", ".join(bottypes[0:3])
 				else:
 					newbattletitle += ' ' + ' vs '.join([str(TachyonBattle['teamSize'])] * int(TachyonBattle['nbTeams']))
 
 			if TachyonBattle['preset'] == 'coop':
-				newbattletitle += " " + "Coop"
+				newbattletitle += " | Coop"
 				if len(bottypes) > 0:
-					newbattletitle += ' ' + str(TachyonBattle['teamSize']) + " vs " + ", ".join(bottypes[0:3])
-				else:
-					newbattletitle += ' ' + ' vs '.join([str(TachyonBattle['teamSize'])] * int(TachyonBattle['nbTeams']))
+					newbattletitle += " vs " + ", ".join(bottypes[0:3])
+				#else:
+				#	newbattletitle += ' ' + ' vs '.join([str(TachyonBattle['teamSize'])] * int(TachyonBattle['nbTeams']))
 		spads.slog("Trying to update battle title: " + newbattletitle + " old " + myBattleTitle , DBGLEVEL)
 		if newbattletitle != myBattleTitle:
 			myBattleTitle = newbattletitle
