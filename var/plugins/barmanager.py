@@ -120,7 +120,9 @@ def sendTachyonBattleTitle():
 		# TachyonBattle = {"boss":"", 'preset':"", 'botlist' : [], 'teamSize' : 6, 'nbTeams':2}
 		# TODO: dont forget to reset the title when the last player leaves!
 		# TODO: dont do this for private games
-
+		if myBattlePassword != "*":
+			spads.slog("myBattlePassword being set prevents title change:" + myBattlePassword , DBGLEVEL)
+			return
 		newbattletitle = myBattleName
 		if len(playersInMyBattle) != 0:
 			# "botlist": ["SimpleDefenderAI", "NullAI", "BARb", "SimpleAI", "SimpleConstructorAI", "ScavengersAI", "SimpleCheaterAI", "ControlModeAI", "STAI", "ChickensAI"]}"
@@ -239,7 +241,7 @@ class BarManager:
 		try:
 			pluginParams = spads.getPluginConf()
 			DBGLEVEL = int(pluginParams['barManagerDebugLevel'])
-			# DBGLEVEL = 3 override here?
+			#DBGLEVEL = 3 # override here
 			spadsConf = spads.getSpadsConf()
 			spads.slog("pluginParams = " + str(pluginParams), 3)
 			CrashDir = os.path.join(spadsConf['varDir'], 'log', pluginParams['crashDir'])
@@ -313,6 +315,7 @@ class BarManager:
 			myBattleID = myBattle['battleId']
 			myBattlePassword = myBattle['password']
 			spads.slog("My BattleID is:" + str(myBattleID), 3)  #
+			spads.slog("My BattlePassword is:" + str(myBattlePassword), 3)  #
 			
 			allbattles = lobbyInterface.getBattles()
 			if myBattleID in allbattles:
