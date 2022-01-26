@@ -28,7 +28,6 @@ globalPluginParams = {
 }
 presetPluginParams = None
 
-lobbyInterface = spads.getLobbyInterface()
 accountIdSkill = {}
 playerNameSkill = {}
 
@@ -44,6 +43,7 @@ def getParams(pluginName):
 class CaptainsDraftPlugin:
     def __init__(self, context):
         try:
+            lobbyInterface = spads.getLobbyInterface()
             spads.addSpadsCommandHandler({
                 'draft': self.draft,
                 'pick': self.pick
@@ -91,7 +91,15 @@ class CaptainsDraftPlugin:
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
-    def onSpringStop(self):
+    def onBattleOpened(self):
+        try:
+            currentSpadsConf = spads.getSpadsConf()
+            if (currentSpadsConf['preset'] == "draft"):
+                self.enable()
+        except Exception as e:
+            spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+
+    def onSpringStop(self, _pid):
         try:
             if (self.state != "disabled"):
                 spads.sayBattle(f"Game ended, returning to adding state")
@@ -127,9 +135,10 @@ class CaptainsDraftPlugin:
             self.state = "adding"
             spads.sayBattle('Captains Draft enabled, call !draft to begin picking')
 
-            users = lobbyInterface.battle["users"]
+            lobbyInterface = spads.getLobbyInterface()
+            users = lobbyInterface.getBattle()["users"]
             for userName in users:
-                userStatus = lobbyInterface.battle["users"][userName]["battleStatus"]
+                userStatus = users[userName]["battleStatus"]
                 if (userStatus["mode"] == "1"):
                     self.addedPlayers.add(userName)
 
@@ -190,7 +199,15 @@ class CaptainsDraftPlugin:
                 spads.sayBattle(f"You must pick a player, e.g. !pick bob")
                 return 0
 
-            pickedPlayer = params[0]
+            lobbyInterface = spads.getLobbyInterface()
+            usersInBattle = list(lobbyInterface.getBattle()['users'])
+            matchingUsers = perl.cleverSearch(params[0], usersInBattle)
+
+            if (len(matchingUsers) == 0):
+                spads.sayBattle(f"Player {params[0]} not found")
+                return 0
+
+            pickedPlayer = matchingUsers[0]
             cap = self.teamAcap if self.teamApicking else self.teamBcap
             otherCap = self.teamAcap if not self.teamApicking else self.teamBcap
 
@@ -225,7 +242,7 @@ class CaptainsDraftPlugin:
                     self.teamB.add(lastUnpickedPlayer)
 
                 self.ready()
-            
+
             self.fixPlayerStatuses()
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
@@ -276,13 +293,15 @@ class CaptainsDraftPlugin:
             if (self.state == "disabled"):
                 return
 
-            users = lobbyInterface.battle["users"];
-            for userName in users:
-                self.fixPlayerStatus(userName)
+            lobbyInterface = spads.getLobbyInterface()
+            users = lobbyInterface.getBattle()["users"];
+
+            for idx, userName in enumerate(users, start=1):
+                self.fixPlayerStatus(userName, idx)
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
-    def fixPlayerStatus(self, userName):
+    def fixPlayerStatus(self, userName, index=-1):
         try:
             if (self.state == "disabled"):
                 return
@@ -309,19 +328,20 @@ class CaptainsDraftPlugin:
                     self.forceAllyTeam(userName, 1)
                 elif (status["isAdded"] and (not status["isTeamA"]) and (not status["isTeamB"]) and status["allyTeamId"] != 2):
                     self.forceAllyTeam(userName, 2)
+
+            if index >= 0:
+                spads.queueLobbyCommand(["FORCETEAMNO", userName, index])
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
     def forceSpec(self, userName):
         try:
-            lobbyInterface.battle["users"][userName]["battleStatus"]["mode"] = "0"
             spads.queueLobbyCommand(["FORCESPECTATORMODE", userName]);
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
     def forceAllyTeam(self, userName, allyTeamId):
         try:
-            lobbyInterface.battle["users"][userName]["battleStatus"]["team"] = allyTeamId
             spads.queueLobbyCommand(["FORCEALLYNO", userName, allyTeamId]);
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
@@ -331,7 +351,8 @@ class CaptainsDraftPlugin:
 
     def getUserBattleStatus(self, userName):
         try:
-            battleStatus = lobbyInterface.battle["users"][userName]["battleStatus"]
+            lobbyInterface = spads.getLobbyInterface()
+            battleStatus = lobbyInterface.getBattle()["users"][userName]["battleStatus"]
             return {
                 "isAdded": userName in self.addedPlayers,
                 "isTeamA": userName in self.teamA,
