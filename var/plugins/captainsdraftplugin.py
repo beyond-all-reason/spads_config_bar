@@ -95,7 +95,7 @@ class CaptainsDraftPlugin:
         try:
             currentSpadsConf = spads.getSpadsConf()
             if (currentSpadsConf['preset'] == "draft"):
-                self.enable()
+                self.state = "adding"
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
@@ -139,7 +139,7 @@ class CaptainsDraftPlugin:
             users = lobbyInterface.getBattle()["users"]
             for userName in users:
                 userStatus = users[userName]["battleStatus"]
-                if (userStatus["mode"] == "1"):
+                if (userStatus is not None and userStatus["mode"] == "1"):
                     self.addedPlayers.add(userName)
 
             self.fixPlayerStatuses()
