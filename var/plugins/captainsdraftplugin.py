@@ -303,7 +303,7 @@ class CaptainsDraftPlugin:
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
-    def fixPlayerStatus(self, userName, index):
+    def fixPlayerStatus(self, userName, index=-1):
         try:
             if (self.state == "disabled"):
                 return
@@ -331,7 +331,8 @@ class CaptainsDraftPlugin:
                 elif (status["isAdded"] and (not status["isTeamA"]) and (not status["isTeamB"]) and status["allyTeamId"] != 2):
                     self.forceAllyTeam(userName, 2)
 
-            spads.queueLobbyCommand(["FORCETEAMNO", userName, index])
+            if index >= 0:
+                spads.queueLobbyCommand(["FORCETEAMNO", userName, index])
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
