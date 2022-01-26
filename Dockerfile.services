@@ -17,6 +17,7 @@ RUN apk update && apk upgrade \
 COPY docker/update-engine.sh /usr/bin/
 COPY docker/sync-maps.sh /usr/bin/
 COPY docker/sync-all.sh /usr/bin/
+COPY docker/update-games.sh /usr/bin/
 
 RUN addgroup -g 1000 spads \
  && adduser --disabled-password --gecos "" --ingroup "spads" --uid "1000" spads \

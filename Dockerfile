@@ -35,6 +35,7 @@ RUN mkdir -p /opt/spads /spring-data /spring-engines
 
 COPY docker/spadsInstaller.auto /opt/spads
 COPY docker/update-engine.sh /opt/
+COPY docker/update-games.sh /opt/
 COPY docker/scripts/*.sh /opt/
 COPY upload_replay.sh /opt/
 
