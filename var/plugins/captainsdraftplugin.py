@@ -243,7 +243,7 @@ class CaptainsDraftPlugin:
                     self.teamB.add(lastUnpickedPlayer)
 
                 self.ready()
-            
+
             self.fixPlayerStatuses()
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
@@ -296,12 +296,14 @@ class CaptainsDraftPlugin:
 
             lobbyInterface = spads.getLobbyInterface()
             users = lobbyInterface.battle["users"];
-            for userName in users:
-                self.fixPlayerStatus(userName)
+            spads.queueLobbyCommand(["FORCETEAMNO", userName, idNb])
+
+            for idx, userName in enumerate(users, start=1):
+                self.fixPlayerStatus(userName, idx)
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
-    def fixPlayerStatus(self, userName):
+    def fixPlayerStatus(self, userName, index):
         try:
             if (self.state == "disabled"):
                 return
@@ -328,6 +330,8 @@ class CaptainsDraftPlugin:
                     self.forceAllyTeam(userName, 1)
                 elif (status["isAdded"] and (not status["isTeamA"]) and (not status["isTeamB"]) and status["allyTeamId"] != 2):
                     self.forceAllyTeam(userName, 2)
+
+            spads.queueLobbyCommand(["FORCETEAMNO", userName, index])
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
