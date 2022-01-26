@@ -47,3 +47,10 @@ crontab -e
 ```
 
 Add: `0,30 * * * * docker-compose run games-updater >> ~/games-updater.log`
+
+11. To stop the application:
+
+```
+spads_timeout=600 # seconds to wait for spads to clean up child processes
+docker-compose stop spads --timeout=$spads_timeout
+```

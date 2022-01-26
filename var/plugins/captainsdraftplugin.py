@@ -192,7 +192,6 @@ class CaptainsDraftPlugin:
 
     def pick(self, source, user, params, checkOnly):
         try:
-
             if (self.state != "drafting"):
                 spads.answer(f"Cannot pick player while Captains Draft is in the {self.state} state")
                 return 0

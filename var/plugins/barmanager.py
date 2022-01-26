@@ -19,15 +19,17 @@ DBGLEVEL = 3
 pluginParams = {}
 # ---------------- Battleroom Variables to Track --------------
 AiProfiles = {}  # dict of BotName : {username : Owner, profile: Defensive} dunno the format yet, should support script tags to set AI profiles
-aiList = {}
 isBattleLocked = False
 ChobbyState = {}
 
-TachyonBattle = {"boss":"", 'preset':"", 'ailist' : [], 'teamSize' : 6, 'nbTeams':2} # https://github.com/beyond-all-reason/teiserver/blob/master/documents/tachyon/types.md#battle
+TachyonBattle = {"boss":"", 'preset':"", 'botlist' : [], 'teamSize' : 6, 'nbTeams':2} # https://github.com/beyond-all-reason/teiserver/blob/master/documents/tachyon/types.md#battle
 timerTachyonBattle = False # do we have a timer set to update the game?
 
 myBattleID = None
 playersInMyBattle = {}
+myBattleName = ""
+myBattleTitle = ""
+myBattlePassword = '*' # which means no password
 
 whoIsBoss = None
 
@@ -42,7 +44,7 @@ spadsConf = None  # {'lobbyReconnectDelay': 15, 'banList': 'empty', 'mapLink': '
 # Each json string will contain a dict, for example, for a votestart
 
 # This is the first version of the plugin
-pluginVersion = '0.1'
+pluginVersion = '0.2'
 
 # This plugin requires a SPADS version which supports Python plugins
 # (only SPADS versions >= 0.12.29 support Python plugins)
@@ -72,10 +74,10 @@ def getParams(pluginName):
 	return [globalPluginParams, presetPluginParams]
 
 def jsonGzipBase64(toencode):
-	return base64.b64encode(zlib.compress(json.dumps(toencode).encode("utf-8"))).decode() 
+	return base64.urlsafe_b64encode(zlib.compress(json.dumps(toencode).encode("utf-8"))).decode() 
 
 def jsonBase64(toencode):
-	return base64.b64encode(json.dumps(toencode).encode("utf-8")).decode()
+	return base64.urlsafe_b64encode(json.dumps(toencode).encode("utf-8")).decode()
 
 def SendChobbyState():
 	try:
@@ -110,13 +112,81 @@ def refreshChobbyState():
 	updateTachyonBattle('preset',spadsConf['preset'] )
 	SendChobbyState()
 
+def sendTachyonBattleTitle():
+	global TachyonBattle, myBattleName, myBattlePassword, myBattleTitle
+	try:
+		# ok, what should our title look like?
+		# we need to have oldbattletitle in myBattleName
+		# TachyonBattle = {"boss":"", 'preset':"", 'botlist' : [], 'teamSize' : 6, 'nbTeams':2}
+		# TODO: dont forget to reset the title when the last player leaves!
+		# TODO: dont do this for private games
+		if myBattlePassword != "*":
+			spads.slog("myBattlePassword being set prevents title change:" + myBattlePassword , DBGLEVEL)
+			return
+		newbattletitle = myBattleName
+		if len(playersInMyBattle) != 0:
+			# "botlist": ["SimpleDefenderAI", "NullAI", "BARb", "SimpleAI", "SimpleConstructorAI", "ScavengersAI", "SimpleCheaterAI", "ControlModeAI", "STAI", "ChickensAI"]}"
+			bottypes = []
+			botlist = TachyonBattle["botlist"]
+			if len(botlist) > 0:
+				if "ScavengersAI" in botlist:
+					bottypes.append("Scavengers")
+				if "ChickensAI" in botlist:
+					bottypes.append("Raptors")
+				if "ControlModeAI" in botlist:
+					bottypes.append("Control Mode")
+				if "BARb" in botlist:
+					bottypes.append("BARbarianAI")
+				if "STAI" in botlist:
+					bottypes.append("STAI")
+				for bot in botlist:
+					if bot.startswith("Simple"):
+						bottypes.append("SimpleAI")
+						break
+			presettotitledict = {'ffa':"Free-for-all",'team':'Teams','coop':'PvE','duel':"Duel"}
+			if TachyonBattle['preset'] == 'ffa':
+				newbattletitle += " | FFA"
+				if len(bottypes) > 0:
+					newbattletitle += " vs " + ", ".join(bottypes[0:3])
+
+			if TachyonBattle['preset'] == 'duel':
+				newbattletitle += " | Duel"
+				if len(bottypes) > 0:
+					newbattletitle += " vs " + ", ".join(bottypes[0:3])
+
+			if TachyonBattle['preset'] == 'team':
+				newbattletitle += " | Teams"
+				if len(bottypes) > 0:
+					newbattletitle += " vs " + ", ".join(bottypes[0:3])
+				else:
+					newbattletitle += ' ' + ' vs '.join([str(TachyonBattle['teamSize'])] * int(TachyonBattle['nbTeams']))
+
+			if TachyonBattle['preset'] == 'coop':
+				newbattletitle += " | Coop"
+				if len(bottypes) > 0:
+					newbattletitle += " vs " + ", ".join(bottypes[0:3])
+				#else:
+				#	newbattletitle += ' ' + ' vs '.join([str(TachyonBattle['teamSize'])] * int(TachyonBattle['nbTeams']))
+		spads.slog("Trying to update battle title: " + newbattletitle + " old " + myBattleTitle , DBGLEVEL)
+		if newbattletitle != myBattleTitle:
+			myBattleTitle = newbattletitle
+			spads.queueLobbyCommand(["SAYBATTLE","$%rename " + newbattletitle])
+
+	except Exception as e:
+		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+
 def sendTachyonBattle():
 	global timerTachyonBattle, TachyonBattle
 	try:
 		timerTachyonBattle = False
 		bsjson = json.dumps(TachyonBattle)
-		spads.slog("Trying to update tachyonbattlestatus " + bsjson,DBGLEVEL)
-		spads.queueLobbyCommand(["c.battle.update","TEifionisgonnakillme", json.dumps(TachyonBattle)])
+		spads.slog("Trying to update tachyonbattlestatus " + bsjson, DBGLEVEL)
+		spads.queueLobbyCommand(["c.battle.update_host", bsjson])
+		sendTachyonBattleTitle()
+		#Which generally looks like this:
+		#  [SpringLobbyInterface] Sending to lobby server: "c.battle.update_host {"boss": "", "preset": "team", "ailist": [], "teamSize": "6", "nbTeams": "2",
+		# these are the possible aiDll entries in botlis
+		#  "botlist": ["SimpleDefenderAI", "NullAI", "BARb", "SimpleAI", "SimpleConstructorAI", "ScavengersAI", "SimpleCheaterAI", "ControlModeAI", "STAI", "ChickensAI"]}"
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
@@ -171,8 +241,9 @@ class BarManager:
 		try:
 			pluginParams = spads.getPluginConf()
 			DBGLEVEL = int(pluginParams['barManagerDebugLevel'])
+			#DBGLEVEL = 3 # override here
 			spadsConf = spads.getSpadsConf()
-			spads.slog("pluginParams = " + str(pluginParams), DBGLEVEL)
+			spads.slog("pluginParams = " + str(pluginParams), 3)
 			CrashDir = os.path.join(spadsConf['varDir'], 'log', pluginParams['crashDir'])
 			if not os.path.exists(CrashDir):
 				spads.slog("Created CrashDir" + CrashDir, DBGLEVEL)
@@ -193,7 +264,7 @@ class BarManager:
 		spads.slog("Plugin unloaded", 3)
 
 	def onBattleOpened(self):
-		global myBattleID  # todo: this is the slipperiest slope of all
+		global myBattleID, myBattleName, myBattlePassword, myBattleTitle  # todo: this is the slipperiest slope of all
 		global ChobbyState
 		try:
 			spads.slog("Battle Opened", DBGLEVEL)
@@ -227,20 +298,37 @@ class BarManager:
 			spads.slog("getRunningBattle()" + str(dir(spads.getRunningBattle())), 3)
 			# TODO: Init battlestatuschanged sanely!
 
-			# spads.slog(str(spadsConf),3)
+			spads.slog("spadsConf: " + str(spadsConf),3)
 			lobbyInterface = spads.getLobbyInterface()
+			
 
 			# spads.slog("getLobbyInterface()" + str(dir(lobbyInterface)),3)
 
 			# spads.slog(str(lobbyInterface.getBattles()),3) # this works, and gets all battles
-			spads.slog(str(lobbyInterface.getBattle()),
-					   3)  # {'scriptTags': {}, 'password': '*', 'founder': '[teh]host15', 'startRects': {'0': {'left': '0', 'right': '34', 'top': '0', 'bottom': '200'}, '1': {'left': '166', 'bottom': '200', 'top': '0', 'right': '200'}}, 'botList': [], 'modHash': '-1321904802', 'battleId': '99', 'users': {'[teh]host15': {'port': None, 'battleStatus': None, 'ip': None, 'color': None}}, 'bots': {}, 'disabledUnits': []}
+			spads.slog("lobbyInterface.getBattle(): " + str(lobbyInterface.getBattle()), 3)
+				# {'scriptTags': {}, 'password': '*', 'founder': '[teh]host15',
+				# 'startRects': {'0': {'left': '0', 'right': '34', 'top': '0', 'bottom': '200'}, '1': {'left': '166', 'bottom': '200', 'top': '0', 'right': '200'}},
+				# 'botList': [], 'modHash': '-1321904802', 'battleId': '99',
+				# 'users': {'[teh]host15': {'port': None, 'battleStatus': None, 'ip': None, 'color': None}}, 'bots': {}, 'disabledUnits': []}
+
 			myBattle = lobbyInterface.getBattle()
 			myBattleID = myBattle['battleId']
+			myBattlePassword = myBattle['password']
 			spads.slog("My BattleID is:" + str(myBattleID), 3)  #
+			spads.slog("My BattlePassword is:" + str(myBattlePassword), 3)  #
+			
+			allbattles = lobbyInterface.getBattles()
+			if myBattleID in allbattles:
+				if 'title' in allbattles[myBattleID]:
+					myBattleTitle = allbattles[myBattleID]['title']
+					myBattleName = allbattles[myBattleID]['title']
+			else:
+				spads.slog("Cannot find my battleid in spads.getBattles(): " + str(myBattleID), 3)  #
+			
 			ChobbyState['locked'] = 'unlocked' # this is assumed by server when opening a battleroom
 			refreshChobbyState()
-
+			
+			
 
 		# for k,v in lobbyInterface:
 		#	spads.slog(str((k,v)), 3)
@@ -388,8 +476,11 @@ class BarManager:
 					ChobbyStateChanged("balanceMode", params[1])
 				elif lowercommand == 'nbteams':
 					ChobbyStateChanged("nbTeams", params[1])
+					updateTachyonBattle("nbTeams", params[1])
 				elif lowercommand == 'teamsize':
 					ChobbyStateChanged("teamSize", params[1])
+					updateTachyonBattle("teamSize", params[1])
+					
 
 			elif command == "vote":
 				# todo: also pass vote status here!
@@ -608,6 +699,10 @@ def hLEFTBATTLE(command, battleID, userName):
 		if battleID == myBattleID and playersInMyBattle[userName]:
 			spads.slog("LEFTBATTLE" + str([command, battleID, userName]), 3)
 			del playersInMyBattle[userName]
+			#spads.slog("playersInMyBattle" + str(playersInMyBattle), 3)
+			if len(playersInMyBattle) == 0: # when the last person leaves, reset title
+				sendTachyonBattleTitle()
+
 			if whoIsBoss == userName:
 				whoIsBoss = None
 				updateTachyonBattle("boss","")
