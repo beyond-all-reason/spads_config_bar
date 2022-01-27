@@ -143,7 +143,7 @@ def sendTachyonBattleTitle():
 					if bot.startswith("Simple"):
 						bottypes.append("SimpleAI")
 						break
-			presettotitledict = {'ffa':"Free-for-all",'team':'Teams','coop':'PvE','duel':"Duel"}
+			presettotitledict = {'ffa':"Free-for-all",'team':'Teams','coop':'PvE','duel':"Duel",'draft':"Draft"}
 			if TachyonBattle['preset'] == 'ffa':
 				newbattletitle += " | FFA"
 				if len(bottypes) > 0:
@@ -160,6 +160,10 @@ def sendTachyonBattleTitle():
 					newbattletitle += " vs " + ", ".join(bottypes[0:3])
 				else:
 					newbattletitle += ' ' + ' vs '.join([str(TachyonBattle['teamSize'])] * int(TachyonBattle['nbTeams']))
+
+			if TachyonBattle['preset'] == 'draft':
+				newbattletitle += " | Captains"
+				newbattletitle += ' ' + ' vs '.join([str(TachyonBattle['teamSize'])] * int(TachyonBattle['nbTeams']))
 
 			if TachyonBattle['preset'] == 'coop':
 				newbattletitle += " | Coop"

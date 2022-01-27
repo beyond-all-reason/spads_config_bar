@@ -27,6 +27,7 @@ globalPluginParams = {
     "helpFile": ["notNull"]
 }
 presetPluginParams = None
+minimumPlayers = 6
 
 accountIdSkill = {}
 playerNameSkill = {}
@@ -157,8 +158,8 @@ class CaptainsDraftPlugin:
     def resetToAddingState(self):
         try:
             self.state = "adding"
-            self.teamA = set()
-            self.teamB = set()
+            self.teamA = {}
+            self.teamB = {}
             self.teamAcap = ""
             self.teamBcap = ""
             self.addedPlayers = set()
@@ -177,8 +178,8 @@ class CaptainsDraftPlugin:
                 spads.sayBattle(f"Can't start draft without an even number of players ({len(self.addedPlayers)} added)")
                 return 0
 
-            if (len(self.addedPlayers) < 6):
-                spads.sayBattle(f"Can't start draft with less than 6 added players ({len(self.addedPlayers)} added)")
+            if (len(self.addedPlayers) < minimumPlayers):
+                spads.sayBattle(f"Can't start draft with less than ${minimumPlayers} added players ({len(self.addedPlayers)} added)")
                 return 0
 
             if (checkOnly):
@@ -370,7 +371,8 @@ class CaptainsDraftPlugin:
 
     def fixTeamIds(self, team, users, initialIdx=1):
         for idx, userName in enumerate(team, start=initialIdx):
-            spads.slog("fixid for " + userName + " idx= " + str(idx), 3)
+            if debug:
+                spads.slog("fixid for " + userName + " idx= " + str(idx), 3)
             status = users[userName]["battleStatus"]
 
             if status is not None and status["id"] != idx:
