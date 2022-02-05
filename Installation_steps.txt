@@ -1,0 +1,91 @@
+# aus: kJuQwfr5axra
+
+# - init 1 minutes
+sudo apt-get install htop byobu mc p7zip g++ swig locatrclone git python3-dev cpanminus p7zip-full python3-distutils libdbd-sqlite3-perl make sshpass
+sudo cpanm https://github.com/niner/inline-python-pm.git
+mkdir spads
+cd spads
+wget http://planetspads.free.fr/spads/installer/spadsInstaller.tar
+tar -xvf spadsInstaller.tar
+./spadsInstaller.pl
+# install spads with _all_ default settings
+
+
+
+
+
+#- Make the swap file: 1 minute
+cd /var
+touch swap.img
+sudo touch swap.img
+sudo chmod 600 swap.img
+sudo dd if=/dev/zero of=/var/swap.img bs=1024k count=4000
+sudo mkswap /var/swap.img
+sudo swapon /var/swap.img
+sudo su -c "echo '/var/swap.img swap swap defaults 0 0' >> /etc/fstab"
+sudo sysctl vm.swappiness=10
+sudo su -c "echo 'vm.swappiness=10' >> /etc/sysctl.conf"
+
+#- clone the updater 1 min
+cd ~/spads
+git clone https://github.com/beyond-all-reason/spads_config_bar.git
+mkdir ~/spads/var/spring
+cd spads_config_bar/
+python3 spads_config_bar_updater.py -s
+sudo cp *.service /etc/systemd/system
+sudo cp *.timer /etc/systemd/system
+
+#- rclone config 3 mins
+rclone config
+#
+    # select new
+    # name: BYAR-maps
+    # storage type: 13 (drive)
+    # no client id
+    # no client secret
+    # access type: 2 (drive.readonly)
+    # root folder id: blank
+    # service account credentials: blank
+    # service accoutn file: blank
+    # Edit advanced config: n
+    # Use auto config: n
+    # Configure this as team drive: n
+rclone sync --drive-shared-with-me BYAR-maps:BYAR-maps ~/spads/var/spring/data/maps/
+
+# edit cluster launcher template
+cp ~/spads/spads_config_bar/etc/spads_cluster_launcher.sh.template ~/spads/etc/spads_cluster_launcher.sh
+chmod +x ~/spads/etc/spads_cluster_launcher.sh
+nano ~/spads/etc/spads_cluster_launcher.sh
+
+#get latest engine
+python3 spads_config_bar_updater.py -c -u https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR105%7D105.1.1-739-ga241485/spring_bar_.BAR105.105.1.1-739-ga241485_linux-64-minimal-portable.7z
+
+#copy pr-dler to ~/spads
+cp ~/spads/var/spring/spring_bar_.BAR105.105.1.1-739-ga241485_linux-64-minimal-portable/pr-downloader ~/spads/
+/home/ubuntu/spads/pr-downloader --filesystem-writepath /home/ubuntu/spads/var/spring/data byar:test
+
+
+# services enable timers:
+
+sudo nano /etc/systemd/system/rclone-maps.service
+sudo nano /etc/systemd/system/pr-downloader.service
+
+
+# enable servixes:
+sudo systemctl daemon-reload
+sudo systemctl start rclone-maps.service
+sudo systemctl start pr-downloader.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now pr-downloader.timer
+sudo systemctl enable --now rclone-maps.timer
+sudo systemctl daemon-reload
+
+#replay upload:
+
+SFTP_PASSWORD= @CHANGEME
+SFTP_LOGIN="beherith"
+
+# start it, like 15 minutes first start :/ 
+tmux
+cd ~/spads/etc/
+./spads_cluster_launcher.sh
