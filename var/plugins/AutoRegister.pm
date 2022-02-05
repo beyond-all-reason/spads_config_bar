@@ -50,12 +50,14 @@ sub onLobbyLogin {
 sub hLobbyDenied {
   my (undef,$loginDeniedReason)=@_;
   
-  if($loginDeniedReason ne 'Invalid username or password') {
-    ::cbLoginDenied(undef,$loginDeniedReason);
-    return;
+  if(substr($loginDeniedReason, 0, length('No user found for ')) ne 'No user found for ') {
+	  if($loginDeniedReason ne 'Invalid username or password') {
+		::cbLoginDenied(undef,$loginDeniedReason);
+		return;
+	  }
   }
   slog('Login denied, trying to auto-register',3);
-  
+  slog($loginDeniedReason,3);
   my $lobby=getLobbyInterface();
   my $r_conf=getSpadsConf();
   my $lobbyLogin=$r_conf->{lobbyLogin};
