@@ -1,7 +1,7 @@
 # aus: kJuQwfr5axra
 
 # - init 1 minutes
-sudo apt-get install htop byobu mc p7zip g++ swig locatrclone git python3-dev cpanminus p7zip-full python3-distutils libdbd-sqlite3-perl make sshpass
+sudo apt-get install htop byobu mc p7zip g++ swig locatrclone git python3-dev cpanminus p7zip-full python3-distutils libdbd-sqlite3-perl make sshpass glances
 sudo cpanm https://github.com/niner/inline-python-pm.git
 mkdir spads
 cd spads
@@ -89,3 +89,10 @@ SFTP_LOGIN="beherith"
 tmux
 cd ~/spads/etc/
 ./spads_cluster_launcher.sh
+
+# further things/ todo:
+# - set up glances, start it from crontab as glances -w for quick view on port 61208
+# - set up replay-deleter, which every week, should delete replays older than 1 month
+# - set up log-rotator, which every week, should zip up logs, and delete the old ones (maybe use logrotate?)
+# - add niceness to prdler and to rclone
+
