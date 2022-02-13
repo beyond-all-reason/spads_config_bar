@@ -1,4 +1,3 @@
-# aus: kJuQwfr5axra
 
 # - init 1 minutes
 sudo apt-get install htop byobu mc p7zip g++ swig locatrclone git python3-dev cpanminus p7zip-full python3-distutils libdbd-sqlite3-perl make sshpass glances
