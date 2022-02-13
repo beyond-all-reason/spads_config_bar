@@ -7,5 +7,5 @@ User=ubuntu
 Type=oneshot
 ExecStart=/usr/bin/rclone sync --drive-shared-with-me BYAR-maps:BYAR-maps /home/ubuntu/spads/var/spring/data/maps
 StandardOutput=journal
-Nice=-15
+Nice=15
 
