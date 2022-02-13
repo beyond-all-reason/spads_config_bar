@@ -12,4 +12,4 @@ ExecStart=/usr/games/pr-downloader --filesystem-writepath /home/uberserver/build
 StandardOutput=journal
 Restart=on-failure
 RestartSec=5s
-
+Nice=-15
