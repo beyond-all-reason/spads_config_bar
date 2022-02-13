@@ -47,7 +47,9 @@ perl /opt/spads/spads.pl /opt/spads/etc/spads_cluster.conf \
   CMD_maxInstances=$SPADS_MAX_INSTANCES \
   CMD_targetSpares=$SPADS_TARGET_SPARES \
   CMD_clusters=$SPADS_CLUSTER_PRESETS \
+  CMD_autoLoadPlugins=$SPADS_PLUGINS \
   CMD_endGameCommandPath=/opt/upload_replay.sh \
+  CMD_hostIp=$SPRING_HOSTIP \
   $SPADS_ARGS &
 
 child=$!
