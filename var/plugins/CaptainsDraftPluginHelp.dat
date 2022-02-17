@@ -1,5 +1,7 @@
 [draft]
-!draft - Captains Draft: begin mode where captains pick players
+!draft [<player1> <player2>] - Captains Draft: begins mode where captains pick players
+"!draft" starts draft with two highest TS players as captains
+"!draft player1 player2" starts draft with player1 as captain of team A and player2 as captain of team B. Team B picks first
 
 [pick]
-!pick - Captains Draft: only captains can use this to pick a player for their team
+!pick <player> - Captains Draft: only captains can use this to pick a player for their team

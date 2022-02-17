@@ -182,13 +182,35 @@ class CaptainsDraftPlugin:
                 spads.sayBattle(f"Can't start draft with less than ${minimumPlayers} added players ({len(self.addedPlayers)} added)")
                 return 0
 
+            if (len(params) != 0):
+                if (len(params) == 2):
+                    lobbyInterface = spads.getLobbyInterface()
+                    usersInBattle = list(lobbyInterface.getBattle()["users"])
+
+                    teamAcapmatches = perl.cleverSearch(params[0], usersInBattle)
+                    if len(teamAcapmatches == 0):
+                        spads.sayBattle(f"Player {params[0]} not found")
+                        return 0
+
+                    teamBcapmatches = perl.cleverSearch(params[1], usersInBattle)
+                    if len(teamBcapmatches == 0):
+                        spads.sayBattle(f"Player {params[1]} not found")
+                        return 0
+
+                else:
+                    spads.sayBattle(f"Must be called with no arguments (e.g. !draft) or with 2 captains (e.g. !draft player1 player2)")
+                    return 0
+
             if (checkOnly):
                 return 1
 
             self.state = "drafting"
             self.playerPool = self.addedPlayers.copy()
             self.updateSkills()
-            self.assignCaptainsBySkill()
+            if (len(params) == 0):
+                self.assignCaptainsBySkill()
+            else:
+                self.assignCaptains(teamAcapmatches[0], teamBcapmatches[0])
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
@@ -198,8 +220,8 @@ class CaptainsDraftPlugin:
                 spads.answer(f"Cannot pick player while Captains Draft is in the {self.state} state")
                 return 0
 
-            if len(params) == 0:
-                spads.sayBattle(f"You must pick a player, e.g. !pick bob")
+            if len(params) != 1:
+                spads.sayBattle(f"You must pick a single player, e.g. !pick bob")
                 return 0
 
             lobbyInterface = spads.getLobbyInterface()
@@ -274,12 +296,10 @@ class CaptainsDraftPlugin:
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
-    def assignCaptainsBySkill(self):
+    def assignCaptains(self, teamAcap, teamBcap):
         try:
-            playerPoolList = list(self.playerPool)
-            playerPoolList.sort(key=lambda x: playerNameSkill[x], reverse=True)
-            self.teamAcap = playerPoolList[0]
-            self.teamBcap = playerPoolList[1]
+            self.teamAcap = teamAcap
+            self.teamBcap = teamBcap
             self.teamA[self.teamAcap] = None
             self.teamB[self.teamBcap] = None
             self.playerPool.discard(self.teamAcap)
@@ -289,6 +309,15 @@ class CaptainsDraftPlugin:
             self.fixPlayerStatuses()
 
             spads.sayBattle(f"Captains are {self.teamAcap} and {self.teamBcap}, based on TrueSkill. {self.teamBcap} gets first !pick")
+        except Exception as e:
+            spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+
+    def assignCaptainsBySkill(self):
+        try:
+            playerPoolList = list(self.playerPool)
+            playerPoolList.sort(key=lambda x: playerNameSkill[x], reverse=True)
+
+            self.assignCaptains(playerPoolList[0], playerPoolList[1])
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
