@@ -33,6 +33,8 @@ myBattlePassword = '*' # which means no password
 
 whoIsBoss = None
 
+hwInfoIngame = {} # maps playernum to hwinfo dics {0: {}} this reverse mapping is needed because hwinfo arrives before playername
+
 aiProfiles = {}  # there are multiple ai profiles one can set, especially for barbarians, This info is currently discarded, but could use a new command
 
 spadsConf = None  # {'lobbyReconnectDelay': 15, 'banList': 'empty', 'mapLink': 'http://springfiles.com/search_result.php?search=%m&select=select_all', 'promoteMsg': '%pplayer(s) needed for battle "%b" [%o, %a] (%u)', 'autoLock': 'off', 'lobbyPassword': 'petike', 'lobbyFollowRedirect': '1', 'lobbyHost': 'bar.teifion.co.uk', 'allowedLocalAIs': 'E323AI;HughAI;KAIK;RAI', 'logGameChat': '1', 'msgFloodAutoKick': '15;7', 'masterChannel': 'autohosts', 'allowGhostMaps': '0', 'maxBots': '16', 'lobbyInterfaceLogLevel': '5', 'opOnMasterChannel': '0', 'teamSize': 6, 'lobbyPort': '8200', 'commandsFile': 'commands.conf', 'unlockSpecDelay': '5;30', 'logPvChat': '1', 'extraBox': '0', 'alertDuration': '72', 'privacyTrustLevel': '130', 'springServer': '/home/eru/spads/var/spring/spring_bar_.BAR.104.0.1-1956-g0092498_linux-64-minimal-portable/spring-headless', 'simpleEventLogLevel': '5', 'springDataDir': '/home/eru/spads/var/spring/data', 'autoBlockColors': '0', 'autoManagedSpringDir': '/home/eru/spads/var/spring', 'rotationManual': 'random', 'rotationType': 'map;certified', 'defaultPreset': 'team', 'spoofProtection': 'warn', 'minPlayers': 1, 'welcomeMsgInGame': 'Hi %u (%d), welcome to %n .', 'shareId': '', 'autoCallvote': '1', 'ircColors': '0', 'voteMode': 'normal', 'autoStart': 'on', 'reCallVoteDelay': 10, 'springServerType': 'headless', 'promoteChannels': 'main', 'autoHostPort': '53199', 'welcomeMsg': 'Hi %u (%d), welcome to %n .', 'maxAutoHostMsgLength': '240', 'rotationEndGame': 'off', 'logBattleJoinLeave': '1', 'cmdFloodAutoIgnore': '8;8;4', 'pluginsDir': '/home/eru/spads/var/plugins', 'autoSpecExtraPlayers': '1', 'autoLearnMaps': '1', 'voteTime': 45, 'springConfig': '', 'description': 'Team Game Global Settings', 'advertDelay': '15', 'logChanChat': '0', 'kickFloodAutoBan': '5;120;5', 'dataDumpDelay': 60, 'clanMode': 'tag(5);pref(5)', 'nbTeams': 2, 'rotationEmpty': 'random', 'alertDelay': '6', 'lobbyLogin': '[teh]host15', 'botsRank': '3', 'hostingPreset': 'enginetesting', 'noSpecDraw': '0', 'autoManagedSpringVersion': '', 'battlePreset': 'team', 'autoAddBotNb': 0, 'freeSettings': 'autoLock;teamSize(1-8)', 'maxSpecs': '', 'colorSensitivity': 55, 'autoReloadArchivesMinDelay': 30, 'endGameAwards': '1', 'ghostMapLink': 'http://springfiles.com/search_result.php?search=%m&select=select_all', 'broadcastChannels': 'autohosts', 'maxChatMessageLength': 1024, 'logDir': '/home/eru/spads/var/spads_host15/log', 'autoBlockBalance': '1', 'autoHostInterfaceLogLevel': '5', 'hideMapPresets': '0', 'kickBanDuration': '300', 'maxBytesSent': 49000, 'logBattleChat': '1', 'useWin32Process': '0', 'map': 'Comet Catcher Remake 1.8', 'allowMapOptionsValues': '1', 'autoSaveBoxes': '2', 'voteRingDelay': '0', 'allowModOptionsValues': '1', 'eventModel': 'auto', 'promoteDelay': '600', 'maxLocalBots': '16', 'votePvMsgDelay': '0', 'maxRemoteBots': '16', 'statusFloodAutoKick': '24;8', 'userDataRetention': '-1;-1;-1', 'autoSetVoteMode': '1', 'logGameServerMsg': '1', 'instanceDir': '/home/eru/spads/var/spads_host15', 'maxLowPrioBytesSent': 48000, 'allowSettingsShortcut': '1', 'autoStop': 'gameOver', 'skillMode': 'TrueSkill', 'rankMode': 'account', 'localLanIp': '192.168.1.102', 'minTeamSize': '1', 'rotationDelay': 600, 'idShareMode': 'off', 'logChanJoinLeave': '0', 'forceHostIp': '', 'spadsLogLevel': '5', 'autoLockClients': 64, 'endGameCommandEnv': '', 'speedControl': '2', 'endGameCommand': '', 'autoLoadPlugins': 'BarManager;AutoRegister;JsonStatus;InGameMute', 'restoreDefaultPresetDelay': '30', 'springieEmulation': 'warn', 'logGameJoinLeave': '1', 'sendRecordPeriod': 5, 'noSpecChat': '0', 'autoLockRunningBattle': '0', 'balanceMode': 'clan;skill', 'updaterLogLevel': '5', 'varDir': '/home/eru/spads/var', 'midGameSpecLevel': '0', 'handleSuggestions': '0', 'unitsyncDir': '/home/eru/spads/var/spring/spring_bar_.BAR.104.0.1-1956-g0092498_linux-64-minimal-portable/', 'endGameCommandMsg': '', 'etcDir': '/home/eru/spads/etc', 'localBots': 'joe 0 E323AI;jim core#FF0000 KAIK', 'minRingDelay': '20', 'minVoteParticipation': '50', 'advertMsg': '', 'maxChildProcesses': '32', 'autoRestartForUpdate': 'off', 'forwardLobbyToGame': '1', 'nbPlayerById': 1, 'autoLoadMapPreset': '0', 'autoFixColors': 'advanced', 'preset': 'team', 'alertLevel': 130, 'autoBalance': 'advanced', 'maxSpecsImmuneLevel': '100', 'floodImmuneLevel': 100, 'autoUpdateRelease': '', 'mapList': 'all', 'autoUpdateDelay': '300'}
@@ -44,7 +46,7 @@ spadsConf = None  # {'lobbyReconnectDelay': 15, 'banList': 'empty', 'mapLink': '
 # Each json string will contain a dict, for example, for a votestart
 
 # This is the first version of the plugin
-pluginVersion = '0.2'
+pluginVersion = '0.3'
 
 # This plugin requires a SPADS version which supports Python plugins
 # (only SPADS versions >= 0.12.29 support Python plugins)
@@ -233,14 +235,20 @@ class BarManager:
 		spads.addLobbyCommandHandler({"ADDBOT": hADDBOT})
 		spads.addLobbyCommandHandler({"UPDATEBATTLEINFO": hUPDATEBATTLEINFO })
 
+		# Declare handlers for Spring Autohost Interface
+		spads.addSpringCommandHandler({"PLAYER_JOINED": h_autohost_PLAYER_JOINED})
+		spads.addSpringCommandHandler({"PLAYER_LEFT": h_autohost_PLAYER_LEFT})
+		spads.addSpringCommandHandler({"GAME_LUAMSG": h_autohost_GAME_LUAMSG})
+		
+
 		# We call the API function "slog" to log a notice message (level 3) when the plugin is loaded
 		spads.slog("Plugin loaded (version %s)" % pluginVersion, 3)
 		if spads.get_flag("can_add_socket"):
-			spads.slog("This plugin can use sockets", 3)
+			spads.slog("This plugin can use sockets", DBGLEVEL)
 		if spads.get_flag("can_fork"):
-			spads.slog("This plugin can fork processes", 3)
+			spads.slog("This plugin can fork processes", DBGLEVEL)
 		if spads.get_flag("use_byte_string"):
-			spads.slog("This plugin can uses byte strings", 3)
+			spads.slog("This plugin can uses byte strings", DBGLEVEL)
 
 		try:
 			pluginParams = spads.getPluginConf()
@@ -260,9 +268,19 @@ class BarManager:
 
 	# This is the callback called when the plugin is unloaded
 	def onUnload(self, reason):
-
-		# We remove our new command handler
 		spads.removeSpadsCommandHandler(['myCommand'])
+		spads.removeSpadsCommandHandler(['aiProfile'])
+		spads.removeSpadsCommandHandler(['splitbattle'])
+
+		spads.removeLobbyCommandHandler(["JOINEDBATTLE"])
+		spads.removeLobbyCommandHandler(["LEFTBATTLE"])
+		spads.removeLobbyCommandHandler(["REMOVEBOT"])
+		spads.removeLobbyCommandHandler(["ADDBOT"])
+		spads.removeLobbyCommandHandler(["UPDATEBATTLEINFO" ])
+
+		spads.removeSpringCommandHandler(["PLAYER_JOINED"])
+		spads.removeSpringCommandHandler(["PLAYER_LEFT"])
+		spads.removeSpringCommandHandler(["GAME_LUAMSG"])
 
 		# We log a notice message when the plugin is unloaded
 		spads.slog("Plugin unloaded", 3)
@@ -297,19 +315,19 @@ class BarManager:
 			# b = a + 1 # this is just a try:except: test
 
 			spadsConf = spads.getSpadsConf()
-			spads.slog("Trying to print spads configuration:", 3)
+			spads.slog("Trying to print spads configuration:", DBGLEVEL)
 
-			spads.slog("getRunningBattle()" + str(dir(spads.getRunningBattle())), 3)
+			spads.slog("getRunningBattle()" + str(dir(spads.getRunningBattle())), DBGLEVEL)
 			# TODO: Init battlestatuschanged sanely!
 
-			spads.slog("spadsConf: " + str(spadsConf),3)
+			spads.slog("spadsConf: " + str(spadsConf),DBGLEVEL)
 			lobbyInterface = spads.getLobbyInterface()
 			
 
 			# spads.slog("getLobbyInterface()" + str(dir(lobbyInterface)),3)
 
 			# spads.slog(str(lobbyInterface.getBattles()),3) # this works, and gets all battles
-			spads.slog("lobbyInterface.getBattle(): " + str(lobbyInterface.getBattle()), 3)
+			spads.slog("lobbyInterface.getBattle(): " + str(lobbyInterface.getBattle()), DBGLEVEL)
 				# {'scriptTags': {}, 'password': '*', 'founder': '[teh]host15',
 				# 'startRects': {'0': {'left': '0', 'right': '34', 'top': '0', 'bottom': '200'}, '1': {'left': '166', 'bottom': '200', 'top': '0', 'right': '200'}},
 				# 'botList': [], 'modHash': '-1321904802', 'battleId': '99',
@@ -318,8 +336,8 @@ class BarManager:
 			myBattle = lobbyInterface.getBattle()
 			myBattleID = myBattle['battleId']
 			myBattlePassword = myBattle['password']
-			spads.slog("My BattleID is:" + str(myBattleID), 3)  #
-			spads.slog("My BattlePassword is:" + str(myBattlePassword), 3)  #
+			spads.slog("My BattleID is:" + str(myBattleID), DBGLEVEL)  #
+			spads.slog("My BattlePassword is:" + str(myBattlePassword), DBGLEVEL)  #
 			
 			allbattles = lobbyInterface.getBattles()
 			if myBattleID in allbattles:
@@ -331,7 +349,6 @@ class BarManager:
 			
 			ChobbyState['locked'] = 'unlocked' # this is assumed by server when opening a battleroom
 			refreshChobbyState()
-			
 			
 
 		# for k,v in lobbyInterface:
@@ -349,11 +366,17 @@ class BarManager:
 	def onGameEnd(self, endGameData):
 		# The \%endGameData parameter is a reference to a hash containing all the data stored by SPADS concerning the game that just ended.
 		# TODO: Send all of this lovely endGameData dict as a base64 encoded json to the bot account called AutohostMonitor as a private message
+		global hwInfoIngame
 		try:
 			spads.slog("onGameEnd", DBGLEVEL)
-			spads.slog("endGameData" + str(endGameData), 3)
-			spads.sayPrivate('AutohostMonitor', 'endGameData ' + jsonGzipBase64(endGameData))
-
+			cleanEndGameData = {}
+			for k,v in endGameData.items():
+				if k not in ['ahPassword', 'ahPassHash']:
+					cleanEndGameData[k] = v
+					
+			spads.slog("endGameData" + str(cleanEndGameData), DBGLEVEL)
+			spads.sayPrivate('AutohostMonitor', 'endGameData ' + jsonGzipBase64(cleanEndGameData))
+			hwInfoIngame = {}
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
@@ -558,7 +581,7 @@ class BarManager:
 		'''
 
 		try:
-			spads.slog("addStartScriptTags: "+ str(AiProfiles), 3)
+			spads.slog("addStartScriptTags: "+ str(AiProfiles), DBGLEVEL)
 			if len(AiProfiles) > 0:
 				extraaitags = {}
 				for botname, aiprofile in AiProfiles.items():
@@ -724,3 +747,50 @@ def hJOINEDBATTLE(command, battleID, userName, battlestatus=0):
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
+def h_autohost_PLAYER_JOINED(command, playerNumInt, userName):
+	global hwInfoIngame
+	try:
+		#spads.slog("h_autohost_PLAYER_JOINED:" + str([command, playerNumInt, userName]),3)
+		if playerNumInt in hwInfoIngame:
+			infostr = json.dumps(hwInfoIngame[playerNumInt])
+			spads.slog("AutohostMonitor spads_hwinfo " + infostr, DBGLEVEL)
+			spads.sayPrivate('AutohostMonitor', 'spads_hwinfo ' + infostr)
+	except Exception as e:
+		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+		
+def h_autohost_PLAYER_LEFT(command, playerNumInt, userName):
+	global hwInfoIngame
+	try:
+		#spads.slog("h_autohost_PLAYER_JOINED:" + str([command, playerNumInt, userName]),3)
+		if playerNumInt in hwInfoIngame:
+			del hwInfoIngame[playerNumInt]
+	except Exception as e:
+		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+
+def h_autohost_GAME_LUAMSG(command, playerNumInt, luahandleidInt , nullStr, message): # --> unmarshalled as:"GAME_LUAMSG,0,100, ,^Oq"
+	global hwInfoIngame
+	try:
+		#spads.slog("h_autohost_GAME_LUAMSG:" + str([command, playerNumInt, luahandleidInt , nullStr, message]),3)
+		
+		if len(message) > 10 and message[0:3] == "$y$" and (playerNumInt not in hwInfoIngame) :
+			validation = message[3:5]
+			messagelines = message[5:].split('\n')
+			messagedict = {}
+			messagedict['validation'] = validation
+			
+			for line in messagelines:
+				if line.startswith('CPU:'):
+					messagedict['CPU'] = line.partition(':')[2].strip()
+				if line.startswith('RAM:'):
+					messagedict['RAM'] = line.partition(':')[2].strip()
+				if line.startswith('GPU:'):
+					messagedict['GPU'] = line.partition(':')[2].strip()
+				if line.startswith('OS:'):
+					messagedict['OS'] = line.partition(':')[2].strip()
+				if line.startswith('Display max:'):
+					messagedict['Displaymax'] = line.partition(':')[2].strip()
+			hwInfoIngame[playerNumInt] = messagedict
+			spads.slog("Stored player HWinfo:" + str([playerNumInt, messagedict]),DBGLEVEL)
+
+	except Exception as e:
+		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
