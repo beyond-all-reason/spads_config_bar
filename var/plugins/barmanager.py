@@ -752,9 +752,10 @@ def h_autohost_PLAYER_JOINED(command, playerNumInt, userName):
 	try:
 		#spads.slog("h_autohost_PLAYER_JOINED:" + str([command, playerNumInt, userName]),3)
 		if playerNumInt in hwInfoIngame:
-			infostr = json.dumps(hwInfoIngame[playerNumInt])
-			spads.slog("AutohostMonitor spads_hwinfo " + infostr, DBGLEVEL)
-			spads.sayPrivate('AutohostMonitor', 'spads_hwinfo ' + infostr)
+			infostr = jsonGzipBase64(hwInfoIngame[playerNumInt])
+			spads.slog("AutohostMonitor user_info " + infostr, DBGLEVEL)
+			spads.sayPrivate('AutohostMonitor', 'user_info ' + infostr)
+	
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 		
