@@ -752,6 +752,7 @@ def h_autohost_PLAYER_JOINED(command, playerNumInt, userName):
 	try:
 		#spads.slog("h_autohost_PLAYER_JOINED:" + str([command, playerNumInt, userName]),3)
 		if playerNumInt in hwInfoIngame:
+			hwInfoIngame[playerNumInt]['username'] = userName
 			infostr = jsonGzipBase64(hwInfoIngame[playerNumInt])
 			spads.slog("AutohostMonitor user_info " + infostr, DBGLEVEL)
 			spads.sayPrivate('AutohostMonitor', 'user_info ' + infostr)
