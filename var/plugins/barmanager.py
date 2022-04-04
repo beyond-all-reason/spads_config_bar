@@ -166,6 +166,9 @@ def sendTachyonBattleTitle():
 			if TachyonBattle['preset'] == 'draft':
 				newbattletitle += " | Captains"
 				newbattletitle += ' ' + ' vs '.join([str(TachyonBattle['teamSize'])] * int(TachyonBattle['nbTeams']))
+				
+			if TachyonBattle['preset'] == 'tourney':
+				newbattletitle += " | Tourney"
 
 			if TachyonBattle['preset'] == 'coop':
 				newbattletitle += " | Coop"
