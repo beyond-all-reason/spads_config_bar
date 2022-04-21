@@ -34,3 +34,8 @@ inc/
 /pm_to_blib
 /*.zip
 .env
+
+# Dev tools
+*.sublime-project
+*.sublime-workspace
+*.code-workspace

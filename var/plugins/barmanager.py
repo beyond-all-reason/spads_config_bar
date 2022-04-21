@@ -242,6 +242,7 @@ class BarManager:
 		spads.addSpringCommandHandler({"PLAYER_JOINED": h_autohost_PLAYER_JOINED})
 		spads.addSpringCommandHandler({"PLAYER_LEFT": h_autohost_PLAYER_LEFT})
 		spads.addSpringCommandHandler({"GAME_LUAMSG": h_autohost_GAME_LUAMSG})
+		spads.addSpringCommandHandler({"PLAYER_CHAT": h_autohost_PLAYER_CHAT})
 		
 
 		# We call the API function "slog" to log a notice message (level 3) when the plugin is loaded
@@ -797,5 +798,26 @@ def h_autohost_GAME_LUAMSG(command, playerNumInt, luahandleidInt , nullStr, mess
 			hwInfoIngame[playerNumInt] = messagedict
 			spads.slog("Stored player HWinfo:" + str([playerNumInt, messagedict]),DBGLEVEL)
 
+	except Exception as e:
+		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+
+# When a chat message is sent we want to forward it on to the montior user
+def h_autohost_PLAYER_CHAT(playerNumInt, destination, text):
+	global hwInfoIngame
+	try:
+		if playerNumInt in hwInfoIngame:
+			# Username should already be stored here
+			username = hwInfoIngame[playerNumInt]['username']
+
+			# Based on the destination it's allied, spectator or global chat
+			# we prefix it accordingly. According to the spec it is possible
+			# to message a player directly which we will track slightly differently
+			if destination == 127: prefix = "a:"
+			elif destination == 126: prefix = "s:"
+			elif destination == 125: prefix = "g:"
+			else: prefix = f"d{destination}:"
+
+			# Send the private message
+			spads.sayPrivate('AutohostMonitor', f'match-chat <{username}> {prefix} {text}')
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
