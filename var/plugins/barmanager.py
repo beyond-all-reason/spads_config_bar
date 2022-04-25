@@ -802,7 +802,7 @@ def h_autohost_GAME_LUAMSG(command, playerNumInt, luahandleidInt , nullStr, mess
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
 # When a chat message is sent we want to forward it on to the montior user
-def h_autohost_PLAYER_CHAT(playerNumInt, destination, text):
+def h_autohost_PLAYER_CHAT(command, playerNumInt, destination, text):
 	global hwInfoIngame
 	try:
 		if playerNumInt in hwInfoIngame:
