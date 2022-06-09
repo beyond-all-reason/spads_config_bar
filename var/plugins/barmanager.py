@@ -805,19 +805,22 @@ def h_autohost_GAME_LUAMSG(command, playerNumInt, luahandleidInt , nullStr, mess
 def h_autohost_PLAYER_CHAT(command, playerNumInt, destination, text):
 	global hwInfoIngame
 	try:
+		# Based on the destination it's allied, spectator or global chat
+		# we prefix it accordingly. According to the spec it is possible
+		# to message a player directly which we will track slightly differently
+		if destination == 127: prefix = "a:"
+		elif destination == 126: prefix = "s:"
+		elif destination == 125: prefix = "g:"
+		else: prefix = f"d{destination}:"
+
 		if playerNumInt in hwInfoIngame:
 			# Username should already be stored here
 			username = hwInfoIngame[playerNumInt]['username']
 
-			# Based on the destination it's allied, spectator or global chat
-			# we prefix it accordingly. According to the spec it is possible
-			# to message a player directly which we will track slightly differently
-			if destination == 127: prefix = "a:"
-			elif destination == 126: prefix = "s:"
-			elif destination == 125: prefix = "g:"
-			else: prefix = f"d{destination}:"
-
 			# Send the private message
-			spads.sayPrivate('AutohostMonitor', f'match-chat <{username}> {prefix} {text}')
+			spads.sayPrivate('AutohostMonitor', f'match-chat-name <{username}>:<{playerNumInt}> {prefix} {text}')
+		else:
+			spads.sayPrivate('AutohostMonitor', f'match-chat-noname <{playerNumInt}> {prefix} {text}')
+
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
