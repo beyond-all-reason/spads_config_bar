@@ -4,7 +4,7 @@ import os
 import sys
 import argparse
 
-parser = argparse.ArgumentParser(description='Update the spads configuration setup. Checkout this repo into spads_config_bar folder, next to the etc and var folders of spads. Example: python spads_config_bar_updater.py -c -u http://imolarpg.dyndns.org/bar/spring_bar_.BAR105.105.1.1-475-gd112b9e_linux-64-minimal-portable.7z')
+parser = argparse.ArgumentParser(description='Update the spads configuration setup. Checkout this repo into spads_config_bar folder, next to the etc and var folders of spads. \nExample: \npython spads_config_bar_updater.py -c -u http://imolarpg.dyndns.org/bar/spring_bar_.BAR105.105.1.1-475-gd112b9e_linux-64-minimal-portable.7z')
 #parser.add_argument('-s', '--spadspath',  default = "../", help = "path to the /spads folder, by default this should be inside the spads folder")
 parser.add_argument('-x', '--haltonerror', action = "store_true", help = "Program will halt on any non-zero exit code")
 parser.add_argument('-d', '--dry', action = "store_true", help = "just print commands dont actually execute them")
@@ -21,6 +21,13 @@ print (parser.description)
 
 args = parser.parse_args()
 print(args)
+
+if __file__:
+	scriptdir = os.path.dirname(os.path.realpath(__file__))
+	if scriptdir != os.getcwd():
+		print("Changing working directory to the scripts path:", os.path.dirname(os.path.realpath(__file__)))
+		os.chdir(scriptdir)
+	
 
 def execute(commandstr):
 	print("Executing:",commandstr)
