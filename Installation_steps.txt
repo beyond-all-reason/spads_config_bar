@@ -1,6 +1,6 @@
 
 # - init 1 minutes
-sudo apt-get install htop byobu mc p7zip g++ swig locatrclone git python3-dev cpanminus p7zip-full python3-distutils libdbd-sqlite3-perl make sshpass glances
+sudo apt-get install htop byobu mc p7zip g++ swig locate rclone git python3-dev cpanminus p7zip-full python3-distutils libdbd-sqlite3-perl make sshpass glances
 sudo cpanm https://github.com/niner/inline-python-pm.git
 mkdir spads
 cd spads
@@ -8,7 +8,8 @@ wget http://planetspads.free.fr/spads/installer/spadsInstaller.tar
 tar -xvf spadsInstaller.tar
 ./spadsInstaller.pl
 # install spads with _all_ default settings
-
+# official fails for some reason, it cant find spring install, so run python3 spads_config_bar_updater.py -s -u [latest github release]
+# and then relaunch
 
 
 
@@ -65,7 +66,7 @@ cp ~/spads/var/spring/spring_bar_.BAR105.105.1.1-739-ga241485_linux-64-minimal-p
 
 
 # services enable timers:
-
+# make sure to change the usernames and paths inside these
 sudo nano /etc/systemd/system/rclone-maps.service
 sudo nano /etc/systemd/system/pr-downloader.service
 
