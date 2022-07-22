@@ -17,7 +17,7 @@ def getRequiredSpadsVersion(pluginName):
 class RatingManager:
     def __init__(self, context):
         spads.slog("MyPlugin plugin loaded (version %s)" % pluginVersion, 3)
-    
+
     def updatePlayerSkill(self, playerSkill, accountId, modName, gameType):
       with urllib.request.urlopen(f"{host_url}/{accountId}/{accountId}/{gameType}") as f:
         raw_data = f.read().decode('utf-8')
