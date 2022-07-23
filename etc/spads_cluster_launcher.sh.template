@@ -44,7 +44,7 @@
 perl ../spads.pl spads_cluster.conf \
 	CMD_lobbyLogin=[teh]cluster1 \
 	CMD_lobbyPassword=****** \
-	CMD_lobbyHost=bar.teifion.co.uk \
+	CMD_lobbyHost=server2.beyondallreason.info \
 	CMD_registrationEmail=mysterme@gmail.com \
 	CMD_baseGamePort=53200 \
 	CMD_baseAutoHostPort=53100 \
