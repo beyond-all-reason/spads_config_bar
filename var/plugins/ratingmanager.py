@@ -1,6 +1,7 @@
 import urllib.request
 import json
 import perl
+import traceback
 spads = perl.RatingManager
 
 pluginVersion = '0.2'
@@ -24,8 +25,8 @@ class RatingManager:
                 raw_data = f.read().decode('utf-8')
                 data = json.loads(raw_data)
 
-                return [1, data["rating"], data["uncertainty"]]
+                return [1, data["rating_value"], data["uncertainty"]]
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()
                        [0]) + "\n" + str(traceback.format_exc()), 0)
-            return [1, 24.999, 8.3333]
+            return [1, 16.66, 8.33]
