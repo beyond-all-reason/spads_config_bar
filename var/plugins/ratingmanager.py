@@ -1,6 +1,7 @@
 import urllib.request
 import json
 import perl
+import sys
 import traceback
 spads = perl.RatingManager
 
@@ -70,3 +71,4 @@ class RatingManager:
         except Exception as e:
             spads.slog("Unhandled exception: [balanceBattle]" + str(sys.exc_info()
                        [0]) + "\n" + str(traceback.format_exc()), 0)
+            return -1
