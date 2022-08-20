@@ -2,6 +2,8 @@ import urllib.request
 import json
 import perl
 import traceback
+import sys
+
 spads = perl.RatingManager
 
 pluginVersion = '0.2'
