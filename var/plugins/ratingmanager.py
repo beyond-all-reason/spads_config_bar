@@ -1,6 +1,7 @@
 import urllib.request
 import json
 import perl
+import sys
 import traceback
 import sys
 
@@ -64,11 +65,15 @@ class RatingManager:
 
                 # unbalance_indicator = 0.5
 
+                spads.slog("[balanceBattle] Data result = " +
+                           str(response_data))
+
                 return [
-                    response_data["unbalance_indicator"],
-                    response_data["player_assign_hash"],
-                    response_data["bot_assign_hash"]
+                    response_data.get("unbalance_indicator", -1),
+                    response_data.get("player_assign_hash", {}),
+                    response_data.get("bot_assign_hash", {})
                 ]
         except Exception as e:
             spads.slog("Unhandled exception: [balanceBattle]" + str(sys.exc_info()
                        [0]) + "\n" + str(traceback.format_exc()), 0)
+            return -1
