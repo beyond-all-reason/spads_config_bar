@@ -10,7 +10,7 @@ spads = perl.RatingManager
 pluginVersion = '0.2'
 requiredSpadsVersion = '0.12.29'
 
-server_url = "https://server2.beyondallreason.info"
+server_url = "https://server3.beyondallreason.info"
 rating_url = f"{server_url}/teiserver/api/spads/get_rating"
 balance_url = f"{server_url}/teiserver/api/spads/balance_battle"
 
