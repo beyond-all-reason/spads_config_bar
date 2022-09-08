@@ -44,7 +44,7 @@
 perl ../spads.pl spads_cluster.conf \
 	CMD_lobbyLogin=[teh]cluster1 \
 	CMD_lobbyPassword=****** \
-	CMD_lobbyHost=server2.beyondallreason.info \
+	CMD_lobbyHost=server3.beyondallreason.info \
 	CMD_registrationEmail=mysterme@gmail.com \
 	CMD_baseGamePort=53200 \
 	CMD_baseAutoHostPort=53100 \
@@ -58,7 +58,7 @@ perl ../spads.pl spads_cluster.conf \
 	CMD_targetSpares=1 \
 	CMD_clusters= \
 	CMD_hostIp= \
-	CMD_autoLoadPlugins="AutoRegister;ClusterManager;JsonStatus;InGameMute;DynamicMapRotation;BarManager;RatingManager;CaptainsDraftPlugin;Resign"\ 
+	CMD_autoLoadPlugins="AutoRegister;ClusterManager;JsonStatus;InGameMute;DynamicMapRotation;BarManager;RatingManager;Resign"\ 
 
 	
 	
