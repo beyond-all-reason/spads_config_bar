@@ -43,6 +43,7 @@ class RatingManager:
                 "bots": bots,
                 "nbTeams": nbTeams,
                 "teamSize": teamSize,
+                "clanMode": clanMode
             })
             data = data.encode('ascii')
 
