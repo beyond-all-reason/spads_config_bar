@@ -3,6 +3,7 @@
 import os
 import sys
 import argparse
+import codecs
 
 if __file__:
 	scriptdir = os.path.dirname(os.path.realpath(__file__))
@@ -22,9 +23,12 @@ logstotruncate = [
 ]
 
 def truncate_logfile(fname, keepsize = 100000):
-	fp = open(fname)
-	full_log = fp.read()
-	fp.close()
+	full_log = ""
+
+	with codecs.open(fname, 'r', encoding='utf-8',
+                 errors='ignore') as fdata:
+		full_log = fdata.read()
+		fdata.close()
 	trunc = full_log[-keepsize:]
 	
 	print(fname, len(full_log)/1000000.0,'MB', full_log[-50:])
@@ -40,7 +44,10 @@ for hostdir in os.listdir(os.getcwd()):
 		for logtotruncate in logstotruncate:
 			if os.path.isfile(os.path.join(hostdir, logtotruncate)):
 				#print (logtotruncate)
-				truncate_logfile(os.path.join(hostdir, logtotruncate))
+				try:
+					truncate_logfile(os.path.join(hostdir, logtotruncate))
+				except:
+					print ("Failed to clean log file", hostdir, logtotruncate)
 		if os.path.isdir(os.path.join(hostdir,'demos-server')):
 			cmd_delete_older_than_month = 'find %s/demos-server -type f -mtime +30 -delete | wc -l' %(hostdir)
 			print ("Deleting Replays older than a month", cmd_delete_older_than_month)
