@@ -1,22 +1,9 @@
-
 # - init 1 minutes
 sudo apt-get install htop byobu mc p7zip g++ swig locate rclone git python3-dev cpanminus p7zip-full python3-distutils libdbd-sqlite3-perl make sshpass glances
-sudo cpanm https://github.com/niner/inline-python-pm.git
-mkdir spads
-cd spads
-wget http://planetspads.free.fr/spads/installer/spadsInstaller.tar
-tar -xvf spadsInstaller.tar
-./spadsInstaller.pl
-# install spads with _all_ default settings
-# official fails for some reason, it cant find spring install, so run python3 spads_config_bar_updater.py -s -u [latest github release]
-# and then relaunch
-
-
 
 
 #- Make the swap file: 1 minute
 cd /var
-touch swap.img
 sudo touch swap.img
 sudo chmod 600 swap.img
 sudo dd if=/dev/zero of=/var/swap.img bs=1024k count=4000
@@ -26,6 +13,7 @@ sudo su -c "echo '/var/swap.img swap swap defaults 0 0' >> /etc/fstab"
 sudo sysctl vm.swappiness=10
 sudo su -c "echo 'vm.swappiness=10' >> /etc/sysctl.conf"
 
+
 #- clone the updater 1 min
 cd ~/spads
 git clone https://github.com/beyond-all-reason/spads_config_bar.git
@@ -34,6 +22,19 @@ cd spads_config_bar/
 python3 spads_config_bar_updater.py -s
 sudo cp *.service /etc/systemd/system
 sudo cp *.timer /etc/systemd/system
+python3 spads_config_bar_updater.py -u 
+
+sudo cpanm https://github.com/niner/inline-python-pm.git
+mkdir spads
+cd spads
+wget http://planetspads.free.fr/spads/installer/spadsInstaller.tar
+tar -xvf spadsInstaller.tar
+./spadsInstaller.pl
+# install spads with _all_ default settings
+# official fails for some reason, it cant find spring install, you gotta manually do it, so run python3 spads_config_bar_updater.py -s -u [latest github release]
+# and then relaunch
+
+
 
 #- rclone config 3 mins
 rclone config
@@ -50,6 +51,8 @@ rclone config
     # Edit advanced config: n
     # Use auto config: n
     # Configure this as team drive: n
+    # yes this is ok: y
+    # q for quit
 rclone sync --drive-shared-with-me BYAR-maps:BYAR-maps ~/spads/var/spring/data/maps/
 
 # edit cluster launcher template
@@ -71,7 +74,7 @@ sudo nano /etc/systemd/system/rclone-maps.service
 sudo nano /etc/systemd/system/pr-downloader.service
 
 
-# enable servixes:
+# enable servixes, about 10-15 mins on first start
 sudo systemctl daemon-reload
 sudo systemctl start rclone-maps.service
 sudo systemctl start pr-downloader.service
@@ -81,9 +84,11 @@ sudo systemctl enable --now rclone-maps.timer
 sudo systemctl daemon-reload
 
 #replay upload:
-
-SFTP_PASSWORD= @CHANGEME
-SFTP_LOGIN="beherith"
+#add these to the users .bashrc as env vars
+sudo nano ~/.bashrc
+#copy these:
+#export SFTP_PASSWORD="@CHANGEME"
+#export SFTP_LOGIN="beherith"
 
 # start it, like 15 minutes first start :/ 
 tmux
@@ -94,5 +99,4 @@ cd ~/spads/etc/
 # - set up glances, start it from crontab as glances -w for quick view on port 61208
 # - set up replay-deleter, which every week, should delete replays older than 1 month
 # - set up log-rotator, which every week, should zip up logs, and delete the old ones (maybe use logrotate?)
-# - add niceness to prdler and to rclone
 
