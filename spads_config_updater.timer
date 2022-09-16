@@ -1,0 +1,8 @@
+[Unit]
+Description=Run Spads Config Updater Every Day
+
+[Timer]
+OnCalendar=* * 12:00:00
+
+[Install]
+WantedBy=timers.target
