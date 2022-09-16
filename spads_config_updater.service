@@ -6,9 +6,9 @@ StartLimitIntervalSec=300
 StartLimitBurst=3
 
 [Service]
-User=eru
+User=ubuntu
 Type=oneshot
-ExecStart=/usr/bin/python3 /home/eru/spads/spads_config_bar/spads_config_bar_updater.py -s
+ExecStart=/usr/bin/python3 /home/ubuntu/spads/spads_config_bar/spads_config_bar_updater.py -s
 StandardOutput=journal
 
 
