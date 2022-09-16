@@ -72,15 +72,17 @@ cp ~/spads/var/spring/spring_bar_.BAR105.105.1.1-739-ga241485_linux-64-minimal-p
 # make sure to change the usernames and paths inside these
 sudo nano /etc/systemd/system/rclone-maps.service
 sudo nano /etc/systemd/system/pr-downloader.service
-
+sudo nano /etc/systemd/system/spads_config_updater.service
 
 # enable servixes, about 10-15 mins on first start
 sudo systemctl daemon-reload
 sudo systemctl start rclone-maps.service
 sudo systemctl start pr-downloader.service
+sudo systemctl start spads_config_updater.service
 sudo systemctl daemon-reload
 sudo systemctl enable --now pr-downloader.timer
 sudo systemctl enable --now rclone-maps.timer
+sudo systemctl enable --now spads_config_updater.timer
 sudo systemctl daemon-reload
 
 #replay upload:
