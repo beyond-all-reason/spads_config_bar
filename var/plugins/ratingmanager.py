@@ -38,12 +38,14 @@ class RatingManager:
 
     def balanceBattle(self, players, bots, clanMode, nbTeams, teamSize):
         try:
+            spadsConf = spads.getSpadsConf()
             data = urllib.parse.urlencode({
                 "players": players,
                 "bots": bots,
                 "nbTeams": nbTeams,
                 "teamSize": teamSize,
-                "clanMode": clanMode
+                "clanMode": clanMode,
+                "balanceMode": spadsConf['balanceMode']
             })
             data = data.encode('ascii')
 
