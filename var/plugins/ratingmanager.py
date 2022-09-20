@@ -7,7 +7,7 @@ import sys
 
 spads = perl.RatingManager
 
-pluginVersion = '0.2'
+pluginVersion = '0.3'
 requiredSpadsVersion = '0.12.29'
 
 server_url = "https://server3.beyondallreason.info"
