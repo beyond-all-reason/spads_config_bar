@@ -8,6 +8,8 @@ StartLimitBurst=3
 [Service]
 User=uberserver
 Type=oneshot
+Environment="PRD_RAPID_USE_STREAMER=false"
+Environment="PRD_RAPID_REPO_MASTER=https://bar-rapid.p2004a.com/repos.gz"
 ExecStart=/usr/games/pr-downloader --filesystem-writepath /home/uberserver/builds/spads/var/spring/data byar:test
 StandardOutput=journal
 Restart=on-failure
