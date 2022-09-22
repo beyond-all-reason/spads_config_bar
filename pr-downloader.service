@@ -2,7 +2,7 @@
 Description=pr-Downloader
 After=network.target
 
-StartLimitIntervalSec=300
+StartLimitIntervalSec=600
 StartLimitBurst=3
 
 [Service]
