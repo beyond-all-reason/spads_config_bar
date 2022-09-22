@@ -111,7 +111,10 @@ def updateengine(args):
 	
 	for filename in ['pr-downloader', 'libunitsync.so', 'spring', 'spring-dedicated', 'spring-headless']:
 		execute("chmod +x " + os.path.join(targetpath, filename) ) 
-	
+		
+	if os.path.exists(os.path.join(targetpath,'pr-downloader')):
+		execute("cp " + os.path.join(targetpath,'pr-downloader') + ' ../pr-downloader')
+			
 	
 	if args.clusterupdateengine:
 		if os.path.exists(args.clusterlauncherfile):
