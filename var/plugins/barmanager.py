@@ -220,6 +220,17 @@ def updateTachyonBattle(key, value):
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 	return False
 
+def onTeiServerMessage(command, args):
+	try:			
+		spads.slog("onTeiserverMsg: " + str([command, args]), DBGLEVEL)
+
+		if command == 'updateSkill':
+			for player in args:
+				perl.eval("::getBattleSkill(" + player + ")")
+
+	except Exception as e:
+		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+
 # This is the class implementing the plugin
 class BarManager:
 
@@ -401,14 +412,18 @@ class BarManager:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
 	def onPrivateMsg(self, userName, message):
-		# todo: nothing yet
-		try:
+		try:			
 			spads.slog("onPrivateMsg: " + str([userName, message]), DBGLEVEL)
+   
+			if userName == 'Coordinator':
+				args = message.split()
+				command = args.pop(0)
+				onTeiServerMessage(command, args)
 
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 		return 0  # return 1 if dont want Spads core to parse this message
-
+        
 	def onVoteRequest(self, source, user, command, remainingVoters):
 		# $source indicates the way the vote has been requested ("pv": private lobby message, "battle": battle lobby message, "chan": master lobby channel message, "game": in game message)
 		# $user is the name of the user requesting the vote
