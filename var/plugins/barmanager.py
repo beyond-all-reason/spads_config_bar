@@ -225,8 +225,10 @@ def onTeiServerMessage(command, args):
 		spads.slog("onTeiserverMsg: " + str([command, args]), DBGLEVEL)
 
 		if command == 'updateSkill':
+			onlineUsers = spads.getLobbyInterface().getUsers()
 			for player in args:
-				perl.eval("::getBattleSkill(" + player + ")")
+				if player in onlineUsers:
+					perl.eval("::getBattleSkill(" + player + ")")
 
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
