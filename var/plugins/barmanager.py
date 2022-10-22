@@ -224,11 +224,13 @@ def onTeiServerMessage(command, args):
 	try:			
 		spads.slog("onTeiserverMsg: " + str([command, args]), DBGLEVEL)
 
-		if command == 'updateSkill':
-			onlineUsers = spads.getLobbyInterface().getUsers()
-			for player in args:
-				if player in onlineUsers:
-					perl.eval("::getBattleSkill(" + player + ")")
+		# lobbyState enum (0:not_connected, 1:connecting, 2:connected, 3:logged_in, 4:start_data_received, 5:opening_battle, 6:battle_opened)
+		if command == 'updateSkill' and spads.getLobbyState() > 5:
+			
+			# a reference to a hash containing the data regarding the users currently in the battle lobby.
+			lobbyUsers = [user for user in args if user in spads.getLobbyInterface().getBattle()['users']]
+			for user in lobbyUsers:
+				perl.eval("::getBattleSkill(" + user + ")")
 
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
