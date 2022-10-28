@@ -513,6 +513,8 @@ class BarManager:
 		# todo: say the results of the changed stuff in battle room
 		try:
 			spads.slog("postSpadsCommand: " + ','.join(map(str, [command, source, user, params, commandResult])), DBGLEVEL)
+			if commandResult == 0:
+				return
 			global whoIsBoss
 			if command == "lock":
 				ChobbyStateChanged("locked", "locked")
