@@ -26,13 +26,14 @@ class RatingManager:
 
     def updatePlayerSkill(self, playerSkill, accountId, modName, gameType):
         try:
+            raw_data = ""
             with urllib.request.urlopen(f"{rating_url}/{accountId}/{gameType}") as f:
                 raw_data = f.read().decode('utf-8')
                 data = json.loads(raw_data)
 
                 return [1, data["rating_value"], data["uncertainty"]]
         except Exception as e:
-            spads.slog("Unhandled exception: [updatePlayerSkill]" + str(sys.exc_info()
+            spads.slog("Unhandled exception: [updatePlayerSkill]" + "[" + raw_data + "]"+ str(sys.exc_info()
                        [0]) + "\n" + str(traceback.format_exc()), 0)
             return [1, 16.66, 8.33]
 
