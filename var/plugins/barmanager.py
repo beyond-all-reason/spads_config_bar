@@ -230,7 +230,7 @@ def onTeiServerMessage(command, args):
 			# a reference to a hash containing the data regarding the users currently in the battle lobby.
 			lobbyUsers = [user for user in args if user in spads.getLobbyInterface().getBattle()['users']]
 			for user in lobbyUsers:
-				perl.eval("::getBattleSkill(" + user + ")")
+				perl.eval('::getBattleSkill("' + user + '")')
 
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
