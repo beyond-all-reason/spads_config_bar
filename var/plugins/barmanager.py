@@ -222,7 +222,7 @@ def updateTachyonBattle(key, value):
 
 def onTeiServerMessage(command, args):
 	try:			
-		spads.slog("onTeiserverMsg: " + str([command, args]), DBGLEVEL)
+		spads.slog("onTeiserverMsg: " + str([command, args]), 4) # changed from DBGLEVEL
 
 		# lobbyState enum (0:not_connected, 1:connecting, 2:connected, 3:logged_in, 4:start_data_received, 5:opening_battle, 6:battle_opened)
 		if command == 'updateSkill' and spads.getLobbyState() > 5:
