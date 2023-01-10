@@ -11,7 +11,7 @@ use Text::ParseWords 'shellwords';
 
 use SpadsPluginApi;
 
-my $pluginVersion='0.4';
+my $pluginVersion='0.5';
 my $requiredSpadsVersion='0.12.27';
 
 my %globalPluginParams = ( commandsFile => ['notNull'],
@@ -29,7 +29,8 @@ my %globalPluginParams = ( commandsFile => ['notNull'],
                            clusters => [],
                            createNewConsoles => ['bool'],
                            sharedData => [],
-                           autoRegister => ['bool2'] );
+                           autoRegister => ['bool2'],
+                           shareArchiveCache => ['bool'] );
 my %presetPluginParams = ( maxInstancesInCluster => ['integer'],
                            maxInstancesInClusterPublic => ['integer'],
                            maxInstancesInClusterPrivate => ['integer'],
@@ -1073,8 +1074,15 @@ sub c_startInstance {
   }
 
   my ($sourceCacheDir,$instanceCacheDir)=(catdir($r_conf->{instanceDir},'cache'),catdir($fpInstanceDir,'cache'));
-  if(-d $sourceCacheDir && ! -d $instanceCacheDir && ! _copyDir($sourceCacheDir,$instanceCacheDir)) {
-    slog("Failed to copy cache data from \"$sourceCacheDir\" to \"$instanceCacheDir\" to initialize instance unitsync cache",2);
+  if(-d $sourceCacheDir && ! -d $instanceCacheDir) {
+    if($r_pluginConf->{shareArchiveCache}) {
+      if(my $symLinkCreateError=symLinkDir($sourceCacheDir,$instanceCacheDir)) {
+        slog("Failed to create symbolic link \"$instanceCacheDir\" to directory \"$sourceCacheDir\" to initialize instance Spring archive cache ($symLinkCreateError)",2);
+      }
+    }else{
+      slog("Failed to copy cache data from \"$sourceCacheDir\" to \"$instanceCacheDir\" to initialize instance Spring archive cache",2)
+          unless(_copyDir($sourceCacheDir,$instanceCacheDir));
+    }
   }
   
   my @instanceDatFiles=qw'mapHashes.dat userData.dat';
@@ -1164,6 +1172,34 @@ sub c_startInstance {
     return undef;
   }
   return \%instanceData;
+}
+
+sub symLinkDir {
+  my ($targetDir,$link)=@_;
+  if($^O eq 'MSWin32') {
+    return 'invalid file name'
+        if(any {/[\Q*?"<>|\E]/} ($targetDir,$link));
+    map {$_='"'.$_.'"' if(/[ \t]/)} ($targetDir,$link);
+    system {'cmd.exe'} ('cmd.exe','/c','mklink','/j',$link,$targetDir,'>NUL','2>&1');
+    if($? == -1) {
+      return 'failed to execute cmd.exe: '.$!;
+    }elsif($? & 127) {
+      return 'cmd.exe interrupted by signal '.($? & 127);
+    }else{
+      my $exitCode=$? >> 8;
+      return 'mklink returned with exit code '.$exitCode if($exitCode);
+      return undef;
+    }
+  }else{
+    my $rc;
+    if(eval { $rc=symlink($targetDir,$link); 1 }) {
+      return $! unless($rc);
+      return undef;
+    }else{
+      chomp($@);
+      return $@;
+    }
+  }
 }
 
 sub _copyDir {
