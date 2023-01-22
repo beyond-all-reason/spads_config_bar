@@ -15,15 +15,16 @@ sudo su -c "echo 'vm.swappiness=10' >> /etc/sysctl.conf"
 
 
 #- clone the updater 1 min
+mkdir -p ~/spads/var/spring
 cd ~/spads
 git clone https://github.com/beyond-all-reason/spads_config_bar.git
-mkdir ~/spads/var/spring
 cd spads_config_bar/
 python3 spads_config_bar_updater.py -s
 sudo cp *.service /etc/systemd/system
 sudo cp *.timer /etc/systemd/system
 python3 spads_config_bar_updater.py -u 
 
+cd ~
 sudo cpanm https://github.com/niner/inline-python-pm.git
 mkdir spads
 cd spads
@@ -34,14 +35,15 @@ tar -xvf spadsInstaller.tar
 # official fails for some reason, it cant find spring install, you gotta manually do it, so run python3 spads_config_bar_updater.py -s -u [latest github release]
 # and then relaunch
 
-
-
 #- rclone config 3 mins
+curl -sL https://raw.githubusercontent.com/wimpysworld/deb-get/main/deb-get | sudo -E bash -s install deb-get
+deb-get update
+deb-get install rclone
 rclone config
 #
     # select new
     # name: BYAR-maps
-    # storage type: 13 (drive)
+    # storage type: 18 (drive)
     # no client id
     # no client secret
     # access type: 2 (drive.readonly)
@@ -93,7 +95,7 @@ sudo nano ~/.bashrc
 #export SFTP_LOGIN="beherith"
 
 # start it, like 15 minutes first start :/ 
-tmux
+byobu
 cd ~/spads/etc/
 ./spads_cluster_launcher.sh
 
