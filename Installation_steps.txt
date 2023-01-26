@@ -52,6 +52,8 @@ rclone config
     # service accoutn file: blank
     # Edit advanced config: n
     # Use auto config: n
+    # Use headless: N
+    # copy 
     # Configure this as team drive: n
     # yes this is ok: y
     # q for quit
