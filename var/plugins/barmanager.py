@@ -775,6 +775,8 @@ def hJOINEDBATTLE(command, battleID, userName, battlestatus=0):
 def h_autohost_PLAYER_JOINED(command, playerNumInt, userName):
 	global hwInfoIngame
 	try:
+		SendChobbyState()
+		
 		#spads.slog("h_autohost_PLAYER_JOINED:" + str([command, playerNumInt, userName]),3)
 		if playerNumInt in hwInfoIngame:
 			hwInfoIngame[playerNumInt]['username'] = userName
