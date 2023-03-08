@@ -818,6 +818,13 @@ def h_autohost_GAME_LUAMSG(command, playerNumInt, luahandleidInt , nullStr, mess
 					messagedict['Displaymax'] = line.partition(':')[2].strip()
 			hwInfoIngame[playerNumInt] = messagedict
 			spads.slog("Stored player HWinfo:" + str([playerNumInt, messagedict]),DBGLEVEL)
+			
+		if message.startswith('m@pm@rk'):
+			#local msg = string.format("m@pm@rk%s:%d:%d:%d:%d:%s:%s",validation, Spring.GetGameFrame(), playerID, px, pz, myPlayerName, labelText)
+			ms = message.split(':',6)
+			if len(ms) == 7:
+				spads.sayPrivate('AutohostMonitor', f'match-chat-name <{ms[5]}>:<{ms[2]}> a: Added Point {ms[6]}')
+			
 
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
