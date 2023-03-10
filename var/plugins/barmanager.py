@@ -819,7 +819,7 @@ def h_autohost_GAME_LUAMSG(command, playerNumInt, luahandleidInt , nullStr, mess
 			hwInfoIngame[playerNumInt] = messagedict
 			spads.slog("Stored player HWinfo:" + str([playerNumInt, messagedict]),DBGLEVEL)
 			
-		if message.startswith('m@pm@rk'):
+		if len(message) > 10 and message[0:7] == "m@pm@rk":
 			#local msg = string.format("m@pm@rk%s:%d:%d:%d:%d:%s:%s",validation, Spring.GetGameFrame(), playerID, px, pz, myPlayerName, labelText)
 			ms = message.split(':',6)
 			spads.slog("m@pm@rk:" + str(ms), 0)
