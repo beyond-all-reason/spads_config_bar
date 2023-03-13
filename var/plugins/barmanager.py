@@ -822,9 +822,11 @@ def h_autohost_GAME_LUAMSG(command, playerNumInt, luahandleidInt , nullStr, mess
 		if len(message) > 10 and message[0:7] == "m@pm@rk":
 			#local msg = string.format("m@pm@rk%s:%d:%d:%d:%d:%s:%s",validation, Spring.GetGameFrame(), playerID, px, pz, myPlayerName, labelText)
 			ms = message.split(':',6)
-			spads.slog("m@pm@rk:" + str(ms), 0)
+			sentmessage = ""
 			if len(ms) == 7:
-				spads.sayPrivate('AutohostMonitor', f'match-chat-name <{ms[5]}>:<{ms[2]}> a: Added Point {ms[6]}')
+				sentmessage =  f'match-chat-name <{ms[5]}>:<{ms[2]}> a: Added Point {ms[6]}'
+				spads.sayPrivate('AutohostMonitor', sentmessage)
+			spads.slog("m@pm@rk:" + str(ms) + sentmessage, 0)
 			
 
 	except Exception as e:
