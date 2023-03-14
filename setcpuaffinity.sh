@@ -7,5 +7,5 @@ do
 	date -u
 	pgrep perl | xargs -L1 taskset -cp 0-7
 	pgrep spring | xargs -L1 taskset -cp 0-7
-	sleep 1800
+	sleep 600
 done 
