@@ -26,7 +26,7 @@ TachyonBattle = {"boss":"", 'preset':"", 'botlist' : [], 'teamSize' : 6, 'nbTeam
 timerTachyonBattle = False # do we have a timer set to update the game?
 
 myBattleID = None
-playersInMyBattle = {}
+playersInMyBattle = {} # key playername, value battlestatus on join, FIXME: track battlestatus here!
 myBattleName = ""
 myBattleTitle = ""
 myBattlePassword = '*' # which means no password
@@ -115,7 +115,7 @@ def refreshChobbyState():
 	SendChobbyState()
 
 def sendTachyonBattleTitle():
-	global TachyonBattle, myBattleName, myBattlePassword, myBattleTitle
+	global TachyonBattle, myBattleName, myBattlePassword, myBattleTitle, whoIsBoss
 	try:
 		# ok, what should our title look like?
 		# we need to have oldbattletitle in myBattleName
@@ -176,6 +176,13 @@ def sendTachyonBattleTitle():
 					newbattletitle += " vs " + ", ".join(bottypes[0:3])
 				#else:
 				#	newbattletitle += ' ' + ' vs '.join([str(TachyonBattle['teamSize'])] * int(TachyonBattle['nbTeams']))
+			if TachyonBattle['preset'] == 'custom':
+				newbattletitle = (whoIsBoss if whoIsBoss is not None else "" ) + " | Custom Battle"
+				if len(bottypes) > 0:
+					newbattletitle += " vs " + ", ".join(bottypes[0:3])
+				else:
+					newbattletitle += ' ' + ' vs '.join([str(TachyonBattle['teamSize'])] * int(TachyonBattle['nbTeams']))
+		
 		spads.slog("Trying to update battle title: " + newbattletitle + " old " + myBattleTitle , DBGLEVEL)
 		if newbattletitle != myBattleTitle:
 			myBattleTitle = newbattletitle
@@ -251,6 +258,7 @@ class BarManager:
 		spads.addLobbyCommandHandler({"LEFTBATTLE": hLEFTBATTLE})
 		spads.addLobbyCommandHandler({"REMOVEBOT": hREMOVEBOT})
 		spads.addLobbyCommandHandler({"ADDBOT": hADDBOT})
+		spads.addLobbyCommandHandler({"CLIENTBATTLESTATUS": hCLIENTBATTLESTATUS  })
 		spads.addLobbyCommandHandler({"UPDATEBATTLEINFO": hUPDATEBATTLEINFO })
 
 		# Declare handlers for Spring Autohost Interface
@@ -543,8 +551,19 @@ class BarManager:
 				if len(params) == 0:
 					whoIsBoss = None
 				else:
-					whoIsBoss = params[0]
-				updateTachyonBattle('boss',whoIsBoss)
+					# params[0] is shorthand, e.g. !boss behe will make [teh]Beherith boss, but will present here as behe
+					# try to search within players, to match the shorthand 
+					whoIsBoss = params[0] 
+					matching = []
+					for playername in playersInMyBattle.keys():
+						if whoIsBoss in playername.lower():
+							matching.append(playername)
+					if len(matching) == 1: 
+						whoIsBoss = matching[0]
+					else:
+						spads.slog("Multiple possible bosses: for " + whoIsBoss + " in " + str(matching), 3)
+				ChobbyStateChanged("boss", "" if whoIsBoss is None else whoIsBoss)
+				updateTachyonBattle("boss","" if whoIsBoss is None else whoIsBoss)
 
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
@@ -757,18 +776,30 @@ def hLEFTBATTLE(command, battleID, userName):
 
 			if whoIsBoss == userName:
 				whoIsBoss = None
+				ChobbyStateChanged("boss", "")
 				updateTachyonBattle("boss","")
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
 
-def hJOINEDBATTLE(command, battleID, userName, battlestatus=0):
+def hJOINEDBATTLE(command, battleID, userName, battleStatus=0):
 	try:
 		if battleID == myBattleID:
-			spads.slog("JOINEDBATTLE" + str([command, battleID, myBattleID, userName, battlestatus]), DBGLEVEL)
+			spads.slog("JOINEDBATTLE" + str([command, battleID, myBattleID, userName, battleStatus]), DBGLEVEL)
 			SendChobbyState()
-			playersInMyBattle[userName] = battlestatus
+			playersInMyBattle[userName] = battleStatus
 			#spads.queueLobbyCommand(["SAYBATTLEEX", "hello dude"])
+	except Exception as e:
+		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+
+def hCLIENTBATTLESTATUS(command, userName, battleStatus, teamColor):
+	try:
+		spads.slog("hCLIENTBATTLESTATUS" + str([command, userName, battleStatus, teamColor]), DBGLEVEL)
+		if userName in playersInMyBattle:
+			playersInMyBattle[userName] = battleStatus
+		else:
+			spads.slog("hCLIENTBATTLESTATUS: User not found in battle " + userName + " " + str(playersInMyBattle.keys()), 3)
+		#spads.queueLobbyCommand(["SAYBATTLEEX", "hello dude"])
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
