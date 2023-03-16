@@ -252,6 +252,7 @@ class BarManager:
 		spads.addSpadsCommandHandler({'myCommand': hMyCommand})
 		spads.addSpadsCommandHandler({'aiProfile': hAiProfile})
 		spads.addSpadsCommandHandler({'splitbattle': hSplitBattle})
+		spads.addSpadsCommandHandler({'barmanagerdebuglevel': hbarmanagerdebuglevel})
 
 		# Declare handler for lobby commands (see https://springrts.com/dl/LobbyProtocol/ProtocolDescription.html)
 		spads.addLobbyCommandHandler({"JOINEDBATTLE": hJOINEDBATTLE})
@@ -658,6 +659,31 @@ def hMyCommand(source, user, params, checkOnly):
 	# We log the command call as notice message
 	spads.slog("User %s called command myCommand with parameter(s) \"%s\"" % (user, paramsString), 3)
 
+# This is the handler for our new command
+def hbarmanagerdebuglevel(source, user, params, checkOnly):
+	global DBGLEVEL
+	
+	try:
+		# checkOnly is true if this is just a check for callVote command, not a real command execution
+		if checkOnly:
+			# MyCommand is a basic command, we have nothing to check in case of callvote
+			return 1
+
+		# Fix strings received from Perl if needed
+		# This is in case Inline::Python handles Perl strings as byte strings instead of normal strings
+		# (this step can be skipped if your Inline::Python version isn't afffected by this bug)
+		user = spads.fix_string(user)
+		if len(params) == 1:
+			try: 
+				newlevel = int(params[0])
+				DBGLEVEL = max(0, min(newlevel, 5))
+			except:
+				spads.slog("hbarmanagerdebuglevel failed to parse debug level value:" + str(params[0]), DBGLEVEL)
+			
+		spads.slog("User %s called command barmanagerdebugleve with parameter(s) \"%s\"" % (user, ','.join(params)), 3)
+	except Exception as e:
+		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+
 
 # This is the handler for our new command
 def hAiProfile(source, user, params, checkOnly):  # !aiProfile BARbarianAI(1) {"testtag":"testvalue"}
@@ -758,8 +784,8 @@ def hADDBOT(command, battleID, name, owner, battleStatus, teamColor, aidll):
 
 def hUPDATEBATTLEINFO(command, battleID, spectatorCount, locked, mapHash, mapName):
 	try:
-		spads.slog(str(['hUPDATEBATTLEINFO',battleID,locked]),  DBGLEVEL)
 		if battleID == myBattleID:
+			spads.slog(str(['hUPDATEBATTLEINFO',battleID,locked]),  DBGLEVEL)
 			ChobbyStateChanged("locked","locked" if locked == '1' else 'unlocked')
 	except:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
