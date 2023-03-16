@@ -177,7 +177,7 @@ def sendTachyonBattleTitle():
 				#else:
 				#	newbattletitle += ' ' + ' vs '.join([str(TachyonBattle['teamSize'])] * int(TachyonBattle['nbTeams']))
 			if TachyonBattle['preset'] == 'custom':
-				newbattletitle = (whoIsBoss if whoIsBoss is not None else "" ) + " | Custom Battle"
+				newbattletitle = ("" if whoIsBoss is None else (whoIsBoss + " | ") ) + "Custom Battle"
 				if len(bottypes) > 0:
 					newbattletitle += " vs " + ", ".join(bottypes[0:3])
 				else:
