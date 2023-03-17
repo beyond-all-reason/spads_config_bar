@@ -1,6 +1,8 @@
+# Set the name of the user who will be running spads et al
+export SPADSUSERNAME="debian"
+# GITHUB PATH: https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR105%7D105.1.1-1544-g058c8ea/spring_bar_.BAR105.105.1.1-1544-g058c8ea_linux-64-minimal-portable.7z
 # - init 1 minutes
 sudo apt-get install htop byobu mc p7zip g++ swig locate rclone git python3-dev cpanminus p7zip-full python3-distutils libdbd-sqlite3-perl make sshpass glances
-
 
 #- Make the swap file: 1 minute
 cd /var
@@ -13,17 +15,20 @@ sudo su -c "echo '/var/swap.img swap swap defaults 0 0' >> /etc/fstab"
 sudo sysctl vm.swappiness=10
 sudo su -c "echo 'vm.swappiness=10' >> /etc/sysctl.conf"
 
-
 #- clone the updater 1 min
 mkdir -p ~/spads/var/spring
+mkdir -p ~/spads/var/plugins
+mkdir -p ~/spads/etc
 cd ~/spads
 git clone https://github.com/beyond-all-reason/spads_config_bar.git
 cd spads_config_bar/
 python3 spads_config_bar_updater.py -s
-sudo cp *.service /etc/systemd/system
-sudo cp *.timer /etc/systemd/system
-python3 spads_config_bar_updater.py -u 
 
+# GRAB DESIRED ENGINE
+#python3 spads_config_bar_updater.py -u 
+
+# install SPADS
+# HAVE PATH TO ENGINE READY ON CLIPBOARD
 cd ~
 sudo cpanm https://github.com/niner/inline-python-pm.git
 mkdir spads
@@ -52,7 +57,8 @@ rclone config
     # service accoutn file: blank
     # Edit advanced config: n
     # Use auto config: n
-    # Use headless: N
+    # Use Browser?: N
+    # launch rclone config on machine with web browser
     # copy 
     # Configure this as team drive: n
     # yes this is ok: y
@@ -72,11 +78,22 @@ cp ~/spads/var/spring/spring_bar_.BAR105.105.1.1-739-ga241485_linux-64-minimal-p
 /home/ubuntu/spads/pr-downloader --filesystem-writepath /home/ubuntu/spads/var/spring/data byar:test
 
 
-# services enable timers:
+# Systemd services and timers:
+cd ~/spads/spads_config_bar/
+python3 spads_config_bar_updater.py -s
+sudo cp *.service ~/spads
+sudo cp *.timer ~/spads
+cd ~/spads
+for systemdfile in rclone-maps.service rclone-maps.timer pr-downloader.service pr-downloader.timer spads_config_updater.service spads_config_updater.timer; do sudo sed -i "s/ubuntu/$SPADSUSERNAME/g" $systemdfile; done
+
+# copy them into services
+sudo cp *.service /etc/systemd/system
+sudo cp *.timer /etc/systemd/system
+
 # make sure to change the usernames and paths inside these
-sudo nano /etc/systemd/system/rclone-maps.service
-sudo nano /etc/systemd/system/pr-downloader.service
-sudo nano /etc/systemd/system/spads_config_updater.service
+#sudo nano /etc/systemd/system/rclone-maps.service
+#sudo nano /etc/systemd/system/pr-downloader.service
+#sudo nano /etc/systemd/system/spads_config_updater.service
 
 # enable servixes, about 10-15 mins on first start
 sudo systemctl daemon-reload
@@ -96,6 +113,10 @@ sudo nano ~/.bashrc
 #export SFTP_PASSWORD="@CHANGEME"
 #export SFTP_LOGIN="beherith"
 
+# Copy launcher template
+cd ~/spads/etc/
+cp spads_cluster_launcher.sh.template spads_cluster_launcher.sh
+chmod +x spads_cluster_launcher.sh
 # start it, like 15 minutes first start :/ 
 byobu
 cd ~/spads/etc/
