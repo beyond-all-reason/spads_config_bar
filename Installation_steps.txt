@@ -1,8 +1,12 @@
 # Set the name of the user who will be running spads et al
 export SPADSUSERNAME="debian"
+export ENGINEGITHUBPATH="https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR105%7D105.1.1-1544-g058c8ea/spring_bar_.BAR105.105.1.1-1544-g058c8ea_linux-64-minimal-portable.7z"
 # GITHUB PATH: https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR105%7D105.1.1-1544-g058c8ea/spring_bar_.BAR105.105.1.1-1544-g058c8ea_linux-64-minimal-portable.7z
 # - init 1 minutes
-sudo apt-get install htop byobu mc p7zip g++ swig locate rclone git python3-dev cpanminus p7zip-full python3-distutils libdbd-sqlite3-perl make sshpass glances
+sudo apt-get install htop byobu mc p7zip g++ swig locate rclone git python3-dev cpanminus p7zip-full python3-distutils make sshpass glances
+
+# install spads deps:
+sudo apt-get install libffi-platypus-perl libdbd-sqlite3-perl
 
 #- Make the swap file: 1 minute
 cd /var
@@ -25,7 +29,7 @@ cd spads_config_bar/
 python3 spads_config_bar_updater.py -s
 
 # GRAB DESIRED ENGINE
-#python3 spads_config_bar_updater.py -u 
+python3 spads_config_bar_updater.py -u $ENGINEGITHUBPATH
 
 # install SPADS
 # HAVE PATH TO ENGINE READY ON CLIPBOARD
