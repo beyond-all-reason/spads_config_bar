@@ -59,7 +59,7 @@ perl ../spads.pl spads_cluster.conf \
 	CMD_clusters= \
 	CMD_hostIp= \
 	sequentialUnitsync=1 \
-	CMD_autoLoadPlugins="AutoRegister;ClusterManager;JsonStatus;InGameMute;DynamicMapRotation;BarManager;RatingManager;Resign"\ 
+	CMD_autoLoadPlugins="AutoRegister;ClusterManager;JsonStatus;InGameMute;DynamicMapRotation;BarManager;RatingManager"\ 
 
 	
 	
