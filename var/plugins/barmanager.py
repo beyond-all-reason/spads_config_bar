@@ -182,6 +182,9 @@ def sendTachyonBattleTitle():
 					newbattletitle += " vs " + ", ".join(bottypes[0:3])
 				else:
 					newbattletitle += ' ' + ' vs '.join([str(TachyonBattle['teamSize'])] * int(TachyonBattle['nbTeams']))
+			else:
+				if whoIsBoss is not None:
+					newbattletitle += ' Boss: ' + str(whoIsBoss)
 		
 		spads.slog("Trying to update battle title: " + newbattletitle + " old " + myBattleTitle , DBGLEVEL)
 		if newbattletitle != myBattleTitle:
