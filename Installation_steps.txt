@@ -1,6 +1,8 @@
 # Set the name of the user who will be running spads et al
 export SPADSUSERNAME="debian"
 export ENGINEGITHUBPATH="https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR105%7D105.1.1-1544-g058c8ea/spring_bar_.BAR105.105.1.1-1544-g058c8ea_linux-64-minimal-portable.7z"
+export ENGINEDIR="spring_bar_.BAR105.105.1.1-1544-g058c8ea_linux-64-minimal-portable"
+
 # GITHUB PATH: https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR105%7D105.1.1-1544-g058c8ea/spring_bar_.BAR105.105.1.1-1544-g058c8ea_linux-64-minimal-portable.7z
 # - init 1 minutes
 sudo apt-get install htop byobu mc p7zip g++ swig locate rclone git python3-dev cpanminus p7zip-full python3-distutils make sshpass glances
@@ -75,12 +77,11 @@ chmod +x ~/spads/etc/spads_cluster_launcher.sh
 nano ~/spads/etc/spads_cluster_launcher.sh
 
 #get latest engine
-python3 spads_config_bar_updater.py -c -u https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR105%7D105.1.1-739-ga241485/spring_bar_.BAR105.105.1.1-739-ga241485_linux-64-minimal-portable.7z
+python3 spads_config_bar_updater.py -c -u $ENGINEGITHUBPATH
 
 #copy pr-dler to ~/spads
-cp ~/spads/var/spring/spring_bar_.BAR105.105.1.1-739-ga241485_linux-64-minimal-portable/pr-downloader ~/spads/
-/home/ubuntu/spads/pr-downloader --filesystem-writepath /home/ubuntu/spads/var/spring/data byar:test
-
+cp ~/spads/var/spring/$ENGINEDIR/pr-downloader ~/spads/
+/home/$SPADSUSER/spads/pr-downloader --filesystem-writepath /home/$SPADSUSER/spads/var/spring/data byar:test
 
 # Systemd services and timers:
 cd ~/spads/spads_config_bar/
