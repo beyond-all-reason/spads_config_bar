@@ -11,8 +11,8 @@ use Text::ParseWords 'shellwords';
 
 use SpadsPluginApi;
 
-my $pluginVersion='0.5';
-my $requiredSpadsVersion='0.12.27';
+my $pluginVersion='0.6';
+my $requiredSpadsVersion='0.13.0';
 
 my %globalPluginParams = ( commandsFile => ['notNull'],
                            helpFile => ['notNull'],
@@ -28,7 +28,6 @@ my %globalPluginParams = ( commandsFile => ['notNull'],
                            baseAutoHostPort => ['port'],
                            clusters => [],
                            createNewConsoles => ['bool'],
-                           sharedData => [],
                            autoRegister => ['bool2'],
                            shareArchiveCache => ['bool'] );
 my %presetPluginParams = ( maxInstancesInCluster => ['integer'],
@@ -261,19 +260,6 @@ sub onReloadConf {
     return 0;
   }
 
-  my @sharedData=split(',',$r_pluginConf->{sharedData});
-  if(any {$_ eq 'preferences'} @sharedData) {
-    eval 'use DBI';
-    if($@) {
-      slog('Unable to share preferences data (Perl DBI module not found)',1);
-      return 0;
-    }
-    if(none {$_ eq 'SQLite'} DBI->available_drivers()) {
-      slog('Unable to share preferences data (Perl DBD::SQLite module not found)',1);
-      return 0;
-    }
-  }
-
   foreach my $pluginPreset (keys %{$spads->{pluginsConf}{ClusterManager}{presets}}) {
     next if($pluginPreset eq '');
     my $r_pluginPresetConf=$spads->{pluginsConf}{ClusterManager}{presets}{$pluginPreset};
@@ -287,6 +273,10 @@ sub onReloadConf {
     }
   }
 
+  if($r_pluginConf->{shareArchiveCache} && ! $r_conf->{sequentialUnitsync}) {
+    slog('Archive cache data are shared but unitsync sequential mode is disabled, this can lead to race conditions and cache data corruption',2);
+  }
+  
   c_provisionClustersIfNeeded($self) if(exists $self->{instData});
 
   return 1;
@@ -1086,8 +1076,7 @@ sub c_startInstance {
   }
   
   my @instanceDatFiles=qw'mapHashes.dat userData.dat';
-  my @sharedData=split(',',$r_pluginConf->{sharedData});
-  map {my $data=$_; push(@instanceDatFiles,"$data.dat") unless(any {$data eq $_} @sharedData)} (qw'bans preferences savedBoxes trustedLobbyCertificates mapInfoCache');
+  map {push(@instanceDatFiles,"$_.dat") if($r_conf->{$_.'Data'} eq 'private')} (qw'bans preferences savedBoxes trustedLobbyCertificates mapInfoCache');
   my @datFiles = grep {-f "$r_conf->{instanceDir}/$_" && ! -f "$fpInstanceDir/$_"} @instanceDatFiles;
   foreach my $datFile (@datFiles) {
     if(! copy("$r_conf->{instanceDir}/$datFile",$fpInstanceDir)) {
@@ -1152,7 +1141,6 @@ sub c_startInstance {
   $instanceMacros{'set:autoHostPort'}=$r_pluginConf->{baseAutoHostPort}+$instNb;
   $instanceMacros{'set:instanceDir'}=catdir('ClusterManager',$instName);
   $instanceMacros{'set:logDir'}='log';
-  $instanceMacros{sharedData}=$r_pluginConf->{sharedData} if($r_pluginConf->{sharedData} ne '');
   if($owner) {
     my $passwd=::generatePassword(4,'abcdefghjkmnpqrstuvwxyz123456789');
     $instanceMacros{'hSet:password'}=$passwd;
@@ -1371,7 +1359,7 @@ sub hClusterConfig {
   return 1 if($checkOnly);
   
   my $r_pluginConf=getPluginConf();
-  my @clusterManagerPublicSettings=(qw'maxInstances maxInstancesPublic maxInstancesPrivate removeSpareInstanceDelay removePrivateInstanceDelay startingInstanceTimeout offlineInstanceTimeout orphanInstanceTimeout baseGamePort baseAutoHostPort clusters sharedData autoRegister');
+  my @clusterManagerPublicSettings=(qw'maxInstances maxInstancesPublic maxInstancesPrivate removeSpareInstanceDelay removePrivateInstanceDelay startingInstanceTimeout offlineInstanceTimeout orphanInstanceTimeout baseGamePort baseAutoHostPort clusters autoRegister shareArchiveCache');
   my @configData;
   foreach my $pluginSetting (sort @clusterManagerPublicSettings) {
     push(@configData,{"$C{5}Setting$C{1}" => $pluginSetting,
