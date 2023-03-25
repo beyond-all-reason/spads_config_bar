@@ -81,7 +81,7 @@ python3 spads_config_bar_updater.py -c -u $ENGINEGITHUBPATH
 
 #copy pr-dler to ~/spads
 cp ~/spads/var/spring/$ENGINEDIR/pr-downloader ~/spads/
-/home/$SPADSUSER/spads/pr-downloader --filesystem-writepath /home/$SPADSUSER/spads/var/spring/data byar:test
+/home/$SPADSUSERNAME/spads/pr-downloader --filesystem-writepath /home/$SPADSUSERNAME/spads/var/spring/data byar:test
 
 # Systemd services and timers:
 cd ~/spads/spads_config_bar/
@@ -122,6 +122,7 @@ sudo nano ~/.bashrc
 cd ~/spads/etc/
 cp spads_cluster_launcher.sh.template spads_cluster_launcher.sh
 chmod +x spads_cluster_launcher.sh
+nano spads_cluster_launcher.sh
 # start it, like 15 minutes first start :/ 
 byobu
 cd ~/spads/etc/
