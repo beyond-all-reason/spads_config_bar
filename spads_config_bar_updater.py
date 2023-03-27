@@ -30,8 +30,8 @@ if __file__:
 	
 
 def execute(commandstr):
-	print("Executing:",commandstr)
 	if args.dry:
+		print("Executing:",commandstr)
 		return 0
 	retval = os.system(commandstr)
 	if retval != 0:
@@ -45,6 +45,7 @@ def execute(commandstr):
 # Step 2, copy over all non-tracked git files from here
 # ignorelist:
 ignorefiletypes = ['.zip', '.7z', '.git','.gitattributes', '.gitignore', 'spads_config_bar_updater.py','.pyc', '.timer', '.service']
+ignoredirs = ['deploy','docker']
 
 def recursecopy(workdir):
 	return 
@@ -64,6 +65,9 @@ def configupdate(args):
 				for ignorefiletype in ignorefiletypes:
 					if filename.endswith(ignorefiletype):
 						ignore = True
+                                for ignoredir in ignoredirs:
+                                        if ignoredir in root:
+                                                ignore = True
 				if not ignore:
 					fullpath  = os.path.join(root,filename)
 					#print (fullpath)
