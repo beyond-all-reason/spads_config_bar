@@ -21,7 +21,7 @@ parser.add_argument('-g', '--nogit', action = "store_true", help = "Dont execute
 print (parser.description)
 
 args = parser.parse_args()
-print(args)
+print("Arguments are:", args,"\n")
 
 if __file__:
 	scriptdir = os.path.dirname(os.path.realpath(__file__))
