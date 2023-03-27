@@ -65,9 +65,9 @@ def configupdate(args):
 				for ignorefiletype in ignorefiletypes:
 					if filename.endswith(ignorefiletype):
 						ignore = True
-                                for ignoredir in ignoredirs:
-                                        if ignoredir in root:
-                                                ignore = True
+				for ignoredir in ignoredirs:
+					if ignoredir in root:
+						ignore = True
 				if not ignore:
 					fullpath  = os.path.join(root,filename)
 					#print (fullpath)
