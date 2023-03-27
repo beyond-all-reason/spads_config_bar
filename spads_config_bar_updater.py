@@ -16,6 +16,7 @@ parser.add_argument('-c', '--clusterupdateengine', action = "store_true", help =
 
 parser.add_argument('-l', '--clusterlauncherfile', default = "../etc/spads_cluster_launcher.sh", help = "The path to the cluster launcher shell script")
 parser.add_argument('-e', '--enginedir', default =  "../var/spring/", help = "The path where the engine is stored")
+parser.add_argument('-g', '--nogit', action = "store_true", help = "Dont execute git pull")
 
 print (parser.description)
 
@@ -30,8 +31,9 @@ if __file__:
 	
 successes = 0
 errors = 0
-def execute(commandstr):
-	if args.dry:
+def execute(commandstr, dry = False):
+	global successes, errors
+	if args.dry or dry:
 		print("Executing:",commandstr)
 		return 0
 	retval = os.system(commandstr)
@@ -55,7 +57,8 @@ def recursecopy(workdir):
 	return 
 
 def configupdate(args):
-	execute("git pull https://github.com/beyond-all-reason/spads_config_bar.git")
+	if args.nogit != True:
+		execute("git pull https://github.com/beyond-all-reason/spads_config_bar.git")
 	for root, directory, filenames in os.walk("."):
 		goodfile = True
 		for ignorefiletype in ignorefiletypes:
