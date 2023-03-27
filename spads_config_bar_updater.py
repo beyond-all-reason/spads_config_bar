@@ -28,7 +28,8 @@ if __file__:
 		print("Changing working directory to the scripts path:", os.path.dirname(os.path.realpath(__file__)))
 		os.chdir(scriptdir)
 	
-
+successes = 0
+errors = 0
 def execute(commandstr):
 	if args.dry:
 		print("Executing:",commandstr)
@@ -36,8 +37,11 @@ def execute(commandstr):
 	retval = os.system(commandstr)
 	if retval != 0:
 		print("Command returned [%d]: %s"%(retval,commandstr))
+		errors +=1
 		if args.haltonerror:
-			exit(1)
+			exit(1)	
+	else:
+		successes += 1
 	return retval
 
 # Step 1, update conf
@@ -147,7 +151,7 @@ def updateengine(args):
 if args.updateengine:
 	updateengine(args)
 
-
+print(f"Done, {successes} commands succeeded, {errors} commands failed")
 # step 7 Restart spads service?
 
 
