@@ -405,7 +405,7 @@ class BarManager:
 				if k not in ['ahPassword', 'ahPassHash']:
 					cleanEndGameData[k] = v
 					
-			spads.slog("endGameData" + str(cleanEndGameData), DBGLEVEL)
+			spads.slog("endGameData: " + str(cleanEndGameData), 3) # set to 3 from DBGLEVEL
 			spads.sayPrivate('AutohostMonitor', 'endGameData ' + jsonGzipBase64(cleanEndGameData))
 			hwInfoIngame = {}
 		except Exception as e:
