@@ -884,7 +884,7 @@ def h_autohost_GAME_LUAMSG(command, playerNumInt, luahandleidInt , nullStr, mess
 			ms = message.split(':',6)
 			sentmessage = ""
 			if len(ms) == 7:
-				sentmessage =  f'match-chat-name <{ms[5]}>:<{ms[2]}> a: Added Point {ms[6]}'
+				sentmessage =  f'match-chat-name <{ms[5]}>:<{ms[2]}> dallies: Added Point {ms[6]}'
 				spads.sayPrivate('AutohostMonitor', sentmessage)
 			spads.slog("m@pm@rk:" + str(ms) + sentmessage, 0)
 			
@@ -899,10 +899,16 @@ def h_autohost_PLAYER_CHAT(command, playerNumInt, destination, text):
 		# Based on the destination it's allied, spectator or global chat
 		# we prefix it accordingly. According to the spec it is possible
 		# to message a player directly which we will track slightly differently
-		if destination == 127: prefix = "a:"
-		elif destination == 126: prefix = "s:"
-		elif destination == 125: prefix = "g:"
-		else: prefix = f"d{destination}:"
+		
+		# Destination is usually from ['allies','spectators', ...], and not a number like the shit below says:
+		if destination == 127: 
+			prefix = "a:"
+		elif destination == 126: 
+			prefix = "s:"
+		elif destination == 125:
+			prefix = "g:"
+		else:
+			prefix = f"d{destination}:"
 
 		if playerNumInt in hwInfoIngame:
 			# Username should already be stored here
