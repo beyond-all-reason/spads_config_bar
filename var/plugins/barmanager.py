@@ -842,17 +842,20 @@ def hCLIENTBATTLESTATUS(command, userName, battleStatus, teamColor):
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
-def hADDUSER(command, userName, country, cpu, userID, lobbyID = ""):
+def hADDUSER(command, userName, country = "nil", cpu = "nil", userID = "nil", lobbyID = "nil"):
 	global knownUsers
 	try:
-		spads.slog("hADDUSER" + str([command, userName, country, cpu, userID, lobbyID, userName in knownUsers]), DBGLEVEL)
+		if country == "nil" or cpu == "nil" or userID == "nil":	
+			spads.slog("hADDUSER nil! " + str([command, userName, country, cpu, userID, lobbyID, userName in knownUsers]), 2)
+			
+		spads.slog("hADDUSER " + str([command, userName, country, cpu, userID, lobbyID, userName in knownUsers]), DBGLEVEL)
 		knownUsers[userName] = userID
 	except:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
 def hLEFT_pre(command, chanName, userName, reason = ""):
 	try:
-		spads.slog("hLEFT_pre" + str([command, chanName, userName, reason, userName in knownUsers]), DBGLEVEL)
+		spads.slog("hLEFT_pre " + str([command, chanName, userName, reason, userName in knownUsers]), DBGLEVEL)
 		if knownUsers[userName]:
 			return
 		else:			
@@ -864,7 +867,7 @@ def hLEFT_pre(command, chanName, userName, reason = ""):
 
 def hLEFTBATTLE_pre(command, battleID, userName):
 	try:
-		spads.slog("hLEFTBATTLE_pre" + str([command, battleID, userName, userName in knownUsers]), DBGLEVEL)
+		spads.slog("hLEFTBATTLE_pre " + str([command, battleID, userName, userName in knownUsers]), DBGLEVEL)
 		if knownUsers[userName]:
 			return 
 		else:
@@ -876,7 +879,7 @@ def hLEFTBATTLE_pre(command, battleID, userName):
 
 def hREMOVEUSER_pre(command, userName):
 	try:
-		spads.slog("hREMOVEUSER_pre" + str([command, userName, userName in knownUsers]), DBGLEVEL)
+		spads.slog("hREMOVEUSER_pre " + str([command, userName, userName in knownUsers]), DBGLEVEL)
 		if knownUsers[userName]:
 			del knownUsers[userName]
 			return 
@@ -889,7 +892,7 @@ def hREMOVEUSER_pre(command, userName):
 
 def hCLIENTSTATUS_pre(command, userName, status):
 	try:
-		spads.slog("hCLIENTSTATUS_pre" + str([command, userName, status, userName in knownUsers]), DBGLEVEL)
+		spads.slog("hCLIENTSTATUS_pre " + str([command, userName, status, userName in knownUsers]), DBGLEVEL)
 		if knownUsers[userName]:
 			return 
 		else:
@@ -901,7 +904,7 @@ def hCLIENTSTATUS_pre(command, userName, status):
 
 def hJOINEDBATTLE_pre(command, battleID, userName, scriptPassword = ""):
 	try:
-		spads.slog("hJOINEDBATTLE_pre" + str([command, battleID, userName, scriptPassword, userName in knownUsers]), DBGLEVEL)
+		spads.slog("hJOINEDBATTLE_pre " + str([command, battleID, userName, scriptPassword, userName in knownUsers]), DBGLEVEL)
 		if knownUsers[userName]:
 			return 
 		else:
