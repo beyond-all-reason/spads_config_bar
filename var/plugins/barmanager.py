@@ -41,6 +41,7 @@ spadsConf = None  # {'lobbyReconnectDelay': 15, 'banList': 'empty', 'mapLink': '
 
 # getLobbyInterface(): 'acceptedHandler', 'addBotHandler', 'addCallbacks', 'addPreCallbacks', 'addStartRectHandler', 'addUserHandler', 'aindex', 'all', 'any', 'battleClosedHandler', 'battleOpenedHandler', 'channelTopicHandler', 'checkIntParams', 'checkTimeouts', 'clientBattleStatusHandler', 'clientIpPortHandler', 'clientStatusHandler', 'clientsHandler', 'connect', 'dclone', 'disableUnitsHandler', 'disconnect', 'enableAllUnitsHandler', 'enableUnitsHandler', 'first', 'forceAllyNoHook', 'forceTeamNoHook', 'generateStartData', 'getBattle', 'getBattles', 'getChannels', 'getLogin', 'getRunningBattle', 'getSkillValue', 'getUsers', 'getVersion', 'gracefulSocketShutdown', 'inet_aton', 'inet_ntoa', 'isTlsAvailable', 'joinBattleHandler', 'joinBattleHook', 'joinBattleRequestHandler', 'joinHandler', 'joinedBattleHandler', 'joinedHandler', 'leaveChannelHandler', 'leftBattleHandler', 'leftHandler', 'loginHook', 'marshallBattleStatus', 'marshallClientStatus', 'marshallColor', 'marshallCommand', 'marshallPasswd', 'md5_base64', 'new', 'none', 'notall', 'okHandler', 'openBattleHandler', 'openBattleHook', 'pack_sockaddr_in', 'pack_sockaddr_in6', 'pack_sockaddr_un', 'prioSort', 'receiveCommand', 'removeBotHandler', 'removeCallbacks', 'removePreCallbacks', 'removeScriptTagsHandler', 'removeStartRectHandler', 'removeUserHandler', 'sendCommand', 'setScriptTagsHandler', 'shuffle', 'sockaddr_family', 'sockaddr_in', 'sockaddr_in6', 'sockaddr_un', 'specSort', 'storeRunningBattle', 'tasserverHandler', 'unmarshallBattleStatus', 'unmarshallClientStatus', 'unmarshallColor', 'unmarshallCommand', 'unmarshallParams', 'unpack_sockaddr_in', 'unpack_sockaddr_in6', 'unpack_sockaddr_un', 'updateBattleInfoHandler', 'updateBotHandler', 'updateBotHook']
 
+knownUsers = {} # this one is for tracking failed commands
 
 # ------------------ JSON OBJECT INFO ------------------
 # Each json string will contain a dict, for example, for a votestart
@@ -262,6 +263,15 @@ class BarManager:
 		spads.addLobbyCommandHandler({"LEFTBATTLE": hLEFTBATTLE})
 		spads.addLobbyCommandHandler({"REMOVEBOT": hREMOVEBOT})
 		spads.addLobbyCommandHandler({"ADDBOT": hADDBOT})
+	
+		spads.addLobbyCommandHandler({"ADDUSER": hADDUSER},999) # for managine the knownUsers, does not need PRE
+		spads.addLobbyCommandHandler({"LEFT": hLEFT_pre}, 999, True) # for checking knownUsers for channels
+		spads.addLobbyCommandHandler({"LEFTBATTLE": hLEFTBATTLE_pre}, 999, True) # for checking knownUsers for battles
+		spads.addLobbyCommandHandler({"REMOVEUSER": hREMOVEUSER_pre}, 999, True) # for checking knownUsers for lobby, maybe needs a post?
+		spads.addLobbyCommandHandler({"CLIENTSTATUS": hCLIENTSTATUS_pre}, 999, True) # for checking knownUsers
+		spads.addLobbyCommandHandler({"JOINEDBATTLE": hJOINEDBATTLE_pre}, 999, True) # for checking knownUsers
+
+
 		spads.addLobbyCommandHandler({"CLIENTBATTLESTATUS": hCLIENTBATTLESTATUS  })
 		spads.addLobbyCommandHandler({"UPDATEBATTLEINFO": hUPDATEBATTLEINFO })
 
@@ -683,7 +693,7 @@ def hbarmanagerdebuglevel(source, user, params, checkOnly):
 			except:
 				spads.slog("hbarmanagerdebuglevel failed to parse debug level value:" + str(params[0]), DBGLEVEL)
 			
-		spads.slog("User %s called command barmanagerdebugleve with parameter(s) \"%s\"" % (user, ','.join(params)), 3)
+		spads.slog("User %s called command barmanagerdebuglevel with parameter(s) \"%s\"" % (user, ','.join(params)), 3)
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
@@ -832,6 +842,76 @@ def hCLIENTBATTLESTATUS(command, userName, battleStatus, teamColor):
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
+def hADDUSER(command, userName, country, cpu, userID, lobbyID = ""):
+	global knownUsers
+	try:
+		spads.slog("hADDUSER" + str([command, userName, country, cpu, userID, lobbyID, userName in knownUsers]), DBGLEVEL)
+		knownUsers[userName] = userID
+	except:
+		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+
+def hLEFT_pre(command, chanName, userName, reason = ""):
+	try:
+		spads.slog("hLEFT_pre" + str([command, chanName, userName, reason, userName in knownUsers]), DBGLEVEL)
+		if knownUsers[userName]:
+			return
+		else:			
+			spads.slog("hLEFT_pre cannot be exectuted" + str([command, chanName, userName, reason, userName in knownUsers]), 2)
+			spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
+			return "DROP"
+	except:
+		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+
+def hLEFTBATTLE_pre(command, battleID, userName):
+	try:
+		spads.slog("hLEFTBATTLE_pre" + str([command, battleID, userName, userName in knownUsers]), DBGLEVEL)
+		if knownUsers[userName]:
+			return 
+		else:
+			spads.slog("hLEFTBATTLE_pre cannot be exectuted" + str([command, battleID, userName, userName in knownUsers]), 2)
+			spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
+			return "DROP"
+	except:
+		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+
+def hREMOVEUSER_pre(command, userName):
+	try:
+		spads.slog("hREMOVEUSER_pre" + str([command, userName, userName in knownUsers]), DBGLEVEL)
+		if knownUsers[userName]:
+			del knownUsers[userName]
+			return 
+		else:
+			spads.slog("hREMOVEUSER_pre cannot be exectuted" + str([command, userName, userName in knownUsers]), 2)
+			spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
+			return "DROP"
+	except:
+		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+
+def hCLIENTSTATUS_pre(command, userName, status):
+	try:
+		spads.slog("hCLIENTSTATUS_pre" + str([command, userName, status, userName in knownUsers]), DBGLEVEL)
+		if knownUsers[userName]:
+			return 
+		else:
+			spads.slog("hCLIENTSTATUS_pre cannot be exectuted" + str([command, userName, status, userName in knownUsers]), 2)
+			spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
+			return "DROP"
+	except:
+		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+
+def hJOINEDBATTLE_pre(command, battleID, userName, scriptPassword = ""):
+	try:
+		spads.slog("hJOINEDBATTLE_pre" + str([command, battleID, userName, scriptPassword, userName in knownUsers]), DBGLEVEL)
+		if knownUsers[userName]:
+			return 
+		else:
+			spads.slog("hJOINEDBATTLE_pre cannot be exectuted" + str([command, battleID, userName, scriptPassword, userName in knownUsers]), 2)
+			spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
+			return "DROP"
+	except:
+		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+
+
 def h_autohost_PLAYER_JOINED(command, playerNumInt, userName):
 	global hwInfoIngame
 	try:
@@ -886,7 +966,7 @@ def h_autohost_GAME_LUAMSG(command, playerNumInt, luahandleidInt , nullStr, mess
 			if len(ms) == 7:
 				sentmessage =  f'match-chat-name <{ms[5]}>:<{ms[2]}> dallies: Added Point {ms[6]}'
 				spads.sayPrivate('AutohostMonitor', sentmessage)
-			spads.slog("m@pm@rk:" + str(ms) + sentmessage, 0)
+				spads.slog("m@pm@rk:" + str(ms) + sentmessage, DBGLEVEL)
 			
 
 	except Exception as e:
