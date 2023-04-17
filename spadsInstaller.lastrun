@@ -1,0 +1,14 @@
+release:unstable
+etcDir:etc
+varDir:var
+logDir:log
+springBinariesType:custom
+unitsyncPath:/home/debian/spads/var/spring/spring_bar_.BAR105.105.1.1-1544-g058c8ea_linux-64-minimal-portable/libunitsync.so
+baseDataDir:/home/debian/spads/var/spring/spring_bar_.BAR105.105.1.1-1544-g058c8ea_linux-64-minimal-portable
+mapModDataDir:/home/debian/spads/var/spring/
+springServerType:dedicated
+springServer:/home/debian/spads/var/spring/spring_bar_.BAR105.105.1.1-1544-g058c8ea_linux-64-minimal-portable/spring-dedicated
+modName:_NO_GAME_FOUND_
+lobbyLogin:[teh]cluster
+lobbyPassword:changeme
+owner:changeme
