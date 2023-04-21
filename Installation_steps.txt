@@ -109,21 +109,17 @@ sudo systemctl daemon-reload
 sudo nano ~/.bashrc
 #copy these:
 #export SFTP_PASSWORD="@CHANGEME"
-#export SFTP_LOGIN="beherith"c
-
-# Copy launcher template
-cd ~/spads/etc/
-cp spads_cluster_launcher.sh.template spads_cluster_launcher.sh
-chmod +x spads_cluster_launcher.sh
-nano spads_cluster_launcher.sh
-# start it, like 15 minutes first start :/ 
-byobu
-cd ~/spads/etc/
-./spads_cluster_launcher.sh
+#export SFTP_LOGIN="beherith"
 
 # UPDATE SpringLobbyInterface
 cd ~/spads/
 ln -sf SpringLobbyInterface_0.42a.pm SpringLobbyInterface.pm
+
+
+# start it, like 15 minutes first start :/ 
+byobu
+cd ~/spads/etc/
+./spads_cluster_launcher.sh
 
 # further things/ todo:
 # - set up glances, start it from crontab as glances -w for quick view on port 61208
