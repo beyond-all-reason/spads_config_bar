@@ -855,7 +855,7 @@ def hADDUSER(command, userName, country = "nil", cpu = "nil", userID = "nil", lo
 
 def hLEFT_pre(command, chanName, userName, reason = ""):
 	try:
-		spads.slog("hLEFT_pre " + str([command, chanName, userName, reason, userName in knownUsers]), 3)
+		spads.slog("hLEFT_pre " + str([command, chanName, userName, reason, userName in knownUsers]), DBGLEVEL)
 		if knownUsers[userName]:
 			return
 		else:			
@@ -867,7 +867,7 @@ def hLEFT_pre(command, chanName, userName, reason = ""):
 
 def hLEFTBATTLE_pre(command, battleID, userName):
 	try:
-		spads.slog("hLEFTBATTLE_pre " + str([command, battleID, userName, userName in knownUsers]), 3)
+		spads.slog("hLEFTBATTLE_pre " + str([command, battleID, userName, userName in knownUsers]), DBGLEVEL)
 		if knownUsers[userName]:
 			return 
 		else:
@@ -879,7 +879,7 @@ def hLEFTBATTLE_pre(command, battleID, userName):
 
 def hREMOVEUSER_pre(command, userName):
 	try:
-		spads.slog("hREMOVEUSER_pre " + str([command, userName, userName in knownUsers]), 3)
+		spads.slog("hREMOVEUSER_pre " + str([command, userName, userName in knownUsers]), DBGLEVEL)
 		if knownUsers[userName]:
 			del knownUsers[userName]
 			return 
@@ -892,7 +892,7 @@ def hREMOVEUSER_pre(command, userName):
 
 def hCLIENTSTATUS_pre(command, userName, status):
 	try:
-		spads.slog("hCLIENTSTATUS_pre " + str([command, userName, status, userName in knownUsers]), 3)
+		spads.slog("hCLIENTSTATUS_pre " + str([command, userName, status, userName in knownUsers]), DBGLEVEL)
 		if knownUsers[userName]:
 			return 
 		else:
@@ -904,7 +904,7 @@ def hCLIENTSTATUS_pre(command, userName, status):
 
 def hJOINEDBATTLE_pre(command, battleID, userName, scriptPassword = ""):
 	try:
-		spads.slog("hJOINEDBATTLE_pre " + str([command, battleID, userName, scriptPassword, userName in knownUsers]), 3)
+		spads.slog("hJOINEDBATTLE_pre " + str([command, battleID, userName, scriptPassword, userName in knownUsers]), DBGLEVEL)
 		if knownUsers[userName]:
 			return 
 		else:
@@ -918,7 +918,7 @@ def hJOINEDBATTLE_pre(command, battleID, userName, scriptPassword = ""):
 def h_autohost_PLAYER_JOINED(command, playerNumInt, userName):
 	global hwInfoIngame
 	try:
-		#spads.slog("h_autohost_PLAYER_JOINED:" + str([command, playerNumInt, userName]),3)
+		#spads.slog("h_autohost_PLAYER_JOINED:" + str([command, playerNumInt, userName]),DBGLEVEL)
 		if playerNumInt in hwInfoIngame:
 			hwInfoIngame[playerNumInt]['username'] = userName
 			infostr = jsonGzipBase64(hwInfoIngame[playerNumInt])
