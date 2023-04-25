@@ -257,7 +257,7 @@ class BarManager:
 		spads.addSpadsCommandHandler({'aiProfile': hAiProfile})
 		spads.addSpadsCommandHandler({'splitbattle': hSplitBattle})
 		spads.addSpadsCommandHandler({'barmanagerdebuglevel': hbarmanagerdebuglevel})
-		spads.addSpadsCommandHandler({'printstate': hprintstate})
+		spads.addSpadsCommandHandler({'barmanagerprintstate': hbarmanagerprintstate})
 
 		# Declare handler for lobby commands (see https://springrts.com/dl/LobbyProtocol/ProtocolDescription.html)
 		spads.addLobbyCommandHandler({"JOINEDBATTLE": hJOINEDBATTLE})
