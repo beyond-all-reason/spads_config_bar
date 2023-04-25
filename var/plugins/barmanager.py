@@ -257,6 +257,7 @@ class BarManager:
 		spads.addSpadsCommandHandler({'aiProfile': hAiProfile})
 		spads.addSpadsCommandHandler({'splitbattle': hSplitBattle})
 		spads.addSpadsCommandHandler({'barmanagerdebuglevel': hbarmanagerdebuglevel})
+		spads.addSpadsCommandHandler({'printstate': hprintstate})
 
 		# Declare handler for lobby commands (see https://springrts.com/dl/LobbyProtocol/ProtocolDescription.html)
 		spads.addLobbyCommandHandler({"JOINEDBATTLE": hJOINEDBATTLE})
@@ -312,6 +313,8 @@ class BarManager:
 		spads.removeSpadsCommandHandler(['myCommand'])
 		spads.removeSpadsCommandHandler(['aiProfile'])
 		spads.removeSpadsCommandHandler(['splitbattle'])
+		spads.removeSpadsCommandHandler(['barmanagerdebuglevel'])
+		spads.removeSpadsCommandHandler(['barmanagerprintstate'])
 
 		spads.removeLobbyCommandHandler(["JOINEDBATTLE"])
 		spads.removeLobbyCommandHandler(["LEFTBATTLE"])
@@ -697,6 +700,40 @@ def hbarmanagerdebuglevel(source, user, params, checkOnly):
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
+# This is the handler for our new command
+def hbarmanagerprintstate(source, user, params, checkOnly):
+	global DBGLEVEL
+	
+	try:
+		# checkOnly is true if this is just a check for callVote command, not a real command execution
+		
+		spads.slog("User %s called command barmanagerprintstate with parameter(s) \"%s\"" % (user, ','.join(params)), 3)
+		if checkOnly:
+			# MyCommand is a basic command, we have nothing to check in case of callvote
+			return 1
+
+		spads.slog("DBGLEVEL: " + str(DBGLEVEL), 3)
+		spads.slog("myBattleID: " + str(myBattleID), 3)
+		spads.slog("ChobbyState: " + str(ChobbyState), 3)
+		spads.slog("TachyonBattle: " + str(TachyonBattle), 3)
+		spads.slog("playersInMyBattle: " + str(playersInMyBattle), 3)
+		spads.slog("myBattleName: " + str(myBattleName), 3)
+		spads.slog("myBattleTitle: " + str(myBattleTitle), 3)
+		spads.slog("whoIsBoss: " + str(whoIsBoss), 3)
+		spads.slog("hwInfoIngame: " + str(hwInfoIngame), 3)
+
+		spads.sayPrivate(user, "DBGLEVEL: " + str(DBGLEVEL))
+		spads.sayPrivate(user, "myBattleID: " + str(myBattleID))
+		spads.sayPrivate(user, "ChobbyState: " + str(ChobbyState))
+		spads.sayPrivate(user, "TachyonBattle: " + str(TachyonBattle))
+		spads.sayPrivate(user, "playersInMyBattle: " + str(playersInMyBattle))
+		spads.sayPrivate(user, "myBattleName: " + str(myBattleName))
+		spads.sayPrivate(user, "myBattleTitle: " + str(myBattleTitle))
+		spads.sayPrivate(user, "whoIsBoss: " + str(whoIsBoss))
+		# Also say these in private to caller
+			
+	except Exception as e:
+		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
 # This is the handler for our new command
 def hAiProfile(source, user, params, checkOnly):  # !aiProfile BARbarianAI(1) {"testtag":"testvalue"}
