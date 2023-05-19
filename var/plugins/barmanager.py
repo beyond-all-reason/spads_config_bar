@@ -320,14 +320,22 @@ class BarManager:
 		spads.removeLobbyCommandHandler(["LEFTBATTLE"])
 		spads.removeLobbyCommandHandler(["REMOVEBOT"])
 		spads.removeLobbyCommandHandler(["ADDBOT"])
-		spads.removeLobbyCommandHandler(["UPDATEBATTLEINFO" ])
+		
+		spads.removeLobbyCommandHandler(["ADDUSER"])
+		spads.removeLobbyCommandHandler(["LEFT"])
+		spads.removeLobbyCommandHandler(["LEFTBATTLE"])
+		spads.removeLobbyCommandHandler(["REMOVEUSER"])
+		spads.removeLobbyCommandHandler(["CLIENTSTATUS"])
+		spads.removeLobbyCommandHandler(["CLIENTBATTLESTATUS"])
+		spads.removeLobbyCommandHandler(["UPDATEBATTLEINFO"])
 
 		spads.removeSpringCommandHandler(["PLAYER_JOINED"])
 		spads.removeSpringCommandHandler(["PLAYER_LEFT"])
 		spads.removeSpringCommandHandler(["GAME_LUAMSG"])
+		spads.removeSpringCommandHandler(["PLAYER_CHAT"])
 
 		# We log a notice message when the plugin is unloaded
-		spads.slog("Plugin unloaded", 3)
+		spads.slog("Barmanager Plugin Unloaded", 2)
 
 	def onBattleOpened(self):
 		global myBattleID, myBattleName, myBattlePassword, myBattleTitle  # todo: this is the slipperiest slope of all
@@ -998,7 +1006,8 @@ def h_autohost_GAME_LUAMSG(command, playerNumInt, luahandleidInt , nullStr, mess
 					messagedict['Displaymax'] = line.partition(':')[2].strip()
 			hwInfoIngame[playerNumInt] = messagedict
 			spads.slog("Stored player HWinfo:" + str([playerNumInt, messagedict]),DBGLEVEL)
-			
+		
+		# Added point event	
 		if len(message) > 10 and message[0:7] == "m@pm@rk":
 			#local msg = string.format("m@pm@rk%s:%d:%d:%d:%d:%s:%s",validation, Spring.GetGameFrame(), playerID, px, pz, myPlayerName, labelText)
 			ms = message.split(':',6)
@@ -1007,6 +1016,16 @@ def h_autohost_GAME_LUAMSG(command, playerNumInt, luahandleidInt , nullStr, mess
 				sentmessage =  f'match-chat-name <{ms[5]}>:<{ms[2]}> dallies: Added Point {ms[6]}'
 				spads.sayPrivate('AutohostMonitor', sentmessage)
 				spads.slog("m@pm@rk:" + str(ms) + sentmessage, DBGLEVEL)
+				
+		# Friendly Fire event
+		#https://github.com/beyond-all-reason/Beyond-All-Reason/blob/6d74689da60a2ce998a990440f935f5b0d79059b/luarules/gadgets/game_logger.lua#LL76C31-L76C34
+		#local msg = string.format("l0g%s:%d:%s:%d:%d:%d", validation,
+		#	Spring.GetGameFrame(), 'ud',
+		#	unitTeam, attackerTeam, unitDefID)
+		if len(message) > 10 and message[0:3] == "l0g":
+			sentmessage = f'match-event-friendlyfire {message}'
+			spads.sayPrivate('AutohostMonitor', sentmessage)
+			spads.slog(sentmessage, DBGLEVEL)
 			
 
 	except Exception as e:
