@@ -16,6 +16,8 @@
 #    ranges do not overlap with baseGamePort
 # CMD_lobbyLogin: 
 #    the username of the cluster manager instance
+# CMD_spadsChannel:
+#    The name of the channel where all instances of this spads cluster will listen for commands
 # CMD_lobbyPassword: 
 #    the password of the cluster manager instance in plaintext
 # if your engine is located here: 
@@ -43,6 +45,7 @@
 
 perl ../spads.pl spads_cluster.conf \
 	CMD_lobbyLogin=[teh]cluster1 \
+	CMD_spadsChannel=cluster1 \
 	CMD_lobbyPassword=****** \
 	CMD_lobbyHost=server3.beyondallreason.info \
 	CMD_registrationEmail=mysterme@gmail.com \
