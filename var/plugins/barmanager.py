@@ -83,10 +83,13 @@ def jsonGzipBase64(toencode):
 def jsonBase64(toencode):
 	return base64.urlsafe_b64encode(json.dumps(toencode).encode("utf-8")).decode()
 
-def SendChobbyState():
+def SendChobbyState(userName=False):
 	try:
 		barmanagermessage = BMP + json.dumps({"BattleStateChanged": ChobbyState})
-		spads.sayBattle(barmanagermessage)
+		if userName:
+			spads.sayBattleUser(userName, barmanagermessage)
+		else:
+			spads.sayBattle(barmanagermessage)
 		spads.slog(barmanagermessage, DBGLEVEL)
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
@@ -437,6 +440,15 @@ class BarManager:
 		# todo: send whole battle state to user
 		try:
 			spads.slog("onJoinBattleRequest:" + str(userName), DBGLEVEL)
+		except Exception as e:
+			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+		return 0  # return 1 if the user isnt allowed to join (return string for reason)
+
+	def onJoinedBattle(self, userName):
+		try:
+			spads.slog("onJoinedBattle:" + str(userName), DBGLEVEL)
+			SendChobbyState(userName)
+			
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 		return 0  # return 1 if the user isnt allowed to join (return string for reason)
