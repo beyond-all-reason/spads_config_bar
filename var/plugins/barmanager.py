@@ -447,8 +447,7 @@ class BarManager:
 	def onJoinedBattle(self, userName):
 		try:
 			spads.slog("onJoinedBattle:" + str(userName), DBGLEVEL)
-			SendChobbyState(userName)
-			
+			SendChobbyState(userName)	
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 		return 0  # return 1 if the user isnt allowed to join (return string for reason)
