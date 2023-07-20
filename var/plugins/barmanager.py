@@ -249,17 +249,7 @@ def onTeiServerMessage(command, args):
 
 # This is the class implementing the plugin
 class BarManager:
-
-	# This is our constructor, called when the plugin is loaded by SPADS (mandatory callback)
-	def __init__(self, context):
-		global DBGLEVEL
-		# We declare our new command and the associated handler
-		spads.addSpadsCommandHandler({'myCommand': hMyCommand})
-		spads.addSpadsCommandHandler({'aiProfile': hAiProfile})
-		spads.addSpadsCommandHandler({'splitbattle': hSplitBattle})
-		spads.addSpadsCommandHandler({'barmanagerdebuglevel': hbarmanagerdebuglevel})
-		spads.addSpadsCommandHandler({'barmanagerprintstate': hbarmanagerprintstate})
-
+	def addLobbyCommandHandlers(self):
 		# Declare handler for lobby commands (see https://springrts.com/dl/LobbyProtocol/ProtocolDescription.html)
 		spads.addLobbyCommandHandler({"JOINEDBATTLE": hJOINEDBATTLE})
 		spads.addLobbyCommandHandler({"LEFTBATTLE": hLEFTBATTLE})
@@ -273,9 +263,22 @@ class BarManager:
 		spads.addLobbyCommandHandler({"CLIENTSTATUS": hCLIENTSTATUS_pre}, 999, True) # for checking knownUsers
 		spads.addLobbyCommandHandler({"JOINEDBATTLE": hJOINEDBATTLE_pre}, 999, True) # for checking knownUsers
 
-
 		spads.addLobbyCommandHandler({"CLIENTBATTLESTATUS": hCLIENTBATTLESTATUS  })
 		spads.addLobbyCommandHandler({"UPDATEBATTLEINFO": hUPDATEBATTLEINFO })
+
+	# This is our constructor, called when the plugin is loaded by SPADS (mandatory callback)
+	def __init__(self, context):
+		global DBGLEVEL
+		# We declare our new command and the associated handler
+		spads.addSpadsCommandHandler({'myCommand': hMyCommand})
+		spads.addSpadsCommandHandler({'aiProfile': hAiProfile})
+		spads.addSpadsCommandHandler({'splitbattle': hSplitBattle})
+		spads.addSpadsCommandHandler({'barmanagerdebuglevel': hbarmanagerdebuglevel})
+		spads.addSpadsCommandHandler({'barmanagerprintstate': hbarmanagerprintstate})
+		
+		# We need to add the lobby command handlers before we are fully connected, or we dont get the JOINEDBATTLE stuff
+		# These will get replaced automatically when connect again
+		self.addLobbyCommandHandlers() 
 
 		# Declare handlers for Spring Autohost Interface
 		spads.addSpringCommandHandler({"PLAYER_JOINED": h_autohost_PLAYER_JOINED})
@@ -306,6 +309,16 @@ class BarManager:
 			else:
 				spads.slog("OK:CrashDir already exists" + CrashDir, DBGLEVEL)
 
+		except Exception as e:
+			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+			
+	def onLobbyConnected(self, lobbyInterface):
+		try:
+			# spads lobby command handlers are unloaded when connection is lost. 
+			# Thus we need to readd them according to 
+			# https://springrts.com/wiki/SPADS_plugin_development_(Python)#Writing_plugin_code_2
+			self.addLobbyCommandHandlers()
+		
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
