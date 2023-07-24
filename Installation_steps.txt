@@ -8,7 +8,7 @@ usermod -aG sudo debian
 apt-get install sudo 
 
 # - init 1 minutes
-sudo apt-get -y install htop byobu mc p7zip g++ swig locate rclone git python3-dev cpanminus p7zip-full python3-distutils make sshpass libffi-platypus-perl libdbd-sqlite3-perl
+sudo apt-get -y install htop byobu mc p7zip g++ swig locate git python3-dev cpanminus p7zip-full python3-distutils make sshpass libffi-platypus-perl libdbd-sqlite3-perl python3-paho-mqtt curl
 
 #- Make the swap file: 1 minute
 cd /var
@@ -46,28 +46,17 @@ tar -xvf spadsInstaller.tar
 # official fails for some reason, it cant find spring install, you gotta manually do it, so run python3 spads_config_bar_updater.py -s -u [latest github release]
 # and then relaunch
 
-#- rclone config 3 mins
-curl -sL https://raw.githubusercontent.com/wimpysworld/deb-get/main/deb-get | sudo -E bash -s install deb-get
-deb-get update
-deb-get install rclone
-rclone config
-#
-    # select new
-    # name: BYAR-maps
-    # storage type: 18 (drive)
-    # no client id
-    # no client secret
-    # access type: 2 (drive.readonly)
-    # service accoutn file: blank
-    # Edit advanced config: n
-    # Use auto config: n
-    # Use Browser?: N
-    # launch rclone config on machine with web browser
-    # copy 
-    # Configure this as team drive: n
-    # yes this is ok: y
-    # q for quit
-rclone sync --drive-shared-with-me BYAR-maps:BYAR-maps ~/spads/var/spring/data/maps/
+# Install map syncing script
+sudo su -c "curl -L https://raw.githubusercontent.com/beyond-all-reason/maps-metadata/main/tools/map_syncer/map_syncer.py > /usr/local/bin/map_syncer.py && chmod +x /usr/local/bin/map_syncer.py"
+cp ~/spads/spads_config_bar/map_syncer.service /etc/systemd/system
+# Update the INSTANCE_NAME and MAPS_DIR to correct values
+nano /etc/systemd/system/map_syncer.service
+# Enable service and it will download maps
+sudo systemctl daemon-reload
+sudo systemctl enable map_syncer
+sudo systemctl start map_syncer
+# check service status
+sudo systemctl status map_syncer
 
 # edit cluster launcher template
 cp ~/spads/spads_config_bar/etc/spads_cluster_launcher.sh.template ~/spads/etc/spads_cluster_launcher.sh
@@ -87,20 +76,18 @@ python3 spads_config_bar_updater.py -s
 sudo cp *.service ~/spads
 sudo cp *.timer ~/spads
 cd ~/spads
-for systemdfile in rclone-maps.service rclone-maps.timer pr-downloader.service pr-downloader.timer spads_config_updater.service spads_config_updater.timer; do sudo sed -i "s/ubuntu/$SPADSUSERNAME/g" $systemdfile; done
+for systemdfile in pr-downloader.service pr-downloader.timer spads_config_updater.service spads_config_updater.timer; do sudo sed -i "s/ubuntu/$SPADSUSERNAME/g" $systemdfile; done
 
 # copy them into services
 sudo cp *.service /etc/systemd/system
 sudo cp *.timer /etc/systemd/system
 
-# enable servixes, about 10-15 mins on first start, cause rclone-maps is slow
+# enable services
 sudo systemctl daemon-reload
-sudo systemctl start rclone-maps.service
 sudo systemctl start pr-downloader.service
 sudo systemctl start spads_config_updater.service
 sudo systemctl daemon-reload
 sudo systemctl enable --now pr-downloader.timer
-sudo systemctl enable --now rclone-maps.timer
 sudo systemctl enable --now spads_config_updater.timer
 sudo systemctl daemon-reload
 

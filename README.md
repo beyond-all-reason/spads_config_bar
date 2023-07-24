@@ -25,46 +25,43 @@ Update the paths in the file/s to suit your system.
 ## Keeping game and maps up to date:
 
 # Maps
-Updated with rclone from google drive folder:
 
-# rclone installation
+Install dependency
 
-- sudo apt-get install rclone
-- rclone config
-- select new
-- name: BYAR-maps
-- storage type: 13 (drive)
-- no client id
-- no client secret
-- access type: 2 (drive.readonly)
-- root folder id: blank
-- service account credentials: blank
-- service accoutn file: blank
-- Edit advanced config: n
-- Use auto config: n
-- Configure this as team drive: n
- 
-Then to update maps:
+```
+sudo apt-get install -y python3-paho-mqtt
+```
 
-rclone sync --drive-shared-with-me BYAR-maps:BYAR-maps /home/xxxx/spads/var/spring/data/maps/
+Install script (as root after `sudo -i`)
 
-copy the relevant .timer and .service files into, 
+```
+curl -L https://raw.githubusercontent.com/beyond-all-reason/maps-metadata/main/tools/map_syncer/map_syncer.py > /usr/local/bin/map_syncer.py
+sudo chmod +x /usr/local/bin/map_syncer.py
+```
 
-/etc/systemd/system 
+Copy `map_syncer.service` to
 
-and make sure they contain the correct paths to executables and data storage, and the User names are correct!
+```
+/etc/systemd/system
+```
 
-https://opensource.com/article/20/7/systemd-timers
+Modify the service file by updating:
+- spads-map-sync-**us1** to correct server name
+- last argument to correct directory with maps 
 
+Enable service
+
+```
 systemctl daemon-reload
+systemctl enable map_syncer
+systemctl start map_syncer
+```
 
-systemctl status rclone-maps.service
+Check it's running and started downloading maps:
 
-systemctl start rclone-maps.service 
-
-systemctl enable --now rclone-maps.timer
-
-Use --now to not wait till next reboot
+```
+systemctl status map_syncer
+```
 
 # Game
 

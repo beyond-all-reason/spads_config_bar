@@ -1,0 +1,13 @@
+[Unit]
+Description=Beyond-All-Reason Map Syncer
+Documentation=https://github.com/beyond-all-reason/maps-metadata/tree/main/tools/map_syncer
+
+[Service]
+Type=simple
+Environment="INSTANCE_NAME=us1"
+Environment="MAPS_DIR=/home/ubuntu/spads/var/spring/data/maps"
+ExecStart=/usr/local/bin/map_syncer.py --log-level INFO --mqtt-host broker.hivemq.com --healthcheck-url https://hc-ping.com/Iq_T4t71_QCqM0fOKG4ddQ/spads-map-sync-${INSTANCE_NAME} ${MAPS_DIR}
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target
