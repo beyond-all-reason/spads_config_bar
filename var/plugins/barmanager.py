@@ -916,61 +916,61 @@ def hADDUSER(command, userName, country = "nil", cpu = "nil", userID = "nil", lo
 def hLEFT_pre(command, chanName, userName, reason = ""):
 	try:
 		spads.slog("hLEFT_pre " + str([command, chanName, userName, reason, userName in knownUsers]), DBGLEVEL)
-		if knownUsers[userName]:
+		if userName in knownUsers:
 			return
 		else:			
 			spads.slog("hLEFT_pre cannot be exectuted" + str([command, chanName, userName, reason, userName in knownUsers]), 2)
-			spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
-			return "DROP"
+			#spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
+			#return "DROP"
 	except:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
 def hLEFTBATTLE_pre(command, battleID, userName):
 	try:
 		spads.slog("hLEFTBATTLE_pre " + str([command, battleID, userName, userName in knownUsers]), DBGLEVEL)
-		if knownUsers[userName]:
+		if userName in knownUsers:
 			return 
 		else:
 			spads.slog("hLEFTBATTLE_pre cannot be exectuted" + str([command, battleID, userName, userName in knownUsers]), 2)
-			spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
-			return "DROP"
+			#spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
+			#return "DROP"
 	except:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
 def hREMOVEUSER_pre(command, userName):
 	try:
 		spads.slog("hREMOVEUSER_pre " + str([command, userName, userName in knownUsers]), DBGLEVEL)
-		if knownUsers[userName]:
+		if userName in knownUsers:
 			del knownUsers[userName]
 			return 
 		else:
 			spads.slog("hREMOVEUSER_pre cannot be exectuted" + str([command, userName, userName in knownUsers]), 2)
-			spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
-			return "DROP"
+			#spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
+			#return "DROP"
 	except:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
 def hCLIENTSTATUS_pre(command, userName, status):
 	try:
 		spads.slog("hCLIENTSTATUS_pre " + str([command, userName, status, userName in knownUsers]), DBGLEVEL)
-		if knownUsers[userName]:
+		if userName in knownUsers:
 			return 
 		else:
 			spads.slog("hCLIENTSTATUS_pre cannot be exectuted" + str([command, userName, status, userName in knownUsers]), 2)
-			spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
-			return "DROP"
+			#spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
+			#return "DROP"
 	except:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
 def hJOINEDBATTLE_pre(command, battleID, userName, scriptPassword = ""):
 	try:
 		spads.slog("hJOINEDBATTLE_pre " + str([command, battleID, userName, scriptPassword, userName in knownUsers]), DBGLEVEL)
-		if knownUsers[userName]:
+		if userName in knownUsers:
 			return 
 		else:
 			spads.slog("hJOINEDBATTLE_pre cannot be exectuted" + str([command, battleID, userName, scriptPassword, userName in knownUsers]), 2)
-			spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
-			return "DROP"
+			#spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
+			#return "DROP"
 	except:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
