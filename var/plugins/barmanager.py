@@ -1039,8 +1039,8 @@ def h_autohost_GAME_LUAMSG(command, playerNumInt, luahandleidInt , nullStr, mess
 			contentsb64 = message[9:]
 			spads.slog("lu@$p@d$:" + str(contentsb64), DBGLEVEL)
 			try:
-				contents = base64.b64decode(contentsb64)
-				if len(contents) == 7:
+				contents = base64.b64decode(contentsb64 + b'==')
+				if len(contents) > 4:
 					sentmessage =  f'match-event {contents}'
 					spads.sayPrivate('AutohostMonitor', sentmessage)
 					spads.slog(sentmessage, DBGLEVEL)
