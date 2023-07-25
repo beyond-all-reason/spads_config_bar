@@ -1041,6 +1041,7 @@ def h_autohost_GAME_LUAMSG(command, playerNumInt, luahandleidInt , nullStr, mess
 			try:
 				contents = base64.urlsafe_b64decode(contentsb64 + "="*(4 - (len(contentsb64)%4) ) ).decode('utf-8') # absolute wtf
 				if len(contents) > 4:
+					contents = contents.replace('\\','/')
 					sentmessage =  f'match-event {contents}'
 					spads.sayPrivate('AutohostMonitor', sentmessage)
 					spads.slog(sentmessage, DBGLEVEL)
