@@ -1031,6 +1031,22 @@ def h_autohost_GAME_LUAMSG(command, playerNumInt, luahandleidInt , nullStr, mess
 				sentmessage =  f'match-chat-name <{ms[5]}>:<{ms[2]}> dallies: Added Point {ms[6]}'
 				spads.sayPrivate('AutohostMonitor', sentmessage)
 				spads.slog("m@pm@rk:" + str(ms) + sentmessage, DBGLEVEL)
+
+		# AddSpadsMessage event, see barwidgets.lua:AddSpadsMessage
+		if len(message) > 10 and message[0:9] == "lu@$p@d$:":
+			# incoming example: lu@$p@d$:ASDFASDFASDF
+			# outgoing result:  match-event <UnnamedPlayer> <LuaUI\Widgets\test_unitshape_instancing.lua/czE3YEocdDJ8bLoO5++a2A==> <35> 
+			contentsb64 = message[9:]
+			spads.slog("lu@$p@d$:" + str(contentsb64), DBGLEVEL)
+			try:
+				contents = base64.b64decode(contentsb64)
+				if len(contents) == 7:
+					sentmessage =  f'match-event {contents}'
+					spads.sayPrivate('AutohostMonitor', sentmessage)
+					spads.slog(sentmessage, DBGLEVEL)
+			except Exception as e:
+				spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+				
 				
 		# Friendly Fire event
 		#https://github.com/beyond-all-reason/Beyond-All-Reason/blob/6d74689da60a2ce998a990440f935f5b0d79059b/luarules/gadgets/game_logger.lua#LL76C31-L76C34
