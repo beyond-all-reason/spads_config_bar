@@ -847,7 +847,6 @@ def hSplitBattle(source, user, params, checkOnly):
 
 def hGetLastVote(source, user, params, checkOnly):
 	spads.slog("User %s called command getLastVote with parameter(s) \"%s\"" % (user, ','.join(params)), DBGLEVEL)
-	spads.slog("voteHistoryLength" + str(voteHistoryLength), DBGLEVEL)
 	if checkOnly:
 		return 1
 
