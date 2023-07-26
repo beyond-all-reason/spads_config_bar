@@ -517,7 +517,7 @@ class BarManager:
 			spads.slog(barmanagermessage, DBGLEVEL)
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
-			
+
 	def onVoteStop(self, voteResult):
 		# This callback is called each time a vote poll is stoped.
 		# $voteResult indicates the result of the vote: -1 (vote failed), 0 (vote cancelled), 1 (vote passed)
@@ -1106,7 +1106,7 @@ def h_autohost_GAME_LUAMSG(command, playerNumInt, luahandleidInt , nullStr, mess
 					spads.slog(sentmessage, DBGLEVEL)
 			except Exception as e:
 				spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
-
+				
 				
 		# Friendly Fire event
 		#https://github.com/beyond-all-reason/Beyond-All-Reason/blob/6d74689da60a2ce998a990440f935f5b0d79059b/luarules/gadgets/game_logger.lua#LL76C31-L76C34
