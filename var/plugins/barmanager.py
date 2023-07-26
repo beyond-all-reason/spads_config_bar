@@ -522,6 +522,7 @@ class BarManager:
 		# This callback is called each time a vote poll is stoped.
 		# $voteResult indicates the result of the vote: -1 (vote failed), 0 (vote cancelled), 1 (vote passed)
 		try:
+			spads.slog("onVoteStop: voteResult=" + str(voteResult), DBGLEVEL)
 			currentVote = json.dumps({"voteResult": spads.getCurrentVote()})
 			spads.sayBattle(BMP + currentVote)
 			voteHistoryAdd(currentVote)
