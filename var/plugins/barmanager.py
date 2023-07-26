@@ -868,7 +868,7 @@ def hGetLastVote(source, user, params, checkOnly):
 				spads.slog("getLastVote: value error: param 1 is not numeric", DBGLEVEL)
 				spads.sayPrivate(user, BMP + '{"getlastvote": {"error": "value", "errordescription": "param 1 is not numeric"}}')
 				return False
-			elif historyNum == 0 or historyNum > len(voteHistory):
+			elif historyNum < 1 or historyNum > len(voteHistory):
 				spads.slog("getLastVote: outofbounds error: requested vote not in vote history", DBGLEVEL)
 				spads.sayPrivate(user, BMP + '{"getlastvote": {"error": "outofbounds", "errordescription": "requested vote not in vote history"}}')
 				return False
@@ -1106,7 +1106,7 @@ def h_autohost_GAME_LUAMSG(command, playerNumInt, luahandleidInt , nullStr, mess
 					spads.slog(sentmessage, DBGLEVEL)
 			except Exception as e:
 				spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
-				
+
 				
 		# Friendly Fire event
 		#https://github.com/beyond-all-reason/Beyond-All-Reason/blob/6d74689da60a2ce998a990440f935f5b0d79059b/luarules/gadgets/game_logger.lua#LL76C31-L76C34
