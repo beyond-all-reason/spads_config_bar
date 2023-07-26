@@ -44,6 +44,9 @@ spadsConf = None  # {'lobbyReconnectDelay': 15, 'banList': 'empty', 'mapLink': '
 
 knownUsers = {} # this one is for tracking failed commands
 
+voteHistoryLength = 1
+voteHistory = [] # stores serialized currentVote objects
+
 # ------------------ JSON OBJECT INFO ------------------
 # Each json string will contain a dict, for example, for a votestart
 
@@ -61,7 +64,8 @@ globalPluginParams = {'crashDir': ['notNull'], 'crashFilePattern': ['notNull'], 
 					  'crashInfologPatterns': ['notNull'], 'chobbyGuiSettings': ['notNull'],
 					  'barManagerDebugLevel': ['notNull'],
 					  'commandsFile': ['notNull'],
-					  'helpFile': ['notNull']
+					  'helpFile': ['notNull'],
+					  'voteHistoryLength': ['notNull'],
 					  }
 presetPluginParams = None
 
@@ -247,6 +251,17 @@ def onTeiServerMessage(command, args):
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
+def voteHistoryAdd(vote):
+	try:
+		spads.slog("voteHistoryAdd: " + vote, DBGLEVEL)
+		voteHistory.append(vote)
+		if len(voteHistory) > voteHistoryLength:
+			voteHistory.pop(0)
+			spads.slog("voteHistoryAdd: reduced history to fit voteHistoryLength of " + str(voteHistoryLength), DBGLEVEL)
+
+	except Exception as e:
+		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+
 # This is the class implementing the plugin
 class BarManager:
 	def addLobbyCommandHandlers(self):
@@ -268,13 +283,14 @@ class BarManager:
 
 	# This is our constructor, called when the plugin is loaded by SPADS (mandatory callback)
 	def __init__(self, context):
-		global DBGLEVEL
+		global DBGLEVEL, voteHistoryLength
 		# We declare our new command and the associated handler
 		spads.addSpadsCommandHandler({'myCommand': hMyCommand})
 		spads.addSpadsCommandHandler({'aiProfile': hAiProfile})
 		spads.addSpadsCommandHandler({'splitbattle': hSplitBattle})
 		spads.addSpadsCommandHandler({'barmanagerdebuglevel': hbarmanagerdebuglevel})
 		spads.addSpadsCommandHandler({'barmanagerprintstate': hbarmanagerprintstate})
+		spads.addSpadsCommandHandler({'getlastvote': hGetLastVote})
 		
 		# We need to add the lobby command handlers before we are fully connected, or we dont get the JOINEDBATTLE stuff
 		# These will get replaced automatically when connect again
@@ -300,6 +316,7 @@ class BarManager:
 			pluginParams = spads.getPluginConf()
 			DBGLEVEL = int(pluginParams['barManagerDebugLevel'])
 			#DBGLEVEL = 3 # override here
+			voteHistoryLength = int(pluginParams['voteHistoryLength'])
 			spadsConf = spads.getSpadsConf()
 			spads.slog("pluginParams = " + str(pluginParams), 3)
 			CrashDir = os.path.join(spadsConf['varDir'], 'log', pluginParams['crashDir'])
@@ -329,6 +346,7 @@ class BarManager:
 		spads.removeSpadsCommandHandler(['splitbattle'])
 		spads.removeSpadsCommandHandler(['barmanagerdebuglevel'])
 		spads.removeSpadsCommandHandler(['barmanagerprintstate'])
+		spads.removeSpadsCommandHandler(['getlastvote'])
 
 		spads.removeLobbyCommandHandler(["JOINEDBATTLE"])
 		spads.removeLobbyCommandHandler(["LEFTBATTLE"])
@@ -491,17 +509,22 @@ class BarManager:
 		# command is an array reference containing the command for which a vote is started
 		try:
 			spads.slog("onVoteStart: " + ','.join(map(str, [user, command])), DBGLEVEL)
-			barmanagermessage = BMP + json.dumps({"onVoteStart": {'user': user, 'command': command}})
+			currentVote = spads.getCurrentVote()
+			usersAllowedToVote = list(currentVote["remainingVoters"])
+			usersAllowedToVote.append(user) # add vote initiator
+			barmanagermessage = BMP + json.dumps({"onVoteStart": {'user': user, 'command': command, 'usersallowedtovote': usersAllowedToVote}})
 			spads.sayBattle(barmanagermessage)
 			spads.slog(barmanagermessage, DBGLEVEL)
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
-
+			
 	def onVoteStop(self, voteResult):
 		# This callback is called each time a vote poll is stoped.
 		# $voteResult indicates the result of the vote: -1 (vote failed), 0 (vote cancelled), 1 (vote passed)
 		try:
-			spads.slog("onVoteStop: voteResult=" + str(voteResult), DBGLEVEL)
+			currentVote = json.dumps({"voteResult": spads.getCurrentVote()})
+			spads.sayBattle(BMP + currentVote)
+			voteHistoryAdd(currentVote)
 
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
@@ -715,8 +738,11 @@ def hbarmanagerdebuglevel(source, user, params, checkOnly):
 			try: 
 				newlevel = int(params[0])
 				DBGLEVEL = max(0, min(newlevel, 5))
+				spads.sayPrivate(user, "BarManager debug level changed to: " + str(DBGLEVEL))
 			except:
 				spads.slog("hbarmanagerdebuglevel failed to parse debug level value:" + str(params[0]), DBGLEVEL)
+		elif len(params) == 0:
+			spads.sayPrivate(user, "Current BarManager debug level: " + str(DBGLEVEL))
 			
 		spads.slog("User %s called command barmanagerdebuglevel with parameter(s) \"%s\"" % (user, ','.join(params)), 3)
 	except Exception as e:
@@ -817,6 +843,39 @@ def hSplitBattle(source, user, params, checkOnly):
 
 	# We log the command call as notice message
 	spads.slog("User %s called command hSplitBattle with parameter(s) \"%s\"" % (user, paramsString), 3)
+
+def hGetLastVote(source, user, params, checkOnly):
+	spads.slog("User %s called command getLastVote with parameter(s) \"%s\"" % (user, ','.join(params)), DBGLEVEL)
+	spads.slog("voteHistoryLength" + str(voteHistoryLength), DBGLEVEL)
+	if checkOnly:
+		return 1
+
+	try:
+		historyNum = 1
+		if len(params) > 1:
+			spads.slog("getLastVote: syntax error: more than 1 parameter", DBGLEVEL)
+			spads.sayPrivate(user, BMP + '{"getlastvote": {"error": "syntax", "errordescription": "more than 1 parameter"}}')
+			return False
+
+		if len(voteHistory) == 0:
+			spads.slog("getLastVote: nodata error: vote history is empty", DBGLEVEL)
+			spads.sayPrivate(user, BMP + '{"getlastvote": {"error": "nodata", "errordescription": "vote history is empty"}}')
+			return False
+		
+		if len(params) == 1:
+			historyNum = int(params[0]) if params[0].isdecimal() else None
+			if historyNum is None:
+				spads.slog("getLastVote: value error: param 1 is not numeric", DBGLEVEL)
+				spads.sayPrivate(user, BMP + '{"getlastvote": {"error": "value", "errordescription": "param 1 is not numeric"}}')
+				return False
+			elif historyNum == 0 or historyNum > len(voteHistory):
+				spads.slog("getLastVote: outofbounds error: requested vote not in vote history", DBGLEVEL)
+				spads.sayPrivate(user, BMP + '{"getlastvote": {"error": "outofbounds", "errordescription": "requested vote not in vote history"}}')
+				return False
+					
+		spads.sayPrivate(user, BMP + json.dumps({"getlastvote": voteHistory[historyNum - 1]}))
+	except Exception as e:
+		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
 def updatebotlist():
 	lobbyInterface = spads.getLobbyInterface()
@@ -920,8 +979,8 @@ def hLEFT_pre(command, chanName, userName, reason = ""):
 			return
 		else:			
 			spads.slog("hLEFT_pre cannot be exectuted" + str([command, chanName, userName, reason, userName in knownUsers]), 2)
-			#spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
-			#return "DROP"
+			spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
+			return "DROP"
 	except:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
@@ -932,8 +991,8 @@ def hLEFTBATTLE_pre(command, battleID, userName):
 			return 
 		else:
 			spads.slog("hLEFTBATTLE_pre cannot be exectuted" + str([command, battleID, userName, userName in knownUsers]), 2)
-			#spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
-			#return "DROP"
+			spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
+			return "DROP"
 	except:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
@@ -945,8 +1004,8 @@ def hREMOVEUSER_pre(command, userName):
 			return 
 		else:
 			spads.slog("hREMOVEUSER_pre cannot be exectuted" + str([command, userName, userName in knownUsers]), 2)
-			#spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
-			#return "DROP"
+			spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
+			return "DROP"
 	except:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
@@ -957,8 +1016,8 @@ def hCLIENTSTATUS_pre(command, userName, status):
 			return 
 		else:
 			spads.slog("hCLIENTSTATUS_pre cannot be exectuted" + str([command, userName, status, userName in knownUsers]), 2)
-			#spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
-			#return "DROP"
+			spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
+			return "DROP"
 	except:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
@@ -969,8 +1028,8 @@ def hJOINEDBATTLE_pre(command, battleID, userName, scriptPassword = ""):
 			return 
 		else:
 			spads.slog("hJOINEDBATTLE_pre cannot be exectuted" + str([command, battleID, userName, scriptPassword, userName in knownUsers]), 2)
-			#spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
-			#return "DROP"
+			spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
+			return "DROP"
 	except:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
@@ -1031,23 +1090,6 @@ def h_autohost_GAME_LUAMSG(command, playerNumInt, luahandleidInt , nullStr, mess
 				sentmessage =  f'match-chat-name <{ms[5]}>:<{ms[2]}> dallies: Added Point {ms[6]}'
 				spads.sayPrivate('AutohostMonitor', sentmessage)
 				spads.slog("m@pm@rk:" + str(ms) + sentmessage, DBGLEVEL)
-
-		# AddSpadsMessage event, see barwidgets.lua:AddSpadsMessage
-		if len(message) > 10 and message[0:9] == "lu@$p@d$:":
-			# incoming example: lu@$p@d$:ASDFASDFASDF
-			# outgoing result:  match-event <UnnamedPlayer> <LuaUI\Widgets\test_unitshape_instancing.lua/czE3YEocdDJ8bLoO5++a2A==> <35> 
-			contentsb64 = message[9:]
-			spads.slog("lu@$p@d$:" + str(contentsb64), DBGLEVEL)
-			try:
-				contents = base64.urlsafe_b64decode(contentsb64 + "="*(4 - (len(contentsb64)%4) ) ).decode('utf-8') # absolute wtf
-				if len(contents) > 4:
-					contents = contents.replace('\\','/')
-					sentmessage =  f'match-event {contents}'
-					spads.sayPrivate('AutohostMonitor', sentmessage)
-					spads.slog(sentmessage, DBGLEVEL)
-			except Exception as e:
-				spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
-				
 				
 		# Friendly Fire event
 		#https://github.com/beyond-all-reason/Beyond-All-Reason/blob/6d74689da60a2ce998a990440f935f5b0d79059b/luarules/gadgets/game_logger.lua#LL76C31-L76C34
