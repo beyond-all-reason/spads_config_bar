@@ -529,7 +529,12 @@ class BarManager:
 		# $voteResult indicates the result of the vote: -1 (vote failed), 0 (vote cancelled), 1 (vote passed)
 		try:
 			spads.slog("onVoteStop: voteResult=" + str(voteResult), DBGLEVEL)
-			voteHistoryAdd(json.dumps(spads.getCurrentVote()))
+			lastVote = spads.getCurrentVote()
+			lastVote["voteResult"] = voteResult
+			barmanagermessage = BMP + json.dumps({"onVoteStop": lastVote})
+			spads.sayBattle(barmanagermessage)
+			spads.slog("onVoteStop: barmanagermessage=" + str(barmanagermessage), DBGLEVEL)
+			voteHistoryAdd(json.dumps(lastVote))
 
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
