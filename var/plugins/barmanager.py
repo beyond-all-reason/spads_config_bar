@@ -52,11 +52,12 @@ voteHistory = [] # stores serialized currentVote objects
 # Each json string will contain a dict, for example, for a votestart
 
 # This is the first version of the plugin
-pluginVersion = '0.3'
+pluginVersion = '0.4'
 
 # This plugin requires a SPADS version which supports Python plugins
 # (only SPADS versions >= 0.12.29 support Python plugins)
-requiredSpadsVersion = '0.12.29'
+# starting with SPADS version >= 0.13.12 commandResult for hVote and hCallVote returns correct values (1=success | 0=failed)
+requiredSpadsVersion = '0.13.12'
 
 # We define 2 global settings (mandatory for plugins implementing new commands):
 # - commandsFile: name of the plugin commands rights configuration file (located in etc dir, same syntax as commands.conf)
