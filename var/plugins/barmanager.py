@@ -7,6 +7,7 @@ import base64
 import zlib
 import os
 import time
+import datetime
 
 # perl.BarManager is the Perl representation of the BarManager plugin module
 # We will use this object to call the plugin API
@@ -44,7 +45,7 @@ spadsConf = None  # {'lobbyReconnectDelay': 15, 'banList': 'empty', 'mapLink': '
 
 knownUsers = {} # this one is for tracking failed commands
 
-voteHistoryLength = 1
+voteHistoryMax = 1
 voteHistory = [] # stores serialized currentVote objects
 
 # ------------------ JSON OBJECT INFO ------------------
@@ -65,7 +66,7 @@ globalPluginParams = {'crashDir': ['notNull'], 'crashFilePattern': ['notNull'], 
 					  'barManagerDebugLevel': ['notNull'],
 					  'commandsFile': ['notNull'],
 					  'helpFile': ['notNull'],
-					  'voteHistoryLength': ['notNull'],
+					  'voteHistoryMax': ['notNull'],
 					  }
 presetPluginParams = None
 
@@ -255,10 +256,18 @@ def voteHistoryAdd(vote):
 	try:
 		spads.slog("voteHistoryAdd: " + vote, DBGLEVEL)
 		voteHistory.append(vote)
-		if len(voteHistory) > voteHistoryLength:
+		while len(voteHistory) > voteHistoryMax:
 			voteHistory.pop(0)
-			spads.slog("voteHistoryAdd: reduced history to fit voteHistoryLength of " + str(voteHistoryLength), DBGLEVEL)
+			spads.slog("voteHistoryAdd: reduced vote history to " + str(len(voteHistory)), DBGLEVEL)
 
+	except Exception as e:
+		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+
+def sendCurrentVote():
+	try:
+		barmanagermessage = BMP + json.dumps({"currentVote": spads.getCurrentVote()})
+		spads.sayBattle(barmanagermessage)
+		spads.slog(barmanagermessage, DBGLEVEL)
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
@@ -283,7 +292,7 @@ class BarManager:
 
 	# This is our constructor, called when the plugin is loaded by SPADS (mandatory callback)
 	def __init__(self, context):
-		global DBGLEVEL, voteHistoryLength
+		global DBGLEVEL, voteHistoryMax
 		# We declare our new command and the associated handler
 		spads.addSpadsCommandHandler({'myCommand': hMyCommand})
 		spads.addSpadsCommandHandler({'aiProfile': hAiProfile})
@@ -316,7 +325,7 @@ class BarManager:
 			pluginParams = spads.getPluginConf()
 			DBGLEVEL = int(pluginParams['barManagerDebugLevel'])
 			#DBGLEVEL = 3 # override here
-			voteHistoryLength = int(pluginParams['voteHistoryLength'])
+			voteHistoryMax = int(pluginParams['voteHistoryMax'])
 			spadsConf = spads.getSpadsConf()
 			spads.slog("pluginParams = " + str(pluginParams), 3)
 			CrashDir = os.path.join(spadsConf['varDir'], 'log', pluginParams['crashDir'])
@@ -509,10 +518,7 @@ class BarManager:
 		# command is an array reference containing the command for which a vote is started
 		try:
 			spads.slog("onVoteStart: " + ','.join(map(str, [user, command])), DBGLEVEL)
-			currentVote = spads.getCurrentVote()
-			usersAllowedToVote = list(currentVote["remainingVoters"])
-			usersAllowedToVote.append(user) # add vote initiator
-			barmanagermessage = BMP + json.dumps({"onVoteStart": {'user': user, 'command': command, 'usersallowedtovote': usersAllowedToVote}})
+			barmanagermessage = BMP + json.dumps({"onVoteStart": spads.getCurrentVote()})
 			spads.sayBattle(barmanagermessage)
 			spads.slog(barmanagermessage, DBGLEVEL)
 		except Exception as e:
@@ -523,9 +529,7 @@ class BarManager:
 		# $voteResult indicates the result of the vote: -1 (vote failed), 0 (vote cancelled), 1 (vote passed)
 		try:
 			spads.slog("onVoteStop: voteResult=" + str(voteResult), DBGLEVEL)
-			currentVote = json.dumps({"voteResult": spads.getCurrentVote()})
-			spads.sayBattle(BMP + currentVote)
-			voteHistoryAdd(currentVote)
+			voteHistoryAdd(json.dumps(spads.getCurrentVote()))
 
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
@@ -606,10 +610,7 @@ class BarManager:
 					
 
 			elif command == "vote":
-				# todo: also pass vote status here!
-				if params[0] in ['yes', 'y', 'no', 'n', 'blank', 'b']:
-					if params[0] == 'yes':
-						pass
+				sendCurrentVote()
 			elif command == "boss":
 				if len(params) == 0:
 					whoIsBoss = None
@@ -873,7 +874,7 @@ def hGetLastVote(source, user, params, checkOnly):
 				spads.sayPrivate(user, BMP + '{"getlastvote": {"error": "outofbounds", "errordescription": "requested vote not in vote history"}}')
 				return False
 					
-		spads.sayPrivate(user, BMP + json.dumps({"getlastvote": voteHistory[historyNum - 1]}))
+		spads.sayPrivate(user, BMP + json.dumps({"getlastvote": voteHistory[len(voteHistory)- historyNum]}))
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
