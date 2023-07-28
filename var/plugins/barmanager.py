@@ -7,7 +7,6 @@ import base64
 import zlib
 import os
 import time
-import datetime
 
 # perl.BarManager is the Perl representation of the BarManager plugin module
 # We will use this object to call the plugin API
