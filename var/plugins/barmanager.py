@@ -706,6 +706,47 @@ class BarManager:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 		return {}
 
+	def updateStatusInfo(self, playerStatus, accountId, modName, gameType, accessLevel):
+		#  updateStatusInfo: params={'Name': '[teh]behetest', 'Skill': '[16.67 ???]', 'ID': '3726', 'Rank': 2},3726,Beyond All Reason test-24450-6c81e38,Duel,30
+
+		try:
+			spads.slog("updateStatusInfo: params=" +','.join(map(str, [playerStatus, accountId, modName, gameType, accessLevel])), DBGLEVEL)
+			if accessLevel >= 10:
+				playerAccessLevel = spads.getUserAccessLevel(playerStatus['Name'])
+				additionalinfo = {}
+				bosses = spads.getBosses()
+				if len(bosses) > 0:
+					if playerStatus['Name'] in bosses:
+						additionalinfo['Boss'] = 1
+						additionalinfo["Acc"]=str(playerAccessLevel)
+					else:
+						additionalinfo["Acc"]='0 ('+str(playerAccessLevel)+')'
+				else:
+					additionalinfo["Acc"]=str(playerAccessLevel)
+				return additionalinfo
+				
+		except Exception as e:
+			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+		return 
+	
+	def changeUserAccessLevel(self, userName, userData, isAuthenticated, currentAccessLevel):
+		global whoIsBoss
+		#  updateStatusInfo: params={'Name': '[teh]behetest', 'Skill': '[16.67 ???]', 'ID': '3726', 'Rank': 2},3726,Beyond All Reason test-24450-6c81e38,Duel,30
+
+		try:
+			#spads.slog("changeUserAccessLevel:" +','.join(map(str, [userName, userData, isAuthenticated, currentAccessLevel])), DBGLEVEL)
+			bosses = spads.getBosses()
+			if userName in bosses:
+				privilegedBossLevel = 100
+				if int(currentAccessLevel) < privilegedBossLevel:
+					spads.slog("changeUserAccessLevel for %s from %s to %d because the user is boss"%(
+						userName, currentAccessLevel, privilegedBossLevel) , DBGLEVEL)
+					return privilegedBossLevel
+			return
+		except Exception as e:
+			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+		return 
+
 
 # This is the handler for our new command
 def hMyCommand(source, user, params, checkOnly):
