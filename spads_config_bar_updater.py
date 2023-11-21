@@ -118,7 +118,7 @@ def updateengine(args):
 	newenginedir = os.path.splitext(enginezipname)[0]
 	
 	targetpath = os.path.join(args.enginedir,newenginedir)
-	execute("7za x -o%s %s"%(targetpath, enginezipname)) # unzip to target
+	execute("7za x -y -o%s %s"%(targetpath, enginezipname)) # unzip to target
 	
 	for filename in ['pr-downloader', 'libunitsync.so', 'spring', 'spring-dedicated', 'spring-headless']:
 		execute("chmod +x " + os.path.join(targetpath, filename) ) 
