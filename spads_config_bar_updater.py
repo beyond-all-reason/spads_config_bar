@@ -157,7 +157,7 @@ if args.updateengine:
 print(f"Done, {successes} commands succeeded, {errors} commands failed")
 # step 7 Restart spads service?
 
-
+sys.exit(errors)
 
 
 
