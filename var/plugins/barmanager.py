@@ -7,6 +7,7 @@ import base64
 import zlib
 import os
 import time
+import datetime
 
 # perl.BarManager is the Perl representation of the BarManager plugin module
 # We will use this object to call the plugin API
@@ -265,7 +266,10 @@ def voteHistoryAdd(vote):
 
 def sendCurrentVote():
 	try:
-		barmanagermessage = BMP + json.dumps({"currentVote": spads.getCurrentVote()})
+		currentVote = spads.getCurrentVote()
+		currentVote['expireTime']  = datetime.datetime.utcfromtimestamp(currentVote['expireTime']).strftime('%Y-%m-%d %H:%M:%S')
+		currentVote['awayVoteTime']  = datetime.datetime.utcfromtimestamp(currentVote['awayVoteTime']).strftime('%Y-%m-%d %H:%M:%S')
+		barmanagermessage = BMP + json.dumps({"currentVote": currentVote})
 		spads.sayBattle(barmanagermessage)
 		spads.slog(barmanagermessage, DBGLEVEL)
 	except Exception as e:
@@ -518,7 +522,10 @@ class BarManager:
 		# command is an array reference containing the command for which a vote is started
 		try:
 			spads.slog("onVoteStart: " + ','.join(map(str, [user, command])), DBGLEVEL)
-			barmanagermessage = BMP + json.dumps({"onVoteStart": spads.getCurrentVote()})
+			currentVote = spads.getCurrentVote()
+			currentVote['expireTime']  = (datetime.datetime.utcfromtimestamp(currentVote['expireTime'])).strftime('%Y-%m-%d %H:%M:%S')
+			currentVote['awayVoteTime']  = (datetime.datetime.utcfromtimestamp(currentVote['awayVoteTime'])).strftime('%Y-%m-%d %H:%M:%S')
+			barmanagermessage = BMP + json.dumps({"onVoteStart": currentVote})
 			spads.sayBattle(barmanagermessage)
 			spads.slog(barmanagermessage, DBGLEVEL)
 		except Exception as e:
@@ -530,6 +537,8 @@ class BarManager:
 		try:
 			spads.slog("onVoteStop: voteResult=" + str(voteResult), DBGLEVEL)
 			lastVote = spads.getCurrentVote()
+			lastVote['expireTime']  = (datetime.datetime.utcfromtimestamp(lastVote['expireTime'])).strftime('%Y-%m-%d %H:%M:%S')
+			lastVote['awayVoteTime']  = (datetime.datetime.utcfromtimestamp(lastVote['awayVoteTime'])).strftime('%Y-%m-%d %H:%M:%S')
 			lastVote["voteResult"] = voteResult
 			barmanagermessage = BMP + json.dumps({"onVoteStop": lastVote})
 			spads.sayBattle(barmanagermessage)
