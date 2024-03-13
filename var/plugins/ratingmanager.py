@@ -70,7 +70,7 @@ class RatingManager:
                 # unbalance_indicator = 0.5
 
                 spads.slog("[balanceBattle] Data result = " +
-                           str(response_data), 3)
+                           str(response_data), 5)
 
                 if len(response_data) == 0:
                     return [-1, {}, {}]
