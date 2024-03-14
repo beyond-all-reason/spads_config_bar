@@ -7,7 +7,6 @@ import base64
 import zlib
 import os
 import time
-import random
 
 # perl.BarManager is the Perl representation of the BarManager plugin module
 # We will use this object to call the plugin API
@@ -68,7 +67,6 @@ globalPluginParams = {'crashDir': ['notNull'], 'crashFilePattern': ['notNull'], 
 					  'commandsFile': ['notNull'],
 					  'helpFile': ['notNull'],
 					  'voteHistoryMax': ['notNull'],
-					  'additionalReconnectDelay': ['notNull'],
 					  }
 presetPluginParams = None
 
@@ -347,23 +345,6 @@ class BarManager:
 			# https://springrts.com/wiki/SPADS_plugin_development_(Python)#Writing_plugin_code_2
 			self.addLobbyCommandHandlers()
 		
-		except Exception as e:
-			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
-			
-	def onLobbyDisconnected(self):
-		try:
-			pluginParams = spads.getPluginConf()
-			additionalReconnectDelay = pluginParams['additionalReconnectDelay']
-			disconnectDelay = 0
-			if '-' in additionalReconnectDelay:
-				aDDSplit = additionalReconnectDelay.split('-')
-				disconnectDelay = random.randint(int(aDDSplit[0]), int(aDDSplit[1]))
-			else:
-				disconnectDelay = int(additionalReconnectDelay)
-				
-			spads.slog("Disconnected from lobby server (waiting %d seconds to reconnect)" % disconnectDelay, 3)
-			time.sleep(disconnectDelay)
-			
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
@@ -765,6 +746,7 @@ class BarManager:
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 		return 
+
 
 # This is the handler for our new command
 def hMyCommand(source, user, params, checkOnly):
