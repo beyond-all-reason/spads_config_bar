@@ -348,6 +348,12 @@ class BarManager:
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
+	def onLobbyDisconnected(self):
+		try:
+			perl.eval('$::timestamps{connectAttempt}=time;')
+		except Exception as e:
+			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+
 	# This is the callback called when the plugin is unloaded
 	def onUnload(self, reason):
 		spads.removeSpadsCommandHandler(['myCommand'])
