@@ -1,3 +1,15 @@
+# LP_LargeTeamNb Plugin
+# This plugin reuses some unused/reserved bits in MYBATTLESTATUS command from spring protocol
+#
+# Original spring protocol can communicate about up to 16 players and teams over the command MYBATTLESTATUS (https://springrts.com/dl/LobbyProtocol/ProtocolDescription.html#MYBATTLESTATUS:client)
+# Since spring/recoil supports up to 256 players, this plugin uses those unused/reserved bits b18..b21 and b28..b31 to communicate teamIDS and allyTeamIDs between autohost and clients.
+#
+# So team nr. will be b2..b5(original) + b18..b21(extension)
+# and ally team no. gets b6..b9 + b28..b31
+# (This info was added by Fireball)
+
+# Author of code: Yaribz
+
 package LP_LargeTeamNb;
 
 use strict;
