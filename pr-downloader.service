@@ -9,7 +9,7 @@ StartLimitBurst=3
 User=ubuntu
 Type=oneshot
 Environment="PRD_RAPID_USE_STREAMER=false"
-Environment="PRD_RAPID_REPO_MASTER=https://bar-rapid.p2004a.com/repos.gz"
+Environment="PRD_RAPID_REPO_MASTER=https://repos-cdn.beyondallreason.dev/repos.gz"
 #ExecStart=/usr/games/pr-downloader --filesystem-writepath /home/ubuntu/spads/var/spring/data byar:test
 ExecStart=perl /home/ubuntu/spads/sequentialSpadsUnitsyncProcess.pl /home/ubuntu/spads/var /home/ubuntu/spads/pr-downloader --filesystem-writepath /home/ubuntu/spads/var/spring/data byar:test
 StandardOutput=journal

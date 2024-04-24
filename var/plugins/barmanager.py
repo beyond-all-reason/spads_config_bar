@@ -352,6 +352,12 @@ class BarManager:
 		except Exception as e:
 			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
+	def onLobbyDisconnected(self):
+		try:
+			perl.eval('$::timestamps{connectAttempt}=time;')
+		except Exception as e:
+			spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+
 	# This is the callback called when the plugin is unloaded
 	def onUnload(self, reason):
 		spads.removeSpadsCommandHandler(['myCommand'])
@@ -1166,15 +1172,34 @@ def h_autohost_GAME_LUAMSG(command, playerNumInt, luahandleidInt , nullStr, mess
 				
 		# Friendly Fire event
 		#https://github.com/beyond-all-reason/Beyond-All-Reason/blob/6d74689da60a2ce998a990440f935f5b0d79059b/luarules/gadgets/game_logger.lua#LL76C31-L76C34
-		#local msg = string.format("l0g%s:%d:%s:%d:%d:%d", validation,
+		#local msg = string.format("l0g%s:friendlyfire:%d:%s:%d:%d:%d", validation,
 		#	Spring.GetGameFrame(), 'ud',
 		#	unitTeam, attackerTeam, unitDefID)
+		
 		if len(message) > 10 and message[0:3] == "l0g":
-			sentmessage = f'match-event-friendlyfire {message}'
-			spads.sayPrivate('AutohostMonitor', sentmessage)
-			spads.slog(sentmessage, DBGLEVEL)
+			username = "UNKNOWN"
+			if playerNumInt in hwInfoIngame:
+				# Username should already be stored here
+				username = hwInfoIngame[playerNumInt]['username']
 			
-
+			eventType = "unknown"
+			try:
+				eventType = message.split(':')[1]	
+			except Exception as e:
+				spads.slog(f'Failed to parse a log message for eventType: {message} ' + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()) , 2)
+				pass
+				
+			gameTime = 0
+			try:
+				gameTime = int(message.split(':')[2])
+			except Exception as e:
+				spads.slog(f'Failed to parse a log message for gameTime: {message} ' + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()) , 2)
+				pass
+			
+			matcheventmessage = f'match-event <{username}> <{eventType}> <{gameTime}>'
+			spads.slog(f'Sent: {matcheventmessage}', 3)
+			spads.sayPrivate('AutohostMonitor', matcheventmessage)
+			
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
