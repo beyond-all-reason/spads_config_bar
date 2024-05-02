@@ -8,6 +8,11 @@ import zlib
 import os
 import time
 
+from datetime import datetime, timezone
+# from https://blog.miguelgrinberg.com/post/it-s-time-for-a-change-datetime-utcnow-is-now-deprecated
+def naive_utcfromtimestamp(timestamp):
+	return datetime.fromtimestamp(timestamp, timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+
 # perl.BarManager is the Perl representation of the BarManager plugin module
 # We will use this object to call the plugin API
 spads = perl.BarManager
@@ -265,7 +270,17 @@ def voteHistoryAdd(vote):
 
 def sendCurrentVote():
 	try:
-		barmanagermessage = BMP + json.dumps({"currentVote": spads.getCurrentVote()})
+		currentVote = spads.getCurrentVote()
+		if not currentVote:
+			return
+
+		for user in currentVote['remainingVoters']:
+			currentVote['remainingVoters'][user]['voteMode'] = spads.getUserPref(user, "voteMode")
+
+		# use string timestamps, because lua can't handle linux timestamps (signed integer is too big)
+		currentVote['expireTime']  = naive_utcfromtimestamp(currentVote['expireTime'])
+		currentVote['awayVoteTime']  = naive_utcfromtimestamp(currentVote['awayVoteTime'])
+		barmanagermessage = BMP + json.dumps({"currentVote": currentVote})
 		spads.sayBattle(barmanagermessage)
 		spads.slog(barmanagermessage, DBGLEVEL)
 	except Exception as e:
@@ -523,8 +538,15 @@ class BarManager:
 	def onVoteStart(self, user, command):
 		# command is an array reference containing the command for which a vote is started
 		try:
-			spads.slog("onVoteStart: " + ','.join(map(str, [user, command])), DBGLEVEL)
-			barmanagermessage = BMP + json.dumps({"onVoteStart": spads.getCurrentVote()})
+			currentVote = spads.getCurrentVote()
+			for user in currentVote['remainingVoters']:
+				currentVote['remainingVoters'][user]['voteMode'] = spads.getUserPref(user, "voteMode")
+
+			# use string timestamps, because lua can't handle linux timestamps (signed integer is too big)
+			currentVote['expireTime']  = naive_utcfromtimestamp(currentVote['expireTime'])
+			currentVote['awayVoteTime']  = naive_utcfromtimestamp(currentVote['awayVoteTime'])
+			
+			barmanagermessage = BMP + json.dumps({"onVoteStart": currentVote})
 			spads.sayBattle(barmanagermessage)
 			spads.slog(barmanagermessage, DBGLEVEL)
 		except Exception as e:
@@ -536,6 +558,11 @@ class BarManager:
 		try:
 			spads.slog("onVoteStop: voteResult=" + str(voteResult), DBGLEVEL)
 			lastVote = spads.getCurrentVote()
+
+			# use string timestamps, because lua can't handle linux timestamps (signed integer is too big)
+			lastVote['expireTime']  = naive_utcfromtimestamp(lastVote['expireTime'])
+			lastVote['awayVoteTime']  = naive_utcfromtimestamp(lastVote['awayVoteTime'])
+
 			lastVote["voteResult"] = voteResult
 			barmanagermessage = BMP + json.dumps({"onVoteStop": lastVote})
 			spads.sayBattle(barmanagermessage)
@@ -999,6 +1026,7 @@ def hJOINEDBATTLE(command, battleID, userName, battleStatus=0):
 			spads.slog("JOINEDBATTLE" + str([command, battleID, myBattleID, userName, battleStatus]), DBGLEVEL)
 			SendChobbyState()
 			playersInMyBattle[userName] = battleStatus
+			sendCurrentVote()
 			#spads.queueLobbyCommand(["SAYBATTLEEX", "hello dude"])
 	except Exception as e:
 		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
