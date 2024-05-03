@@ -49,6 +49,6 @@ for hostdir in os.listdir(os.getcwd()):
 				except:
 					print ("Failed to clean log file", hostdir, logtotruncate)
 		if os.path.isdir(os.path.join(hostdir,'demos-server')):
-			cmd_delete_older_than_two_weeks = 'find %s/demos-server -type f -mtime +14 -delete | wc -l' %(hostdir)
+			cmd_delete_older_than_two_weeks = 'find %s/demos-server -type f -mtime +8 -delete | wc -l' %(hostdir)
 			print ("Deleting Replays older than two weeks", cmd_delete_older_than_two_weeks)
 			os.system(cmd_delete_older_than_two_weeks)
