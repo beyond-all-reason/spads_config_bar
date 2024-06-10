@@ -938,7 +938,7 @@ def hMaxRatingLevel(source, user, params, checkOnly):
 		paramsString = ','.join(params)
 
 		# We log the command call as notice message
-		spads.slog("User %s called command hMaxRatingLevel with parameter(s) \"%s\"" % (user, paramsString, source, checkOnly), 3)
+		spads.slog("User %s called command hMaxRatingLevel with parameter(s) \"%s\" %s %s" % (user, paramsString, source, checkOnly), 3)
 
 		maxRating = None
 
@@ -947,11 +947,12 @@ def hMaxRatingLevel(source, user, params, checkOnly):
 		except:
 			pass
 
-		if checkOnly:
+		# checkonly is not needed as the barmanagercmd.conf already handles this
+		#if checkOnly:
 			# Only callable from battleroom
-			if source != 'battle':
-				return 0
-			return 1
+		#	if source != 'battle':
+		#		return 0
+		#	return 1
 
 
 		# We tell AutohostMonitor:
