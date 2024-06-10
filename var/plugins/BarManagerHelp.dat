@@ -4,5 +4,6 @@
 "!getlastvote 2" returns 2nd most recent vote result
 
 [maxratinglevel]
-"!maxratinglevel [<number>]" - Sets the maximum rating level of a lobby to the specified number
+!maxratinglevel [<number>] - Sets the maximum rating level of a lobby to the specified number
+"!maxratinglevel 3" - Sets minimum rating to 3
 "!maxratinglevel" - Clears the maximum rating level of the lobby
