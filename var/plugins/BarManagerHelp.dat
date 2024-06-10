@@ -2,3 +2,7 @@
 !getlastvote [<voteNum>] - returns a vote result in json format, where param 1 returns the most recent vote result
 "!getlastvote" returns most recent vote result
 "!getlastvote 2" returns 2nd most recent vote result
+
+[maxratinglevel]
+"!maxratinglevel [<number>]" - Sets the maximum rating level of a lobby to the specified number
+"!maxratinglevel" - Clears the maximum rating level of the lobby
