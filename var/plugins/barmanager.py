@@ -946,14 +946,10 @@ def hMaxRatingLevel(source, user, params, checkOnly):
 			maxRating = int(params[0])
 		except:
 			pass
-
-		# checkonly is not needed as the barmanagercmd.conf already handles this
-		#if checkOnly:
-			# Only callable from battleroom
-		#	if source != 'battle':
-		#		return 0
-		#	return 1
-
+		
+		# This is only called when checking if the command can initiate a callvote
+		if checkOnly:
+			return 1		
 
 		# We tell AutohostMonitor:
 		spads.sayPrivate('AutohostMonitor', '$maxratinglevel' + ("" if maxRating is None else ' %d'%(maxRating)))
