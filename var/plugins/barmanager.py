@@ -315,6 +315,9 @@ class BarManager:
 		spads.addSpadsCommandHandler({'barmanagerdebuglevel': hbarmanagerdebuglevel})
 		spads.addSpadsCommandHandler({'barmanagerprintstate': hbarmanagerprintstate})
 		spads.addSpadsCommandHandler({'getlastvote': hGetLastVote})
+
+		spads.addSpadsCommandHandler({'maxratinglevel': hMaxRatingLevel})
+
 		
 		# We need to add the lobby command handlers before we are fully connected, or we dont get the JOINEDBATTLE stuff
 		# These will get replaced automatically when connect again
@@ -377,6 +380,8 @@ class BarManager:
 		spads.removeSpadsCommandHandler(['barmanagerdebuglevel'])
 		spads.removeSpadsCommandHandler(['barmanagerprintstate'])
 		spads.removeSpadsCommandHandler(['getlastvote'])
+
+		spads.removeSpadsCommandHandler(['maxratinglevel'])
 
 		spads.removeLobbyCommandHandler(["JOINEDBATTLE"])
 		spads.removeLobbyCommandHandler(["LEFTBATTLE"])
@@ -924,6 +929,41 @@ def hSplitBattle(source, user, params, checkOnly):
 
 	# We log the command call as notice message
 	spads.slog("User %s called command hSplitBattle with parameter(s) \"%s\"" % (user, paramsString), 3)
+
+def hMaxRatingLevel(source, user, params, checkOnly):
+	try:
+		# checkOnly is true if this is just a check for callVote command, not a real command execution
+
+		maxRating = None
+
+		try:
+			maxRating = int(params[0])
+		except:
+			pass
+
+		if checkOnly:
+			# Only callable from battleroom
+			if source != 'battle':
+				return 0
+			return 1
+
+		# We join the parameters provided (if any), using ',' as delimiter
+		paramsString = ','.join(params)
+
+		# We log the command call as notice message
+		spads.slog("User %s called command hMaxRatingLevel with parameter(s) \"%s\"" % (user, paramsString), 3)
+
+		# We tell AutohostMonitor:
+		spads.sayPrivate('AutohostMonitor', '$maxratinglevel' + ("" if maxRating is None else ' %d'%(maxRating)))
+
+		spads.sayBattle("maxratinglevel command succeded, notified AutohostMonitor with $maxratinglevel %s"%(maxRating))
+
+		return 1
+		
+	except Exception as e:
+		spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+	return 1
+
 
 def hGetLastVote(source, user, params, checkOnly):
 	spads.slog("User %s called command getLastVote with parameter(s) \"%s\"" % (user, ','.join(params)), DBGLEVEL)
