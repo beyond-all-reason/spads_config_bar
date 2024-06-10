@@ -933,6 +933,12 @@ def hSplitBattle(source, user, params, checkOnly):
 def hMaxRatingLevel(source, user, params, checkOnly):
 	try:
 		# checkOnly is true if this is just a check for callVote command, not a real command execution
+		
+		# We join the parameters provided (if any), using ',' as delimiter
+		paramsString = ','.join(params)
+
+		# We log the command call as notice message
+		spads.slog("User %s called command hMaxRatingLevel with parameter(s) \"%s\"" % (user, paramsString, source, checkOnly), 3)
 
 		maxRating = None
 
@@ -947,11 +953,6 @@ def hMaxRatingLevel(source, user, params, checkOnly):
 				return 0
 			return 1
 
-		# We join the parameters provided (if any), using ',' as delimiter
-		paramsString = ','.join(params)
-
-		# We log the command call as notice message
-		spads.slog("User %s called command hMaxRatingLevel with parameter(s) \"%s\"" % (user, paramsString), 3)
 
 		# We tell AutohostMonitor:
 		spads.sayPrivate('AutohostMonitor', '$maxratinglevel' + ("" if maxRating is None else ' %d'%(maxRating)))
