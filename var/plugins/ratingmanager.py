@@ -14,17 +14,21 @@ server_url = "https://server4.beyondallreason.info"
 rating_url = f"{server_url}/teiserver/api/spads/get_rating"
 balance_url = f"{server_url}/teiserver/api/spads/balance_battle"
 
+
 def getVersion(pluginObject):
     return pluginVersion
 
+
 def getRequiredSpadsVersion(pluginName):
     return requiredSpadsVersion
+
 
 class RatingManager:
     def __init__(self, context):
         global server_url, rating_url, balance_url
         try:
-            spads.slog("RatingManager plugin loaded (version %s)" % pluginVersion, 3)
+            spads.slog("RatingManager plugin loaded (version %s)" %
+                       pluginVersion, 3)
             spadsConf = spads.getSpadsConf()
             lobbyHost = spadsConf['lobbyHost']
             if 'beyondallreason.info' in lobbyHost:
@@ -33,9 +37,8 @@ class RatingManager:
                 balance_url = f"{server_url}/teiserver/api/spads/balance_battle"
                 spads.slog("RatingManager server_url (%s)" % server_url, 3)
         except Exception as e:
-            spads.slog("Unhandled exception: [updatePlayerSkill]" + "[" + raw_data + "]"+ str(sys.exc_info()
+            spads.slog("Unhandled exception: [updatePlayerSkill]" + "[" + raw_data + "]" + str(sys.exc_info()
                        [0]) + "\n" + str(traceback.format_exc()), 0)
-
 
     def updatePlayerSkill(self, playerSkill, accountId, modName, gameType):
         try:
@@ -46,7 +49,7 @@ class RatingManager:
 
                 return [1, data["rating_value"], data["uncertainty"]]
         except Exception as e:
-            spads.slog("Unhandled exception: [updatePlayerSkill]" + "[" + raw_data + "]"+ str(sys.exc_info()
+            spads.slog("Unhandled exception: [updatePlayerSkill]" + "[" + raw_data + "]" + str(sys.exc_info()
                        [0]) + "\n" + str(traceback.format_exc()), 0)
             return [1, 16.66, 8.33]
 
