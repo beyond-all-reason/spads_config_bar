@@ -627,6 +627,7 @@ class BarManager:
             spads.slog("onPresetApplied: " + str(oldPresetName) +
                        " -> " + str(newPresetName), DBGLEVEL)
             refreshChobbyState()
+            checkForBarGametypeChange(None, None)
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()
                        [0]) + "\n" + str(traceback.format_exc()), 0)
