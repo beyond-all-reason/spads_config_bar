@@ -14,17 +14,36 @@ server_url = "https://server4.beyondallreason.info"
 rating_url = f"{server_url}/teiserver/api/spads/get_rating"
 balance_url = f"{server_url}/teiserver/api/spads/balance_battle"
 
+
 def getVersion(pluginObject):
     return pluginVersion
 
+
 def getRequiredSpadsVersion(pluginName):
     return requiredSpadsVersion
+
+
+def getBarGameType(teamsize, teamcount):
+    if teamcount <= 2:
+        if teamsize == 1:
+            return "Duel"
+        elif teamsize <= 5:
+            return "Small Team"
+        else:
+            return "Large Team"
+    else:
+        if teamsize == 1:
+            return "FFA"
+        else:
+            return "Team FFA"
+
 
 class RatingManager:
     def __init__(self, context):
         global server_url, rating_url, balance_url
         try:
-            spads.slog("RatingManager plugin loaded (version %s)" % pluginVersion, 3)
+            spads.slog("RatingManager plugin loaded (version %s)" %
+                       pluginVersion, 3)
             spadsConf = spads.getSpadsConf()
             lobbyHost = spadsConf['lobbyHost']
             if 'beyondallreason.info' in lobbyHost:
@@ -33,14 +52,19 @@ class RatingManager:
                 balance_url = f"{server_url}/teiserver/api/spads/balance_battle"
                 spads.slog("RatingManager server_url (%s)" % server_url, 3)
         except Exception as e:
-            spads.slog("Unhandled exception: [updatePlayerSkill]" + "[" + raw_data + "]"+ str(sys.exc_info()
+            spads.slog("Unhandled exception: [updatePlayerSkill]" + "[" + raw_data + "]" + str(sys.exc_info()
                        [0]) + "\n" + str(traceback.format_exc()), 0)
-
 
     def updatePlayerSkill(self, playerSkill, accountId, modName, gameType):
         try:
             raw_data = ""
-            with urllib.request.urlopen(f"{rating_url}/{accountId}/{gameType}") as f:
+            spadsConf = spads.getSpadsConf()
+            teamsize = spadsConf["teamSize"]
+            teamcount = spadsConf["nbTeams"]
+            barGameType = getBarGameType(teamsize, teamcount)
+            barGameType = barGameType.replace(" ", "%20")
+
+            with urllib.request.urlopen(f"{rating_url}/{accountId}/{barGameType}") as f:
                 raw_data = f.read().decode('utf-8')
                 data = json.loads(raw_data)
 
