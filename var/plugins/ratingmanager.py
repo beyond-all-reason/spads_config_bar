@@ -70,7 +70,7 @@ class RatingManager:
 
                 return [1, data["rating_value"], data["uncertainty"]]
         except Exception as e:
-            spads.slog("Unhandled exception: [updatePlayerSkill]" + "[" + raw_data + "]"+ str(sys.exc_info()
+            spads.slog("Unhandled exception: [updatePlayerSkill]" + "[" + raw_data + "]" + str(sys.exc_info()
                        [0]) + "\n" + str(traceback.format_exc()), 0)
             return [1, 16.66, 8.33]
 

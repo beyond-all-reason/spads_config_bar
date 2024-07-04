@@ -769,7 +769,7 @@ class BarManager:
             if commandResult == 0:
                 return
             global whoIsBoss
-            spads.slog("BLAH", 3)
+
             if command == "lock":
                 ChobbyStateChanged("locked", "locked")
             elif command == "unlock":
