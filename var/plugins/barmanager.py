@@ -360,11 +360,11 @@ def getBarGameType(teamsize, teamcount):
 
 # Checks if the game type has changed
 # BAR has its own definition of game types that are slightly different from SPADS
-# If the game type has changed, the update the ratings of everyone in the lobby
+# If the game type has changed, then update the ratings of everyone in the lobby
 # Use None for parameters where you just want to pull from spadsConf
 
 
-def checkForBarGametypeChange(teamsize, teamcount):
+def checkForBarGameTypeChange(teamsize, teamcount):
     global barGameType
     newBarGameType = getBarGameType(teamsize, teamcount)
     if newBarGameType != barGameType:
@@ -627,7 +627,7 @@ class BarManager:
             spads.slog("onPresetApplied: " + str(oldPresetName) +
                        " -> " + str(newPresetName), DBGLEVEL)
             refreshChobbyState()
-            checkForBarGametypeChange(None, None)
+            checkForBarGameTypeChange(None, None)
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()
                        [0]) + "\n" + str(traceback.format_exc()), 0)
@@ -783,11 +783,11 @@ class BarManager:
                 elif lowercommand == 'nbteams':
                     ChobbyStateChanged("nbTeams", params[1])
                     updateTachyonBattle("nbTeams", params[1])
-                    checkForBarGametypeChange(None, params[1])
+                    checkForBarGameTypeChange(None, params[1])
                 elif lowercommand == 'teamsize':
                     ChobbyStateChanged("teamSize", params[1])
                     updateTachyonBattle("teamSize", params[1])
-                    checkForBarGametypeChange(params[1], None)
+                    checkForBarGameTypeChange(params[1], None)
 
             elif command == "vote":
                 sendCurrentVote()
