@@ -335,12 +335,11 @@ def sendCurrentVote():
                    [0]) + "\n" + str(traceback.format_exc()), 0)
 
 
-def getBarGameType(teamsize, teamcount):
-    spadsConf = spads.getSpadsConf()
+def getBarGameType(teamsize=None, teamcount=None):
     if teamsize is None:
-        teamsize = spadsConf["teamSize"]
+        teamsize = ChobbyState['teamSize']
     if teamcount is None:
-        teamcount = spadsConf["nbTeams"]
+        teamcount = ChobbyState['nbTeams']
 
     teamcount = int(teamcount)
     teamsize = int(teamsize)
@@ -364,7 +363,7 @@ def getBarGameType(teamsize, teamcount):
 # Use None for parameters where you just want to pull from spadsConf
 
 
-def checkForBarGameTypeChange(teamsize, teamcount):
+def checkForBarGameTypeChange(teamsize=None, teamcount=None):
     global barGameType
     newBarGameType = getBarGameType(teamsize, teamcount)
     if newBarGameType != barGameType:
@@ -627,7 +626,7 @@ class BarManager:
             spads.slog("onPresetApplied: " + str(oldPresetName) +
                        " -> " + str(newPresetName), DBGLEVEL)
             refreshChobbyState()
-            checkForBarGameTypeChange(None, None)
+            checkForBarGameTypeChange()
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()
                        [0]) + "\n" + str(traceback.format_exc()), 0)
@@ -783,11 +782,11 @@ class BarManager:
                 elif lowercommand == 'nbteams':
                     ChobbyStateChanged("nbTeams", params[1])
                     updateTachyonBattle("nbTeams", params[1])
-                    checkForBarGameTypeChange(None, params[1])
+                    checkForBarGameTypeChange(teamcount=params[1])
                 elif lowercommand == 'teamsize':
                     ChobbyStateChanged("teamSize", params[1])
                     updateTachyonBattle("teamSize", params[1])
-                    checkForBarGameTypeChange(params[1], None)
+                    checkForBarGameTypeChange(teamsize=params[1])
 
             elif command == "vote":
                 sendCurrentVote()
