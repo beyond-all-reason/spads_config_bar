@@ -7,6 +7,7 @@ import base64
 import zlib
 import os
 import time
+import re
 
 from datetime import datetime, timezone
 # from https://blog.miguelgrinberg.com/post/it-s-time-for-a-change-datetime-utcnow-is-now-deprecated
@@ -375,6 +376,14 @@ class BarManager:
         spads.addSpadsCommandHandler(
             {'barmanagerprintstate': hbarmanagerprintstate})
         spads.addSpadsCommandHandler({'getlastvote': hGetLastVote})
+        spads.addSpadsCommandHandler({'minratinglevel': getTeiserverSingleIntegerCommandHandler("minratinglevel", 0, 0, 999)})
+        spads.addSpadsCommandHandler({'maxratinglevel': getTeiserverSingleIntegerCommandHandler("maxratinglevel", 1000, 1, 1000)})
+        spads.addSpadsCommandHandler({'resetratinglevels': getTeiserverNoParameterCommandHandler("resetratinglevels")})
+        spads.addSpadsCommandHandler({'minchevlevel': getTeiserverSingleIntegerCommandHandler("minchevlevel", 0, 0, 999)})
+        spads.addSpadsCommandHandler({'maxchevlevel': getTeiserverSingleIntegerCommandHandler("maxchevlevel", 1000, 1, 1000)})
+        spads.addSpadsCommandHandler({'resetchevlevels': getTeiserverNoParameterCommandHandler("resetchevlevels")})
+        spads.addSpadsCommandHandler({'rename': getTeiserverStringCommandHandler("rename", re.compile("^[a-zA-Z0-9_\\-\\[\\] \\<\\>\\+\\|:]+$"))})
+        spads.addSpadsCommandHandler({'welcome-message': getTeiserverStringCommandHandler("welcome-message", re.compile("^.*$"))})
 
         # We need to add the lobby command handlers before we are fully connected, or we dont get the JOINEDBATTLE stuff
         # These will get replaced automatically when connect again
@@ -1100,6 +1109,107 @@ def hGetLastVote(source, user, params, checkOnly):
         spads.slog("Unhandled exception: " + str(sys.exc_info()
                    [0]) + "\n" + str(traceback.format_exc()), 0)
 
+def getTeiserverNoParameterCommandHandler(cmd):
+    def handler(source, user, params, checkOnly):
+        spads.slog("User %s called command %s with parameter(s) \"%s\"" % (
+            user, cmd, ','.join(params)), DBGLEVEL)
+
+        try:
+            user = spads.fix_string(user)
+            for i in range(len(params)):
+                params[i] = spads.fix_string(params[i])
+
+            if len(params) > 0:
+                spads.slog(cmd + ": syntax error: more than 0 parameters", DBGLEVEL)
+                spads.sayPrivate(user, cmd + ": Too many parameters.")
+                return False
+
+            # All parameter checking was successful, return now if no action is desired
+            if checkOnly:
+                return True
+
+            spads.queueLobbyCommand(["SAYBATTLE", "$%" + cmd])
+        except Exception as e:
+            spads.slog("Unhandled exception: " + str(sys.exc_info()
+                       [0]) + "\n" + str(traceback.format_exc()), 0)
+    return handler
+
+def getTeiserverSingleIntegerCommandHandler(cmd, defaultValue, minValue, maxValue):
+    def handler(source, user, params, checkOnly):
+        spads.slog("User %s called command %s with parameter(s) \"%s\"" % (
+            user, cmd, ','.join(params)), DBGLEVEL)
+
+        try:
+            user = spads.fix_string(user)
+            for i in range(len(params)):
+                params[i] = spads.fix_string(params[i])
+
+            if len(params) > 1:
+                spads.slog(cmd + ": syntax error: more than 1 parameter", DBGLEVEL)
+                spads.sayPrivate(user, cmd + ": Too many parameters.")
+                return False
+
+            newValue = None
+
+            if len(params) == 0:
+                newValue = defaultValue
+
+            if len(params) == 1:
+                newValue = int(params[0]) if params[0].isdecimal() else None
+
+            if newValue is None:
+                spads.slog(cmd + ": value error: param 1 is not numeric", DBGLEVEL)
+                spads.sayPrivate(user, cmd + ": Parameter is not numeric")
+                return False
+
+            # All parameter checking was successful, return now if no action is desired
+            if checkOnly:
+                return True
+
+            if newValue < minValue:
+                newValue = minValue
+            if newValue > maxValue:
+                newValue = maxValue
+
+            spads.queueLobbyCommand(["SAYBATTLE", "$%" + cmd + " " + str(newValue)])
+        except Exception as e:
+            spads.slog("Unhandled exception: " + str(sys.exc_info()
+                       [0]) + "\n" + str(traceback.format_exc()), 0)
+    return handler
+
+
+def getTeiserverStringCommandHandler(cmd, validRegex):
+    def handler(source, user, params, checkOnly):
+        spads.slog("User %s called command %s with parameter(s) \"%s\"" % (
+            user, cmd, ','.join(params)), DBGLEVEL)
+
+        try:
+            user = spads.fix_string(user)
+            for i in range(len(params)):
+                params[i] = spads.fix_string(params[i])
+
+            if len(params) == 0:
+                spads.slog(cmd + ": syntax error: not enough parameters", DBGLEVEL)
+                spads.sayPrivate(user, cmd + ": Not enough parameters.")
+                return False
+
+            combinedParams = " ".join(params)
+
+            if not validRegex.search(combinedParams):
+                spads.slog(cmd + ": syntax error: regex did not match", DBGLEVEL)
+                spads.sayPrivate(user, cmd + ": Contains forbidden characters.")
+                return False
+
+            # All parameter checking was successful, return now if no action is desired
+            if checkOnly:
+                return True
+
+            spads.queueLobbyCommand(["SAYBATTLE", "$%" + cmd + " " + combinedParams])
+        except Exception as e:
+            spads.slog("Unhandled exception: " + str(sys.exc_info()
+                       [0]) + "\n" + str(traceback.format_exc()), 0)
+    return handler
+
 
 def updatebotlist():
     lobbyInterface = spads.getLobbyInterface()
@@ -1194,7 +1304,7 @@ def hCLIENTBATTLESTATUS(command, userName, battleStatus, teamColor):
             playersInMyBattle[userName] = battleStatus
         else:
             spads.slog("hCLIENTBATTLESTATUS: User not found in battle " +
-                       userName + " " + str(playersInMyBattle.keys()), 3)
+                       str(userName) + " " + str(playersInMyBattle.keys()), 3)
         # spads.queueLobbyCommand(["SAYBATTLEEX", "hello dude"])
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
@@ -1330,6 +1440,7 @@ def h_autohost_GAME_LUAMSG(command, playerNumInt, luahandleidInt, nullStr, messa
         # spads.slog("h_autohost_GAME_LUAMSG:" + str([command, playerNumInt, luahandleidInt , nullStr, message]),3)
 
         if len(message) > 10 and message[0:3] == "$y$" and (playerNumInt not in hwInfoIngame):
+            spads.slog("h_autohost_GAME_LUAMSG:" + str([command, playerNumInt, luahandleidInt , nullStr, message]),3)
             validation = message[3:5]
             messagelines = message[5:].split('\n')
             messagedict = {}
