@@ -2,3 +2,35 @@
 !getlastvote [<voteNum>] - returns a vote result in json format, where param 1 returns the most recent vote result
 "!getlastvote" returns most recent vote result
 "!getlastvote 2" returns 2nd most recent vote result
+
+[minratinglevel]
+!minratinglevel [rating] - sets the minimum skill rating required to become a player
+"!minratinglevel" removes the minimum skill requirement
+"!minratinglevel 17" sets the minimum skill requirement to 17
+
+[maxratinglevel]
+!maxratinglevel [rating] - sets the maximum skill rating allowed to become a player
+"!maxratinglevel" removes the maximum skill requirement
+"!maxratinglevel 17" sets the maximum skill requirement to 17
+
+[resetratinglevels]
+!resetratinglevels - removes the minimum/maximum skill rating requirements
+
+[minchevlevel]
+!minchevlevel [rank] - sets the minimum rank required to become a player
+"!minchevlevel" removes the minimum rank requirement
+"!minchevlevel 3" sets the minimum rank requirement to 3
+
+[maxchevlevel]
+!maxchevlevel [rank] - sets the maximum rank allowed to become a player
+"!maxchevlevel" removes the maximum rank requirement
+"!maxchevlevel 3" sets the maximum rank requirement to 3
+
+[resetchevlevels]
+!resetchevlevels - removes the minimum/maximum rank requirements
+
+[rename]
+!rename <name> - Renames the lobby to the given name.
+
+[welcome-message]
+!welcome-message [message] Sets the welcome message sent to anybody joining the lobby. Run this command without a message to clear the existing message. Use $$ to add a line return.

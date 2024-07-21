@@ -7,6 +7,7 @@ import base64
 import zlib
 import os
 import time
+import re
 
 from datetime import datetime, timezone
 # from https://blog.miguelgrinberg.com/post/it-s-time-for-a-change-datetime-utcnow-is-now-deprecated
@@ -375,6 +376,14 @@ class BarManager:
         spads.addSpadsCommandHandler(
             {'barmanagerprintstate': hbarmanagerprintstate})
         spads.addSpadsCommandHandler({'getlastvote': hGetLastVote})
+        spads.addSpadsCommandHandler({'minratinglevel': hMinRatingLevel})
+        spads.addSpadsCommandHandler({'maxratinglevel': hMaxRatingLevel})
+        spads.addSpadsCommandHandler({'resetratinglevels': hResetRatingLevels})
+        spads.addSpadsCommandHandler({'minchevlevel': hMinChevLevel})
+        spads.addSpadsCommandHandler({'maxchevlevel': hMaxChevLevel})
+        spads.addSpadsCommandHandler({'resetchevlevels': hResetChevLevels})
+        spads.addSpadsCommandHandler({'rename': hRename})
+        spads.addSpadsCommandHandler({'welcome-message': hWelcomeMessage})
 
         # We need to add the lobby command handlers before we are fully connected, or we dont get the JOINEDBATTLE stuff
         # These will get replaced automatically when connect again
@@ -1100,6 +1109,158 @@ def hGetLastVote(source, user, params, checkOnly):
         spads.slog("Unhandled exception: " + str(sys.exc_info()
                    [0]) + "\n" + str(traceback.format_exc()), 0)
 
+def hMinRatingLevel(source, user, params, checkOnly):
+    spads.slog("User %s called command minRatingLevel with parameter(s) \"%s\"" % (
+        user, ','.join(params)), DBGLEVEL)
+
+    try:
+        return genericSingleIntegerCommand(source, user, params, checkOnly, "minratinglevel", 0, 0, 999)
+    except Exception as e:
+        spads.slog("Unhandled exception: " + str(sys.exc_info()
+                   [0]) + "\n" + str(traceback.format_exc()), 0)
+
+def hMaxRatingLevel(source, user, params, checkOnly):
+    spads.slog("User %s called command maxRatingLevel with parameter(s) \"%s\"" % (
+        user, ','.join(params)), DBGLEVEL)
+
+    try:
+        return genericSingleIntegerCommand(source, user, params, checkOnly, "maxratinglevel", 1000, 1, 1000)
+    except Exception as e:
+        spads.slog("Unhandled exception: " + str(sys.exc_info()
+                   [0]) + "\n" + str(traceback.format_exc()), 0)
+
+def hResetRatingLevels(source, user, params, checkOnly):
+    spads.slog("User %s called command resetRatingLevels with parameter(s) \"%s\"" % (
+        user, ','.join(params)), DBGLEVEL)
+
+    try:
+        return genericNoParameterCommand(source, user, params, checkOnly, "resetratinglevels")
+    except Exception as e:
+        spads.slog("Unhandled exception: " + str(sys.exc_info()
+                   [0]) + "\n" + str(traceback.format_exc()), 0)
+
+def hMinChevLevel(source, user, params, checkOnly):
+    spads.slog("User %s called command minChevLevel with parameter(s) \"%s\"" % (
+        user, ','.join(params)), DBGLEVEL)
+
+    try:
+        return genericSingleIntegerCommand(source, user, params, checkOnly, "minchevlevel", 0, 0, 999)
+    except Exception as e:
+        spads.slog("Unhandled exception: " + str(sys.exc_info()
+                   [0]) + "\n" + str(traceback.format_exc()), 0)
+
+def hMaxChevLevel(source, user, params, checkOnly):
+    spads.slog("User %s called command maxChevLevel with parameter(s) \"%s\"" % (
+        user, ','.join(params)), DBGLEVEL)
+
+    try:
+        return genericSingleIntegerCommand(source, user, params, checkOnly, "maxchevlevel", 1000, 1, 1000)
+    except Exception as e:
+        spads.slog("Unhandled exception: " + str(sys.exc_info()
+                   [0]) + "\n" + str(traceback.format_exc()), 0)
+
+def hResetChevLevels(source, user, params, checkOnly):
+    spads.slog("User %s called command resetChevLevels with parameter(s) \"%s\"" % (
+        user, ','.join(params)), DBGLEVEL)
+
+    try:
+        return genericNoParameterCommand(source, user, params, checkOnly, "resetchevlevels")
+    except Exception as e:
+        spads.slog("Unhandled exception: " + str(sys.exc_info()
+                   [0]) + "\n" + str(traceback.format_exc()), 0)
+
+def hRename(source, user, params, checkOnly):
+    spads.slog("User %s called command rename with parameter(s) \"%s\"" % (
+        user, ','.join(params)), DBGLEVEL)
+
+    try:
+        return genericStringCommand(source, user, params, checkOnly, "rename", "^[a-zA-Z0-9_\-\[\] \<\>\+\|:]+$")
+    except Exception as e:
+        spads.slog("Unhandled exception: " + str(sys.exc_info()
+                   [0]) + "\n" + str(traceback.format_exc()), 0)
+
+def hWelcomeMessage(source, user, params, checkOnly):
+    spads.slog("User %s called command welcome-message with parameter(s) \"%s\"" % (
+        user, ','.join(params)), DBGLEVEL)
+
+    try:
+        return genericStringCommand(source, user, params, checkOnly, "welcome-message", "^.*$")
+    except Exception as e:
+        spads.slog("Unhandled exception: " + str(sys.exc_info()
+                   [0]) + "\n" + str(traceback.format_exc()), 0)
+
+def genericNoParameterCommand(source, user, params, checkOnly, cmd):
+    user = spads.fix_string(user)
+    for i in range(len(params)):
+        params[i] = spads.fix_string(params[i])
+
+    if len(params) > 0:
+        spads.slog(cmd + ": syntax error: more than 0 parameters", DBGLEVEL)
+        spads.sayPrivate(user, cmd + ": Too many parameters.")
+        return False
+
+    # All parameter checking was successful, return now if no action is desired
+    if checkOnly:
+        return True
+
+    spads.queueLobbyCommand(["SAYBATTLE", "$%" + cmd])
+
+def genericSingleIntegerCommand(source, user, params, checkOnly, cmd, defaultValue, minValue, maxValue):
+    user = spads.fix_string(user)
+    for i in range(len(params)):
+        params[i] = spads.fix_string(params[i])
+
+    if len(params) > 1:
+        spads.slog(cmd + ": syntax error: more than 1 parameter", DBGLEVEL)
+        spads.sayPrivate(user, cmd + ": Too many parameters.")
+        return False
+
+    newValue = None
+
+    if len(params) == 0:
+        newValue = defaultValue
+
+    if len(params) == 1:
+        newValue = int(params[0]) if params[0].isdecimal() else None
+
+    if newValue is None:
+        spads.slog(cmd + ": value error: param 1 is not numeric", DBGLEVEL)
+        spads.sayPrivate(user, cmd + ": Parameter is not numeric")
+        return False
+
+    # All parameter checking was successful, return now if no action is desired
+    if checkOnly:
+        return True
+
+    if newValue < minValue:
+        newValue = minValue
+    if newValue > maxValue:
+        newValue = maxValue
+
+    spads.queueLobbyCommand(["SAYBATTLE", "$%" + cmd + " " + str(newValue)])
+
+def genericStringCommand(source, user, params, checkOnly, cmd, validRegex):
+    user = spads.fix_string(user)
+    for i in range(len(params)):
+        params[i] = spads.fix_string(params[i])
+
+    if len(params) == 0:
+        spads.slog(cmd + ": syntax error: not enough parameters", DBGLEVEL)
+        spads.sayPrivate(user, cmd + ": Not enough parameters.")
+        return False
+
+    combinedParams = " ".join(params)
+
+    if not re.search(validRegex, combinedParams):
+        spads.slog(cmd + ": syntax error: regex did not match", DBGLEVEL)
+        spads.sayPrivate(user, cmd + ": Contains forbidden characters.")
+        return False
+
+    # All parameter checking was successful, return now if no action is desired
+    if checkOnly:
+        return True
+
+    spads.queueLobbyCommand(["SAYBATTLE", "$%" + cmd + " " + combinedParams])
 
 def updatebotlist():
     lobbyInterface = spads.getLobbyInterface()
@@ -1194,7 +1355,7 @@ def hCLIENTBATTLESTATUS(command, userName, battleStatus, teamColor):
             playersInMyBattle[userName] = battleStatus
         else:
             spads.slog("hCLIENTBATTLESTATUS: User not found in battle " +
-                       userName + " " + str(playersInMyBattle.keys()), 3)
+                       str(userName) + " " + str(playersInMyBattle.keys()), 3)
         # spads.queueLobbyCommand(["SAYBATTLEEX", "hello dude"])
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
@@ -1330,6 +1491,7 @@ def h_autohost_GAME_LUAMSG(command, playerNumInt, luahandleidInt, nullStr, messa
         # spads.slog("h_autohost_GAME_LUAMSG:" + str([command, playerNumInt, luahandleidInt , nullStr, message]),3)
 
         if len(message) > 10 and message[0:3] == "$y$" and (playerNumInt not in hwInfoIngame):
+            spads.slog("h_autohost_GAME_LUAMSG:" + str([command, playerNumInt, luahandleidInt , nullStr, message]),3)
             validation = message[3:5]
             messagelines = message[5:].split('\n')
             messagedict = {}
