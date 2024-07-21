@@ -376,14 +376,14 @@ class BarManager:
         spads.addSpadsCommandHandler(
             {'barmanagerprintstate': hbarmanagerprintstate})
         spads.addSpadsCommandHandler({'getlastvote': hGetLastVote})
-        spads.addSpadsCommandHandler({'minratinglevel': hMinRatingLevel})
-        spads.addSpadsCommandHandler({'maxratinglevel': hMaxRatingLevel})
-        spads.addSpadsCommandHandler({'resetratinglevels': hResetRatingLevels})
-        spads.addSpadsCommandHandler({'minchevlevel': hMinChevLevel})
-        spads.addSpadsCommandHandler({'maxchevlevel': hMaxChevLevel})
-        spads.addSpadsCommandHandler({'resetchevlevels': hResetChevLevels})
-        spads.addSpadsCommandHandler({'rename': hRename})
-        spads.addSpadsCommandHandler({'welcome-message': hWelcomeMessage})
+        spads.addSpadsCommandHandler({'minratinglevel': getTeiserverSingleIntegerCommandHandler("minratinglevel", 0, 0, 999)})
+        spads.addSpadsCommandHandler({'maxratinglevel': getTeiserverSingleIntegerCommandHandler("maxratinglevel", 1000, 1, 1000)})
+        spads.addSpadsCommandHandler({'resetratinglevels': getTeiserverNoParameterCommandHandler("resetratinglevels")})
+        spads.addSpadsCommandHandler({'minchevlevel': getTeiserverSingleIntegerCommandHandler("minchevlevel", 0, 0, 999)})
+        spads.addSpadsCommandHandler({'maxchevlevel': getTeiserverSingleIntegerCommandHandler("maxchevlevel", 1000, 1, 1000)})
+        spads.addSpadsCommandHandler({'resetchevlevels': getTeiserverNoParameterCommandHandler("resetchevlevels")})
+        spads.addSpadsCommandHandler({'rename': getTeiserverStringCommandHandler("rename", "^[a-zA-Z0-9_\\-\\[\\] \\<\\>\\+\\|:]+$")})
+        spads.addSpadsCommandHandler({'welcome-message': getTeiserverStringCommandHandler("welcome-message", "^.*$")})
 
         # We need to add the lobby command handlers before we are fully connected, or we dont get the JOINEDBATTLE stuff
         # These will get replaced automatically when connect again
@@ -1109,158 +1109,107 @@ def hGetLastVote(source, user, params, checkOnly):
         spads.slog("Unhandled exception: " + str(sys.exc_info()
                    [0]) + "\n" + str(traceback.format_exc()), 0)
 
-def hMinRatingLevel(source, user, params, checkOnly):
-    spads.slog("User %s called command minRatingLevel with parameter(s) \"%s\"" % (
-        user, ','.join(params)), DBGLEVEL)
+def getTeiserverNoParameterCommandHandler(cmd):
+    def handler(source, user, params, checkOnly):
+        spads.slog("User %s called command %s with parameter(s) \"%s\"" % (
+            user, cmd, ','.join(params)), DBGLEVEL)
 
-    try:
-        return genericSingleIntegerCommand(source, user, params, checkOnly, "minratinglevel", 0, 0, 999)
-    except Exception as e:
-        spads.slog("Unhandled exception: " + str(sys.exc_info()
-                   [0]) + "\n" + str(traceback.format_exc()), 0)
+        try:
+            user = spads.fix_string(user)
+            for i in range(len(params)):
+                params[i] = spads.fix_string(params[i])
 
-def hMaxRatingLevel(source, user, params, checkOnly):
-    spads.slog("User %s called command maxRatingLevel with parameter(s) \"%s\"" % (
-        user, ','.join(params)), DBGLEVEL)
+            if len(params) > 0:
+                spads.slog(cmd + ": syntax error: more than 0 parameters", DBGLEVEL)
+                spads.sayPrivate(user, cmd + ": Too many parameters.")
+                return False
 
-    try:
-        return genericSingleIntegerCommand(source, user, params, checkOnly, "maxratinglevel", 1000, 1, 1000)
-    except Exception as e:
-        spads.slog("Unhandled exception: " + str(sys.exc_info()
-                   [0]) + "\n" + str(traceback.format_exc()), 0)
+            # All parameter checking was successful, return now if no action is desired
+            if checkOnly:
+                return True
 
-def hResetRatingLevels(source, user, params, checkOnly):
-    spads.slog("User %s called command resetRatingLevels with parameter(s) \"%s\"" % (
-        user, ','.join(params)), DBGLEVEL)
+            spads.queueLobbyCommand(["SAYBATTLE", "$%" + cmd])
+        except Exception as e:
+            spads.slog("Unhandled exception: " + str(sys.exc_info()
+                       [0]) + "\n" + str(traceback.format_exc()), 0)
+    return handler
 
-    try:
-        return genericNoParameterCommand(source, user, params, checkOnly, "resetratinglevels")
-    except Exception as e:
-        spads.slog("Unhandled exception: " + str(sys.exc_info()
-                   [0]) + "\n" + str(traceback.format_exc()), 0)
+def getTeiserverSingleIntegerCommandHandler(cmd, defaultValue, minValue, maxValue):
+    def handler(source, user, params, checkOnly):
+        spads.slog("User %s called command %s with parameter(s) \"%s\"" % (
+            user, cmd, ','.join(params)), DBGLEVEL)
 
-def hMinChevLevel(source, user, params, checkOnly):
-    spads.slog("User %s called command minChevLevel with parameter(s) \"%s\"" % (
-        user, ','.join(params)), DBGLEVEL)
+        try:
+            user = spads.fix_string(user)
+            for i in range(len(params)):
+                params[i] = spads.fix_string(params[i])
 
-    try:
-        return genericSingleIntegerCommand(source, user, params, checkOnly, "minchevlevel", 0, 0, 999)
-    except Exception as e:
-        spads.slog("Unhandled exception: " + str(sys.exc_info()
-                   [0]) + "\n" + str(traceback.format_exc()), 0)
+            if len(params) > 1:
+                spads.slog(cmd + ": syntax error: more than 1 parameter", DBGLEVEL)
+                spads.sayPrivate(user, cmd + ": Too many parameters.")
+                return False
 
-def hMaxChevLevel(source, user, params, checkOnly):
-    spads.slog("User %s called command maxChevLevel with parameter(s) \"%s\"" % (
-        user, ','.join(params)), DBGLEVEL)
+            newValue = None
 
-    try:
-        return genericSingleIntegerCommand(source, user, params, checkOnly, "maxchevlevel", 1000, 1, 1000)
-    except Exception as e:
-        spads.slog("Unhandled exception: " + str(sys.exc_info()
-                   [0]) + "\n" + str(traceback.format_exc()), 0)
+            if len(params) == 0:
+                newValue = defaultValue
 
-def hResetChevLevels(source, user, params, checkOnly):
-    spads.slog("User %s called command resetChevLevels with parameter(s) \"%s\"" % (
-        user, ','.join(params)), DBGLEVEL)
+            if len(params) == 1:
+                newValue = int(params[0]) if params[0].isdecimal() else None
 
-    try:
-        return genericNoParameterCommand(source, user, params, checkOnly, "resetchevlevels")
-    except Exception as e:
-        spads.slog("Unhandled exception: " + str(sys.exc_info()
-                   [0]) + "\n" + str(traceback.format_exc()), 0)
+            if newValue is None:
+                spads.slog(cmd + ": value error: param 1 is not numeric", DBGLEVEL)
+                spads.sayPrivate(user, cmd + ": Parameter is not numeric")
+                return False
 
-def hRename(source, user, params, checkOnly):
-    spads.slog("User %s called command rename with parameter(s) \"%s\"" % (
-        user, ','.join(params)), DBGLEVEL)
+            # All parameter checking was successful, return now if no action is desired
+            if checkOnly:
+                return True
 
-    try:
-        return genericStringCommand(source, user, params, checkOnly, "rename", "^[a-zA-Z0-9_\-\[\] \<\>\+\|:]+$")
-    except Exception as e:
-        spads.slog("Unhandled exception: " + str(sys.exc_info()
-                   [0]) + "\n" + str(traceback.format_exc()), 0)
+            if newValue < minValue:
+                newValue = minValue
+            if newValue > maxValue:
+                newValue = maxValue
 
-def hWelcomeMessage(source, user, params, checkOnly):
-    spads.slog("User %s called command welcome-message with parameter(s) \"%s\"" % (
-        user, ','.join(params)), DBGLEVEL)
+            spads.queueLobbyCommand(["SAYBATTLE", "$%" + cmd + " " + str(newValue)])
+        except Exception as e:
+            spads.slog("Unhandled exception: " + str(sys.exc_info()
+                       [0]) + "\n" + str(traceback.format_exc()), 0)
+    return handler
 
-    try:
-        return genericStringCommand(source, user, params, checkOnly, "welcome-message", "^.*$")
-    except Exception as e:
-        spads.slog("Unhandled exception: " + str(sys.exc_info()
-                   [0]) + "\n" + str(traceback.format_exc()), 0)
 
-def genericNoParameterCommand(source, user, params, checkOnly, cmd):
-    user = spads.fix_string(user)
-    for i in range(len(params)):
-        params[i] = spads.fix_string(params[i])
+def getTeiserverStringCommandHandler(cmd, validRegex):
+    def handler(source, user, params, checkOnly):
+        spads.slog("User %s called command %s with parameter(s) \"%s\"" % (
+            user, cmd, ','.join(params)), DBGLEVEL)
 
-    if len(params) > 0:
-        spads.slog(cmd + ": syntax error: more than 0 parameters", DBGLEVEL)
-        spads.sayPrivate(user, cmd + ": Too many parameters.")
-        return False
+        try:
+            user = spads.fix_string(user)
+            for i in range(len(params)):
+                params[i] = spads.fix_string(params[i])
 
-    # All parameter checking was successful, return now if no action is desired
-    if checkOnly:
-        return True
+            if len(params) == 0:
+                spads.slog(cmd + ": syntax error: not enough parameters", DBGLEVEL)
+                spads.sayPrivate(user, cmd + ": Not enough parameters.")
+                return False
 
-    spads.queueLobbyCommand(["SAYBATTLE", "$%" + cmd])
+            combinedParams = " ".join(params)
 
-def genericSingleIntegerCommand(source, user, params, checkOnly, cmd, defaultValue, minValue, maxValue):
-    user = spads.fix_string(user)
-    for i in range(len(params)):
-        params[i] = spads.fix_string(params[i])
+            if not re.search(validRegex, combinedParams):
+                spads.slog(cmd + ": syntax error: regex did not match", DBGLEVEL)
+                spads.sayPrivate(user, cmd + ": Contains forbidden characters.")
+                return False
 
-    if len(params) > 1:
-        spads.slog(cmd + ": syntax error: more than 1 parameter", DBGLEVEL)
-        spads.sayPrivate(user, cmd + ": Too many parameters.")
-        return False
+            # All parameter checking was successful, return now if no action is desired
+            if checkOnly:
+                return True
 
-    newValue = None
+            spads.queueLobbyCommand(["SAYBATTLE", "$%" + cmd + " " + combinedParams])
+        except Exception as e:
+            spads.slog("Unhandled exception: " + str(sys.exc_info()
+                       [0]) + "\n" + str(traceback.format_exc()), 0)
+    return handler
 
-    if len(params) == 0:
-        newValue = defaultValue
-
-    if len(params) == 1:
-        newValue = int(params[0]) if params[0].isdecimal() else None
-
-    if newValue is None:
-        spads.slog(cmd + ": value error: param 1 is not numeric", DBGLEVEL)
-        spads.sayPrivate(user, cmd + ": Parameter is not numeric")
-        return False
-
-    # All parameter checking was successful, return now if no action is desired
-    if checkOnly:
-        return True
-
-    if newValue < minValue:
-        newValue = minValue
-    if newValue > maxValue:
-        newValue = maxValue
-
-    spads.queueLobbyCommand(["SAYBATTLE", "$%" + cmd + " " + str(newValue)])
-
-def genericStringCommand(source, user, params, checkOnly, cmd, validRegex):
-    user = spads.fix_string(user)
-    for i in range(len(params)):
-        params[i] = spads.fix_string(params[i])
-
-    if len(params) == 0:
-        spads.slog(cmd + ": syntax error: not enough parameters", DBGLEVEL)
-        spads.sayPrivate(user, cmd + ": Not enough parameters.")
-        return False
-
-    combinedParams = " ".join(params)
-
-    if not re.search(validRegex, combinedParams):
-        spads.slog(cmd + ": syntax error: regex did not match", DBGLEVEL)
-        spads.sayPrivate(user, cmd + ": Contains forbidden characters.")
-        return False
-
-    # All parameter checking was successful, return now if no action is desired
-    if checkOnly:
-        return True
-
-    spads.queueLobbyCommand(["SAYBATTLE", "$%" + cmd + " " + combinedParams])
 
 def updatebotlist():
     lobbyInterface = spads.getLobbyInterface()
