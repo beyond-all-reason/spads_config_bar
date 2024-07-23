@@ -39,8 +39,7 @@ timerTachyonBattle = False  # do we have a timer set to update the game?
 myBattleID = None
 # key playername, value battlestatus on join, FIXME: track battlestatus here!
 playersInMyBattle = {}
-myBattleName = ""
-myBattleTitle = ""
+myBattleTeaser = ""
 myBattlePassword = '*'  # which means no password
 
 whoIsBoss = None
@@ -148,11 +147,10 @@ def refreshChobbyState():
     SendChobbyState()
 
 
-def sendTachyonBattleTitle():
-    global TachyonBattle, myBattleName, myBattlePassword, myBattleTitle, whoIsBoss
+def sendTachyonBattleTeaser():
+    global TachyonBattle, myBattlePassword, myBattleTeaser, whoIsBoss
     try:
-        # ok, what should our title look like?
-        # we need to have oldbattletitle in myBattleName
+        # ok, what should our teaser look like?
         # TachyonBattle = {"boss":"", 'preset':"", 'botlist' : [], 'teamSize' : 6, 'nbTeams':2}
         # TODO: dont forget to reset the title when the last player leaves!
         # TODO: dont do this for private games
@@ -160,7 +158,7 @@ def sendTachyonBattleTitle():
             spads.slog(
                 "myBattlePassword being set prevents title change:" + myBattlePassword, DBGLEVEL)
             return
-        newbattletitle = myBattleName
+        newbattleteaser = ""
         if len(playersInMyBattle) != 0:
             # "botlist": ["SimpleDefenderAI", "NullAI", "BARb", "SimpleAI", "SimpleConstructorAI", "ScavengersAI", "SimpleCheaterAI", "ControlModeAI", "STAI", "ChickensAI"]}"
             bottypes = []
@@ -183,58 +181,58 @@ def sendTachyonBattleTitle():
             presettotitledict = {'ffa': "Free-for-all", 'team': 'Teams',
                                  'coop': 'PvE', 'duel': "Duel", 'draft': "Draft"}
             if TachyonBattle['preset'] == 'ffa':
-                newbattletitle += " | FFA"
+                newbattleteaser += " | FFA"
                 if len(bottypes) > 0:
-                    newbattletitle += " vs " + ", ".join(bottypes[0:3])
+                    newbattleteaser += " vs " + ", ".join(bottypes[0:3])
 
             if TachyonBattle['preset'] == 'duel':
-                newbattletitle += " | Duel"
+                newbattleteaser += " | Duel"
                 if len(bottypes) > 0:
-                    newbattletitle += " vs " + ", ".join(bottypes[0:3])
+                    newbattleteaser += " vs " + ", ".join(bottypes[0:3])
 
             if TachyonBattle['preset'] == 'team':
-                newbattletitle += " | Teams"
+                newbattleteaser += " | Teams"
                 if len(bottypes) > 0:
-                    newbattletitle += " vs " + ", ".join(bottypes[0:3])
+                    newbattleteaser += " vs " + ", ".join(bottypes[0:3])
                 else:
-                    newbattletitle += ' ' + \
+                    newbattleteaser += ' ' + \
                         ' vs '.join([str(TachyonBattle['teamSize'])]
                                     * int(TachyonBattle['nbTeams']))
 
             if TachyonBattle['preset'] == 'draft':
-                newbattletitle += " | Captains"
-                newbattletitle += ' ' + \
+                newbattleteaser += " | Captains"
+                newbattleteaser += ' ' + \
                     ' vs '.join([str(TachyonBattle['teamSize'])]
                                 * int(TachyonBattle['nbTeams']))
 
             if TachyonBattle['preset'] == 'tourney':
-                newbattletitle += " | Tourney"
+                newbattleteaser += " | Tourney"
 
             if TachyonBattle['preset'] == 'coop':
-                newbattletitle += " | Coop"
+                newbattleteaser += " | Coop"
                 if len(bottypes) > 0:
-                    newbattletitle += " vs " + ", ".join(bottypes[0:3])
+                    newbattleteaser += " vs " + ", ".join(bottypes[0:3])
                 # else:
-                # newbattletitle += ' ' + ' vs '.join([str(TachyonBattle['teamSize'])] * int(TachyonBattle['nbTeams']))
+                # newbattleteaser += ' ' + ' vs '.join([str(TachyonBattle['teamSize'])] * int(TachyonBattle['nbTeams']))
             if TachyonBattle['preset'] == 'custom':
-                newbattletitle = ("" if whoIsBoss is None else (
+                newbattleteaser = ("" if whoIsBoss is None else (
                     whoIsBoss + " | ")) + "Custom Battle"
                 if len(bottypes) > 0:
-                    newbattletitle += " vs " + ", ".join(bottypes[0:3])
+                    newbattleteaser += " vs " + ", ".join(bottypes[0:3])
                 else:
-                    newbattletitle += ' ' + \
+                    newbattleteaser += ' ' + \
                         ' vs '.join([str(TachyonBattle['teamSize'])]
                                     * int(TachyonBattle['nbTeams']))
             else:
                 if whoIsBoss is not None:
-                    newbattletitle += ' | Boss: ' + str(whoIsBoss)
+                    newbattleteaser += ' | Boss: ' + str(whoIsBoss)
 
         spads.slog("Trying to update battle title: " +
-                   newbattletitle + " old " + myBattleTitle, DBGLEVEL)
-        if newbattletitle != myBattleTitle:
-            myBattleTitle = newbattletitle
+                   newbattleteaser + " old " + myBattleTeaser, DBGLEVEL)
+        if newbattleteaser != myBattleTeaser:
+            myBattleTeaser = newbattleteaser
             spads.queueLobbyCommand(
-                ["SAYBATTLE", "$%rename " + newbattletitle])
+                ["SAYBATTLE", "$%set-config-teaser " + newbattleteaser])
 
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
@@ -248,7 +246,7 @@ def sendTachyonBattle():
         bsjson = json.dumps(TachyonBattle)
         spads.slog("Trying to update tachyonbattlestatus " + bsjson, DBGLEVEL)
         spads.queueLobbyCommand(["c.battle.update_host", bsjson])
-        sendTachyonBattleTitle()
+        sendTachyonBattleTeaser()
         # Which generally looks like this:
         #  [SpringLobbyInterface] Sending to lobby server: "c.battle.update_host {"boss": "", "preset": "team", "ailist": [], "teamSize": "6", "nbTeams": "2",
         # these are the possible aiDll entries in botlis
@@ -474,7 +472,7 @@ class BarManager:
 
     def onBattleOpened(self):
         # todo: this is the slipperiest slope of all
-        global myBattleID, myBattleName, myBattlePassword, myBattleTitle
+        global myBattleID, myBattlePassword
         global ChobbyState
         try:
             spads.slog("Battle Opened", DBGLEVEL)
@@ -528,15 +526,6 @@ class BarManager:
             spads.slog("My BattleID is:" + str(myBattleID), DBGLEVEL)  #
             spads.slog("My BattlePassword is:" +
                        str(myBattlePassword), DBGLEVEL)  #
-
-            allbattles = lobbyInterface.getBattles()
-            if myBattleID in allbattles:
-                if 'title' in allbattles[myBattleID]:
-                    myBattleTitle = allbattles[myBattleID]['title']
-                    myBattleName = allbattles[myBattleID]['title']
-            else:
-                spads.slog(
-                    "Cannot find my battleid in spads.getBattles(): " + str(myBattleID), 3)  #
 
             # this is assumed by server when opening a battleroom
             ChobbyState['locked'] = 'unlocked'
@@ -975,8 +964,7 @@ def hbarmanagerprintstate(source, user, params, checkOnly):
         spads.slog("ChobbyState: " + str(ChobbyState), 3)
         spads.slog("TachyonBattle: " + str(TachyonBattle), 3)
         spads.slog("playersInMyBattle: " + str(playersInMyBattle), 3)
-        spads.slog("myBattleName: " + str(myBattleName), 3)
-        spads.slog("myBattleTitle: " + str(myBattleTitle), 3)
+        spads.slog("myBattleTeaser: " + str(myBattleTeaser), 3)
         spads.slog("whoIsBoss: " + str(whoIsBoss), 3)
         spads.slog("hwInfoIngame: " + str(hwInfoIngame), 3)
 
@@ -985,8 +973,7 @@ def hbarmanagerprintstate(source, user, params, checkOnly):
         spads.sayPrivate(user, "ChobbyState: " + str(ChobbyState))
         spads.sayPrivate(user, "TachyonBattle: " + str(TachyonBattle))
         spads.sayPrivate(user, "playersInMyBattle: " + str(playersInMyBattle))
-        spads.sayPrivate(user, "myBattleName: " + str(myBattleName))
-        spads.sayPrivate(user, "myBattleTitle: " + str(myBattleTitle))
+        spads.sayPrivate(user, "myBattleTeaser: " + str(myBattleTeaser))
         spads.sayPrivate(user, "whoIsBoss: " + str(whoIsBoss))
         # Also say these in private to caller
 
@@ -1269,7 +1256,7 @@ def hLEFTBATTLE(command, battleID, userName):
             del playersInMyBattle[userName]
             # spads.slog("playersInMyBattle" + str(playersInMyBattle), 3)
             if len(playersInMyBattle) == 0:  # when the last person leaves, reset title
-                sendTachyonBattleTitle()
+                sendTachyonBattleTeaser()
 
             if whoIsBoss == userName:
                 whoIsBoss = None
