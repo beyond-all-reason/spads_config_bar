@@ -39,6 +39,9 @@ timerTachyonBattle = False  # do we have a timer set to update the game?
 myBattleID = None
 # key playername, value battlestatus on join, FIXME: track battlestatus here!
 playersInMyBattle = {}
+# A teaser is intended to advertise settings used by the lobby. For example, at time of writing, Teiserver includes the teaser as part of the lobby's name:
+# - Lobby_Name: [Default/Custom Title] [BarManager Teaser] [Teiserver Postfix]
+# While the lobby's title may be customized by a user, the teaser is automatically chosen by BarManager whenever a relevant setting changes.
 myBattleTeaser = ""
 myBattlePassword = '*'  # which means no password
 
