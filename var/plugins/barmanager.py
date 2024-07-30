@@ -385,6 +385,11 @@ class BarManager:
         spads.addSpadsCommandHandler({'resetchevlevels': getTeiserverNoParameterCommandHandler("resetchevlevels")})
         spads.addSpadsCommandHandler({'rename': getTeiserverStringCommandHandler("rename", re.compile("^[a-zA-Z0-9_\\-\\[\\] \\<\\>\\+\\|:]+$"))})
         spads.addSpadsCommandHandler({'welcome-message': getTeiserverStringCommandHandler("welcome-message", re.compile("^.*$"))})
+        spads.addSpadsCommandHandler({'gatekeeper': getTeiserverStringCommandHandler("gatekeeper", re.compile("^(friends|friendsplay|default)$"))})
+        spads.addSpadsCommandHandler({'meme': getTeiserverStringCommandHandler("meme",
+            re.compile("^(undo|ticks|nodefence|nodefence2|greenfields|rich|poor|hardt1|crazy|deathmatch|noscout|hoversonly|nofusion|armonly|coronly|legonly|armvcor)$"))})
+        spads.addSpadsCommandHandler({'balancealgorithm': getTeiserverStringCommandHandler("balancemode",
+            re.compile("^(cheeky_switcher_smart|loser_picks|split_one_chevs)$"))})
 
         # We need to add the lobby command handlers before we are fully connected, or we dont get the JOINEDBATTLE stuff
         # These will get replaced automatically when connect again
@@ -1195,7 +1200,7 @@ def getTeiserverStringCommandHandler(cmd, validRegex):
 
             if not validRegex.search(combinedParams):
                 spads.slog(cmd + ": syntax error: regex did not match", DBGLEVEL)
-                spads.sayPrivate(user, cmd + ": Contains forbidden characters.")
+                spads.sayPrivate(user, cmd + ": Invalid parameters, check the help entry for advice: \"!help " + cmd + "\"")
                 return False
 
             # All parameter checking was successful, return now if no action is desired
