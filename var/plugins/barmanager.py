@@ -379,6 +379,7 @@ class BarManager:
         spads.addSpadsCommandHandler({'getlastvote': hGetLastVote})
         spads.addSpadsCommandHandler({'minratinglevel': getTeiserverSingleIntegerCommandHandler("minratinglevel", 0, 0, 999)})
         spads.addSpadsCommandHandler({'maxratinglevel': getTeiserverSingleIntegerCommandHandler("maxratinglevel", 1000, 1, 1000)})
+        spads.addSpadsCommandHandler({'setratinglevels': setRatingLevelsCommandHandler})
         spads.addSpadsCommandHandler({'resetratinglevels': getTeiserverNoParameterCommandHandler("resetratinglevels")})
         spads.addSpadsCommandHandler({'minchevlevel': getTeiserverSingleIntegerCommandHandler("minchevlevel", 0, 0, 999)})
         spads.addSpadsCommandHandler({'maxchevlevel': getTeiserverSingleIntegerCommandHandler("maxchevlevel", 1000, 1, 1000)})
@@ -1207,6 +1208,48 @@ def getTeiserverStringCommandHandler(cmd, validRegex):
             spads.slog("Unhandled exception: " + str(sys.exc_info()
                        [0]) + "\n" + str(traceback.format_exc()), 0)
     return handler
+
+def setRatingLevelsCommandHandler(source, user, params, checkOnly):
+    spads.slog("User %s called command setratinglevels with parameter(s) \"%s\"" % (
+        user, ','.join(params)), DBGLEVEL)
+
+    try:
+        user = spads.fix_string(user)
+        for i in range(len(params)):
+            params[i] = spads.fix_string(params[i])
+
+        if len(params) != 2:
+            spads.slog("setratinglevels: syntax error: wrong number of parameters", DBGLEVEL)
+            spads.sayPrivate(user, "setratinglevels: you must provide exactly two parameters (no more, no less).")
+            return False
+
+        if not params[0].isdecimal() or not params[1].isdecimal():
+            spads.slog("setratinglevels: value error: a param is not numeric", DBGLEVEL)
+            spads.sayPrivate(user, "setratinglevels: all parameters must be numbers.")
+            return False
+
+        newMinValue = int(params[0])
+        newMaxValue = int(params[1])
+
+        # All parameter checking was successful, return now if no action is desired
+        if checkOnly:
+            return True
+
+        if newMinValue < 0:
+            newMinValue = 0
+        if newMinValue > 999:
+            newMinValue = 999
+        if newMaxValue < 1:
+            newMaxValue = 1
+        if newMaxValue > 1000:
+            newMaxValue = 1000
+        if newMaxValue <= newMinValue:
+            newMaxValue = newMinValue + 1
+
+        spads.queueLobbyCommand(["SAYBATTLE", "$%setratinglevels " + str(newMinValue) + " " + str(newMaxValue)])
+    except Exception as e:
+        spads.slog("Unhandled exception: " + str(sys.exc_info()
+                   [0]) + "\n" + str(traceback.format_exc()), 0)
 
 
 def updatebotlist():
