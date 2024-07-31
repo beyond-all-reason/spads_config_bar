@@ -30,6 +30,7 @@ pluginParams = {}
 AiProfiles = {}  # dict of BotName : {username : Owner, profile: Defensive} dunno the format yet, should support script tags to set AI profiles
 isBattleLocked = False
 ChobbyState = {}
+barGameType = None
 
 # https://github.com/beyond-all-reason/teiserver/blob/master/documents/tachyon/types.md#battle
 TachyonBattle = {"boss": "", 'preset': "",
@@ -335,6 +336,49 @@ def sendCurrentVote():
         spads.slog("Unhandled exception: " + str(sys.exc_info()
                    [0]) + "\n" + str(traceback.format_exc()), 0)
 
+
+def getBarGameType(teamsize=None, teamcount=None):
+    if teamsize is None:
+        teamsize = ChobbyState['teamSize']
+    if teamcount is None:
+        teamcount = ChobbyState['nbTeams']
+
+    teamcount = int(teamcount)
+    teamsize = int(teamsize)
+
+    if teamcount <= 2:
+        if teamsize == 1:
+            return "Duel"
+        elif teamsize <= 5:
+            return "Small Team"
+        else:
+            return "Large Team"
+    else:
+        if teamsize == 1:
+            return "FFA"
+        else:
+            return "Team FFA"
+
+# Checks if the game type has changed
+# BAR has its own definition of game types that are slightly different from SPADS
+# If the game type has changed, then update the ratings of everyone in the lobby
+# Use None for parameters where you just want to pull from spadsConf
+
+
+def checkForBarGameTypeChange(teamsize=None, teamcount=None):
+    global barGameType
+    newBarGameType = getBarGameType(teamsize, teamcount)
+    if newBarGameType != barGameType:
+        barGameType = newBarGameType
+        updateAllRatings()
+
+
+def updateAllRatings():
+    lobbyUsers = spads.getLobbyInterface().getBattle()['users']
+    for user in lobbyUsers:
+        perl.eval('::getBattleSkill("' + user + '")')
+
+
 # This is the class implementing the plugin
 
 
@@ -596,6 +640,7 @@ class BarManager:
             spads.slog("onPresetApplied: " + str(oldPresetName) +
                        " -> " + str(newPresetName), DBGLEVEL)
             refreshChobbyState()
+            checkForBarGameTypeChange()
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()
                        [0]) + "\n" + str(traceback.format_exc()), 0)
@@ -737,6 +782,7 @@ class BarManager:
             if commandResult == 0:
                 return
             global whoIsBoss
+
             if command == "lock":
                 ChobbyStateChanged("locked", "locked")
             elif command == "unlock":
@@ -750,9 +796,11 @@ class BarManager:
                 elif lowercommand == 'nbteams':
                     ChobbyStateChanged("nbTeams", params[1])
                     updateTachyonBattle("nbTeams", params[1])
+                    checkForBarGameTypeChange(teamcount=params[1])
                 elif lowercommand == 'teamsize':
                     ChobbyStateChanged("teamSize", params[1])
                     updateTachyonBattle("teamSize", params[1])
+                    checkForBarGameTypeChange(teamsize=params[1])
 
             elif command == "vote":
                 sendCurrentVote()
