@@ -23,6 +23,21 @@ def getRequiredSpadsVersion(pluginName):
     return requiredSpadsVersion
 
 
+def getBarGameType(teamsize, teamcount):
+    if teamcount <= 2:
+        if teamsize == 1:
+            return "Duel"
+        elif teamsize <= 5:
+            return "Small Team"
+        else:
+            return "Large Team"
+    else:
+        if teamsize == 1:
+            return "FFA"
+        else:
+            return "Team FFA"
+
+
 class RatingManager:
     def __init__(self, context):
         global server_url, rating_url, balance_url
@@ -43,7 +58,13 @@ class RatingManager:
     def updatePlayerSkill(self, playerSkill, accountId, modName, gameType):
         try:
             raw_data = ""
-            with urllib.request.urlopen(f"{rating_url}/{accountId}/{gameType}") as f:
+            spadsConf = spads.getSpadsConf()
+            teamsize = spadsConf["teamSize"]
+            teamcount = spadsConf["nbTeams"]
+            barGameType = getBarGameType(teamsize, teamcount)
+            barGameType = barGameType.replace(" ", "%20")
+
+            with urllib.request.urlopen(f"{rating_url}/{accountId}/{barGameType}") as f:
                 raw_data = f.read().decode('utf-8')
                 data = json.loads(raw_data)
 
