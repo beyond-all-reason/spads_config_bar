@@ -177,8 +177,7 @@ def sendTachyonBattleTeaser():
                     bottype = "Raptors"
                 else:
                     bottype = "AI"
-            presettotitledict = {'ffa': "Free-for-all", 'team': 'Teams',
-                                 'coop': 'PvE', 'duel': "Duel", 'draft': "Draft"}
+
             if TachyonBattle['preset'] == 'ffa':
                 newbattleteaser += " | FFA"
                 if bottype is not None:
@@ -190,18 +189,18 @@ def sendTachyonBattleTeaser():
                     newbattleteaser += " vs " + bottype
 
             if TachyonBattle['preset'] == 'team':
-                newbattleteaser += " | Teams"
+                newbattleteaser += " | Team"
                 if bottype is not None:
                     newbattleteaser += " vs " + bottype
                 else:
                     newbattleteaser += ' ' + \
-                        ' vs '.join([str(TachyonBattle['teamSize'])]
+                        'v'.join([str(TachyonBattle['teamSize'])]
                                     * int(TachyonBattle['nbTeams']))
 
             if TachyonBattle['preset'] == 'draft':
                 newbattleteaser += " | Captains"
                 newbattleteaser += ' ' + \
-                    ' vs '.join([str(TachyonBattle['teamSize'])]
+                    'v'.join([str(TachyonBattle['teamSize'])]
                                 * int(TachyonBattle['nbTeams']))
 
             if TachyonBattle['preset'] == 'tourney':
@@ -211,14 +210,12 @@ def sendTachyonBattleTeaser():
                 newbattleteaser += " | Coop"
                 if bottype is not None:
                     newbattleteaser += " vs " + bottype
-                # else:
-                # newbattleteaser += ' ' + ' vs '.join([str(TachyonBattle['teamSize'])] * int(TachyonBattle['nbTeams']))
             if TachyonBattle['preset'] == 'custom':
                 if bottype is not None:
                     newbattleteaser += " | Custom vs " + bottype
                 else:
                     newbattleteaser += ' | Custom ' + \
-                        ' vs '.join([str(TachyonBattle['teamSize'])]
+                        'v'.join([str(TachyonBattle['teamSize'])]
                                     * int(TachyonBattle['nbTeams']))
 
         spads.slog("Trying to update battle title: " +
