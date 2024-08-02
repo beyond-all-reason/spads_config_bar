@@ -155,15 +155,11 @@ def sendTachyonBattleTeaser():
     global TachyonBattle, myBattlePassword, myBattleTeaser, whoIsBoss
     try:
         # ok, what should our teaser look like?
-        # TachyonBattle = {"boss":"", 'preset':"", 'botlist' : [], 'teamSize' : 6, 'nbTeams':2}
-        # TODO: dont forget to reset the title when the last player leaves!
-        # TODO: dont do this for private games
-        if myBattlePassword != "*":
-            spads.slog(
-                "myBattlePassword being set prevents title change:" + myBattlePassword, DBGLEVEL)
-            return
         newbattleteaser = ""
-        if len(playersInMyBattle) != 0:
+        # We'll use the default (blank) Teaser for private and empty lobbies
+        # Otherwise, build a Teaser based on the lobby's current settings
+        if myBattlePassword == "*" and len(playersInMyBattle) != 0:
+            # TachyonBattle = {"boss":"", 'preset':"", 'botlist' : [], 'teamSize' : 6, 'nbTeams':2}
             # "botlist": ["SimpleDefenderAI", "NullAI", "BARb", "SimpleAI", "SimpleConstructorAI", "ScavengersAI", "SimpleCheaterAI", "ControlModeAI", "STAI", "ChickensAI"]}"
             bottypes = []
             botlist = TachyonBattle["botlist"]
