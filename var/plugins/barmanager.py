@@ -168,39 +168,31 @@ def sendTachyonBattleTeaser():
                 newbattleteaser += ' | Boss: ' + str(whoIsBoss)
 
             # "botlist": ["SimpleDefenderAI", "NullAI", "BARb", "SimpleAI", "SimpleConstructorAI", "ScavengersAI", "SimpleCheaterAI", "ControlModeAI", "STAI", "ChickensAI"]}"
-            bottypes = []
+            bottype = None
             botlist = TachyonBattle["botlist"]
             if len(botlist) > 0:
                 if "ScavengersAI" in botlist:
-                    bottypes.append("Scavengers")
-                if "RaptorsAI" in botlist:
-                    bottypes.append("Raptors")
-                if "ControlModeAI" in botlist:
-                    bottypes.append("Control Mode")
-                if "BARb" in botlist:
-                    bottypes.append("BARbarianAI")
-                if "STAI" in botlist:
-                    bottypes.append("STAI")
-                for bot in botlist:
-                    if bot.startswith("Simple"):
-                        bottypes.append("SimpleAI")
-                        break
+                    bottype = "Scavengers"
+                elif "RaptorsAI" in botlist:
+                    bottype = "Raptors"
+                else:
+                    bottype = "AI"
             presettotitledict = {'ffa': "Free-for-all", 'team': 'Teams',
                                  'coop': 'PvE', 'duel': "Duel", 'draft': "Draft"}
             if TachyonBattle['preset'] == 'ffa':
                 newbattleteaser += " | FFA"
-                if len(bottypes) > 0:
-                    newbattleteaser += " vs " + ", ".join(bottypes[0:3])
+                if bottype is not None:
+                    newbattleteaser += " vs " + bottype
 
             if TachyonBattle['preset'] == 'duel':
                 newbattleteaser += " | Duel"
-                if len(bottypes) > 0:
-                    newbattleteaser += " vs " + ", ".join(bottypes[0:3])
+                if bottype is not None:
+                    newbattleteaser += " vs " + bottype
 
             if TachyonBattle['preset'] == 'team':
                 newbattleteaser += " | Teams"
-                if len(bottypes) > 0:
-                    newbattleteaser += " vs " + ", ".join(bottypes[0:3])
+                if bottype is not None:
+                    newbattleteaser += " vs " + bottype
                 else:
                     newbattleteaser += ' ' + \
                         ' vs '.join([str(TachyonBattle['teamSize'])]
@@ -217,13 +209,13 @@ def sendTachyonBattleTeaser():
 
             if TachyonBattle['preset'] == 'coop':
                 newbattleteaser += " | Coop"
-                if len(bottypes) > 0:
-                    newbattleteaser += " vs " + ", ".join(bottypes[0:3])
+                if bottype is not None:
+                    newbattleteaser += " vs " + bottype
                 # else:
                 # newbattleteaser += ' ' + ' vs '.join([str(TachyonBattle['teamSize'])] * int(TachyonBattle['nbTeams']))
             if TachyonBattle['preset'] == 'custom':
-                if len(bottypes) > 0:
-                    newbattleteaser += " | Custom vs " + ", ".join(bottypes[0:3])
+                if bottype is not None:
+                    newbattleteaser += " | Custom vs " + bottype
                 else:
                     newbattleteaser += ' | Custom ' + \
                         ' vs '.join([str(TachyonBattle['teamSize'])]
