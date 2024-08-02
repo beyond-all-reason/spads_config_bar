@@ -164,6 +164,9 @@ def sendTachyonBattleTeaser():
             return
         newbattleteaser = ""
         if len(playersInMyBattle) != 0:
+            if whoIsBoss is not None:
+                newbattleteaser += ' | Boss: ' + str(whoIsBoss)
+
             # "botlist": ["SimpleDefenderAI", "NullAI", "BARb", "SimpleAI", "SimpleConstructorAI", "ScavengersAI", "SimpleCheaterAI", "ControlModeAI", "STAI", "ChickensAI"]}"
             bottypes = []
             botlist = TachyonBattle["botlist"]
@@ -219,17 +222,12 @@ def sendTachyonBattleTeaser():
                 # else:
                 # newbattleteaser += ' ' + ' vs '.join([str(TachyonBattle['teamSize'])] * int(TachyonBattle['nbTeams']))
             if TachyonBattle['preset'] == 'custom':
-                newbattleteaser = ("" if whoIsBoss is None else (
-                    whoIsBoss + " | ")) + "Custom Battle"
                 if len(bottypes) > 0:
-                    newbattleteaser += " vs " + ", ".join(bottypes[0:3])
+                    newbattleteaser += " | Custom vs " + ", ".join(bottypes[0:3])
                 else:
-                    newbattleteaser += ' ' + \
+                    newbattleteaser += ' | Custom ' + \
                         ' vs '.join([str(TachyonBattle['teamSize'])]
                                     * int(TachyonBattle['nbTeams']))
-            else:
-                if whoIsBoss is not None:
-                    newbattleteaser += ' | Boss: ' + str(whoIsBoss)
 
         spads.slog("Trying to update battle title: " +
                    newbattleteaser + " old " + myBattleTeaser, DBGLEVEL)
