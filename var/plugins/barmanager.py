@@ -173,7 +173,7 @@ def sendTachyonBattleTeaser():
             if len(botlist) > 0:
                 if "ScavengersAI" in botlist:
                     bottypes.append("Scavengers")
-                if "ChickensAI" in botlist:
+                if "RaptorsAI" in botlist:
                     bottypes.append("Raptors")
                 if "ControlModeAI" in botlist:
                     bottypes.append("Control Mode")
