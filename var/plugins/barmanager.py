@@ -150,73 +150,78 @@ def refreshChobbyState():
     updateTachyonBattle('preset', spadsConf['preset'])
     SendChobbyState()
 
+def buildBattleTeaser():
+    global TachyonBattle, whoIsBoss
+
+    
+
+    if whoIsBoss is not None:
+        return ' | Boss: ' + str(whoIsBoss)
+
+    bottype = None
+    botlist = TachyonBattle["botlist"]
+    if len(botlist) > 0:
+        if "ScavengersAI" in botlist:
+            bottype = "Scavengers"
+        elif "RaptorsAI" in botlist:
+            bottype = "Raptors"
+        else:
+            bottype = "AI"
+
+    if TachyonBattle['preset'] == 'ffa':
+        newbattleteaser = " | FFA"
+        if bottype is not None:
+            newbattleteaser += " vs " + bottype
+        return newbattleteaser
+
+    elif TachyonBattle['preset'] == 'duel':
+        newbattleteaser = " | Duel"
+        if bottype is not None:
+            newbattleteaser += " vs " + bottype
+        return newbattleteaser
+
+    elif TachyonBattle['preset'] == 'team':
+        newbattleteaser = " | Team"
+        if bottype is not None:
+            newbattleteaser += " vs " + bottype
+        else:
+            newbattleteaser += ' ' + \
+                'v'.join([str(TachyonBattle['teamSize'])]
+                            * int(TachyonBattle['nbTeams']))
+        return newbattleteaser
+
+    elif TachyonBattle['preset'] == 'draft':
+        return " | Captains " + \
+            'v'.join([str(TachyonBattle['teamSize'])]
+                    * int(TachyonBattle['nbTeams']))
+
+    elif TachyonBattle['preset'] == 'tourney':
+        return " | Tourney"
+
+    elif TachyonBattle['preset'] == 'coop':
+        newbattleteaser = " | Coop"
+        if bottype is not None:
+            newbattleteaser += " vs " + bottype
+        return newbattleteaser
+
+    elif TachyonBattle['preset'] == 'custom':
+        if bottype is not None:
+            return " | Custom vs " + bottype
+        else:
+            return ' | Custom ' + \
+                'v'.join([str(TachyonBattle['teamSize'])]
+                            * int(TachyonBattle['nbTeams']))
 
 def sendTachyonBattleTeaser():
-    global TachyonBattle, myBattlePassword, myBattleTeaser, whoIsBoss
+    global myBattlePassword, myBattleTeaser
     try:
-        # ok, what should our teaser look like?
-        # TachyonBattle = {"boss":"", 'preset':"", 'botlist' : [], 'teamSize' : 6, 'nbTeams':2}
-        # TODO: dont forget to reset the title when the last player leaves!
-        # TODO: dont do this for private games
         if myBattlePassword != "*":
             spads.slog(
                 "myBattlePassword being set prevents title change:" + myBattlePassword, DBGLEVEL)
             return
         newbattleteaser = ""
         if len(playersInMyBattle) != 0:
-            if whoIsBoss is not None:
-                newbattleteaser += ' | Boss: ' + str(whoIsBoss)
-
-            # "botlist": ["SimpleDefenderAI", "NullAI", "BARb", "SimpleAI", "SimpleConstructorAI", "ScavengersAI", "SimpleCheaterAI", "ControlModeAI", "STAI", "ChickensAI"]}"
-            bottype = None
-            botlist = TachyonBattle["botlist"]
-            if len(botlist) > 0:
-                if "ScavengersAI" in botlist:
-                    bottype = "Scavengers"
-                elif "RaptorsAI" in botlist:
-                    bottype = "Raptors"
-                else:
-                    bottype = "AI"
-
-            if TachyonBattle['preset'] == 'ffa':
-                newbattleteaser += " | FFA"
-                if bottype is not None:
-                    newbattleteaser += " vs " + bottype
-
-            if TachyonBattle['preset'] == 'duel':
-                newbattleteaser += " | Duel"
-                if bottype is not None:
-                    newbattleteaser += " vs " + bottype
-
-            if TachyonBattle['preset'] == 'team':
-                newbattleteaser += " | Team"
-                if bottype is not None:
-                    newbattleteaser += " vs " + bottype
-                else:
-                    newbattleteaser += ' ' + \
-                        'v'.join([str(TachyonBattle['teamSize'])]
-                                    * int(TachyonBattle['nbTeams']))
-
-            if TachyonBattle['preset'] == 'draft':
-                newbattleteaser += " | Captains"
-                newbattleteaser += ' ' + \
-                    'v'.join([str(TachyonBattle['teamSize'])]
-                                * int(TachyonBattle['nbTeams']))
-
-            if TachyonBattle['preset'] == 'tourney':
-                newbattleteaser += " | Tourney"
-
-            if TachyonBattle['preset'] == 'coop':
-                newbattleteaser += " | Coop"
-                if bottype is not None:
-                    newbattleteaser += " vs " + bottype
-            if TachyonBattle['preset'] == 'custom':
-                if bottype is not None:
-                    newbattleteaser += " | Custom vs " + bottype
-                else:
-                    newbattleteaser += ' | Custom ' + \
-                        'v'.join([str(TachyonBattle['teamSize'])]
-                                    * int(TachyonBattle['nbTeams']))
+            newbattleteaser = buildBattleTeaser();
 
         spads.slog("Trying to update battle title: " +
                    newbattleteaser + " old " + myBattleTeaser, DBGLEVEL)
