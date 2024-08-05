@@ -832,6 +832,21 @@ class BarManager:
         try:
             spads.slog("preSpadsCommand: " + ','.join(map(str,
                        [command, source, user, params])), DBGLEVEL)
+
+            # We check "len(params) > 1" here so that only commands like "callvote boss UserName"
+            # are considered, and commands like "callvote boss" are allowed.
+            if command == "callvote" and len(params) > 1 and params[0] == "boss":
+                battle = spads.getLobbyInterface().getBattle()
+                numPlayers = sum(1 for u in battle['users'].values() if u['battleStatus']['mode'] == 1)
+                accessLevel = 0
+                try:
+                    accessLevel = int(spads.getUserAccessLevel(user))
+                except TypeError:
+                    pass
+                if numPlayers > 1 and accessLevel < 100:
+                    spads.sayBattle(user + ", you are not allowed to call command \"callvote boss\" in current context (there is more than one player in the lobby)")
+                    return 0
+
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()
                        [0]) + "\n" + str(traceback.format_exc()), 0)
