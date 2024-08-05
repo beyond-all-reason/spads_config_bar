@@ -1234,17 +1234,10 @@ def setRatingLevelsCommandHandler(source, user, params, checkOnly):
         # All parameter checking was successful, return now if no action is desired
         if checkOnly:
             return True
-
-        if newMinValue < 0:
-            newMinValue = 0
-        if newMinValue > 999:
-            newMinValue = 999
-        if newMaxValue < 1:
-            newMaxValue = 1
-        if newMaxValue > 1000:
-            newMaxValue = 1000
-        if newMaxValue <= newMinValue:
-            newMaxValue = newMinValue + 1
+		
+	#Clamp new rating values within sane ranges and insure a non-empty range
+	newMinValue = min(999,  max(0,               newMinValue))
+	newMaxValue = min(1000, max(newMinValue + 1, newMaxValue))
 
         spads.queueLobbyCommand(["SAYBATTLE", "$%setratinglevels " + str(newMinValue) + " " + str(newMaxValue)])
     except Exception as e:
