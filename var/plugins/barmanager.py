@@ -150,82 +150,74 @@ def refreshChobbyState():
     updateTachyonBattle('preset', spadsConf['preset'])
     SendChobbyState()
 
+def buildBattleTeaser():
+    global TachyonBattle, whoIsBoss
+
+    if whoIsBoss is not None:
+        return ' | Boss: ' + str(whoIsBoss)
+
+    bottype = None
+    botlist = TachyonBattle["botlist"]
+    if len(botlist) > 0:
+        if "ScavengersAI" in botlist:
+            bottype = "Scavengers"
+        elif "RaptorsAI" in botlist:
+            bottype = "Raptors"
+        else:
+            bottype = "AI"
+
+    if TachyonBattle['preset'] == 'ffa':
+        newbattleteaser = " | FFA"
+        if bottype is not None:
+            newbattleteaser += " vs " + bottype
+        return newbattleteaser
+
+    elif TachyonBattle['preset'] == 'duel':
+        newbattleteaser = " | Duel"
+        if bottype is not None:
+            newbattleteaser += " vs " + bottype
+        return newbattleteaser
+
+    elif TachyonBattle['preset'] == 'team':
+        newbattleteaser = " | Team"
+        if bottype is not None:
+            newbattleteaser += " vs " + bottype
+        else:
+            newbattleteaser += ' ' + \
+                'v'.join([str(TachyonBattle['teamSize'])]
+                            * int(TachyonBattle['nbTeams']))
+        return newbattleteaser
+
+    elif TachyonBattle['preset'] == 'draft':
+        return " | Captains " + \
+            'v'.join([str(TachyonBattle['teamSize'])]
+                    * int(TachyonBattle['nbTeams']))
+
+    elif TachyonBattle['preset'] == 'tourney':
+        return " | Tourney"
+
+    elif TachyonBattle['preset'] == 'coop':
+        newbattleteaser = " | Coop"
+        if bottype is not None:
+            newbattleteaser += " vs " + bottype
+        return newbattleteaser
+
+    elif TachyonBattle['preset'] == 'custom':
+        if bottype is not None:
+            return " | Custom vs " + bottype
+        else:
+            return ' | Custom ' + \
+                'v'.join([str(TachyonBattle['teamSize'])]
+                            * int(TachyonBattle['nbTeams']))
 
 def sendTachyonBattleTeaser():
-    global TachyonBattle, myBattlePassword, myBattleTeaser, whoIsBoss
+    global myBattlePassword, myBattleTeaser
     try:
-        # ok, what should our teaser look like?
         newbattleteaser = ""
         # We'll use the default (blank) Teaser for private and empty lobbies
         # Otherwise, build a Teaser based on the lobby's current settings
         if myBattlePassword == "*" and len(playersInMyBattle) != 0:
-            # TachyonBattle = {"boss":"", 'preset':"", 'botlist' : [], 'teamSize' : 6, 'nbTeams':2}
-            # "botlist": ["SimpleDefenderAI", "NullAI", "BARb", "SimpleAI", "SimpleConstructorAI", "ScavengersAI", "SimpleCheaterAI", "ControlModeAI", "STAI", "ChickensAI"]}"
-            bottypes = []
-            botlist = TachyonBattle["botlist"]
-            if len(botlist) > 0:
-                if "ScavengersAI" in botlist:
-                    bottypes.append("Scavengers")
-                if "ChickensAI" in botlist:
-                    bottypes.append("Raptors")
-                if "ControlModeAI" in botlist:
-                    bottypes.append("Control Mode")
-                if "BARb" in botlist:
-                    bottypes.append("BARbarianAI")
-                if "STAI" in botlist:
-                    bottypes.append("STAI")
-                for bot in botlist:
-                    if bot.startswith("Simple"):
-                        bottypes.append("SimpleAI")
-                        break
-            presettotitledict = {'ffa': "Free-for-all", 'team': 'Teams',
-                                 'coop': 'PvE', 'duel': "Duel", 'draft': "Draft"}
-            if TachyonBattle['preset'] == 'ffa':
-                newbattleteaser += " | FFA"
-                if len(bottypes) > 0:
-                    newbattleteaser += " vs " + ", ".join(bottypes[0:3])
-
-            if TachyonBattle['preset'] == 'duel':
-                newbattleteaser += " | Duel"
-                if len(bottypes) > 0:
-                    newbattleteaser += " vs " + ", ".join(bottypes[0:3])
-
-            if TachyonBattle['preset'] == 'team':
-                newbattleteaser += " | Teams"
-                if len(bottypes) > 0:
-                    newbattleteaser += " vs " + ", ".join(bottypes[0:3])
-                else:
-                    newbattleteaser += ' ' + \
-                        ' vs '.join([str(TachyonBattle['teamSize'])]
-                                    * int(TachyonBattle['nbTeams']))
-
-            if TachyonBattle['preset'] == 'draft':
-                newbattleteaser += " | Captains"
-                newbattleteaser += ' ' + \
-                    ' vs '.join([str(TachyonBattle['teamSize'])]
-                                * int(TachyonBattle['nbTeams']))
-
-            if TachyonBattle['preset'] == 'tourney':
-                newbattleteaser += " | Tourney"
-
-            if TachyonBattle['preset'] == 'coop':
-                newbattleteaser += " | Coop"
-                if len(bottypes) > 0:
-                    newbattleteaser += " vs " + ", ".join(bottypes[0:3])
-                # else:
-                # newbattleteaser += ' ' + ' vs '.join([str(TachyonBattle['teamSize'])] * int(TachyonBattle['nbTeams']))
-            if TachyonBattle['preset'] == 'custom':
-                newbattleteaser = ("" if whoIsBoss is None else (
-                    whoIsBoss + " | ")) + "Custom Battle"
-                if len(bottypes) > 0:
-                    newbattleteaser += " vs " + ", ".join(bottypes[0:3])
-                else:
-                    newbattleteaser += ' ' + \
-                        ' vs '.join([str(TachyonBattle['teamSize'])]
-                                    * int(TachyonBattle['nbTeams']))
-            else:
-                if whoIsBoss is not None:
-                    newbattleteaser += ' | Boss: ' + str(whoIsBoss)
+            newbattleteaser = buildBattleTeaser();
 
         spads.slog("Trying to update battle title: " +
                    newbattleteaser + " old " + myBattleTeaser, DBGLEVEL)
@@ -836,6 +828,21 @@ class BarManager:
         try:
             spads.slog("preSpadsCommand: " + ','.join(map(str,
                        [command, source, user, params])), DBGLEVEL)
+
+            # We check "len(params) > 1" here so that only commands like "callvote boss UserName"
+            # are considered, and commands like "callvote boss" are allowed.
+            if command == "callvote" and len(params) > 1 and params[0] == "boss":
+                battle = spads.getLobbyInterface().getBattle()
+                numPlayers = sum(1 for u in battle['users'].values() if u['battleStatus']['mode'] == 1)
+                accessLevel = 0
+                try:
+                    accessLevel = int(spads.getUserAccessLevel(user))
+                except TypeError:
+                    pass
+                if numPlayers > 1 and accessLevel < 100:
+                    spads.sayBattle(user + ", you are not allowed to call command \"callvote boss\" in current context (there is more than one player in the lobby)")
+                    return 0
+
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()
                        [0]) + "\n" + str(traceback.format_exc()), 0)
@@ -1337,6 +1344,8 @@ def hJOINEDBATTLE(command, battleID, userName, battleStatus=0):
             SendChobbyState()
             playersInMyBattle[userName] = battleStatus
             sendCurrentVote()
+            if len(playersInMyBattle) == 1:  # when the first person joins, set teaser
+                sendTachyonBattleTeaser()
             # spads.queueLobbyCommand(["SAYBATTLEEX", "hello dude"])
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
