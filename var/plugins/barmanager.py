@@ -1333,6 +1333,8 @@ def hJOINEDBATTLE(command, battleID, userName, battleStatus=0):
             SendChobbyState()
             playersInMyBattle[userName] = battleStatus
             sendCurrentVote()
+            if len(playersInMyBattle) == 1:  # when the first person joins, set teaser
+                sendTachyonBattleTeaser()
             # spads.queueLobbyCommand(["SAYBATTLEEX", "hello dude"])
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
