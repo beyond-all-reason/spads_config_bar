@@ -197,12 +197,10 @@ def buildBattleTeaser():
 def sendTachyonBattleTeaser():
     global myBattlePassword, myBattleTeaser
     try:
-        if myBattlePassword != "*":
-            spads.slog(
-                "myBattlePassword being set prevents title change:" + myBattlePassword, DBGLEVEL)
-            return
         newbattleteaser = ""
-        if len(playersInMyBattle) != 0:
+        # We'll use the default (blank) Teaser for private and empty lobbies
+        # Otherwise, build a Teaser based on the lobby's current settings
+        if myBattlePassword == "*" and len(playersInMyBattle) != 0:
             newbattleteaser = buildBattleTeaser();
 
         spads.slog("Trying to update battle title: " +
