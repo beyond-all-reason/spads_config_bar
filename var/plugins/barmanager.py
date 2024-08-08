@@ -153,9 +153,6 @@ def refreshChobbyState():
 def buildBattleTeaser():
     global TachyonBattle, whoIsBoss
 
-    if whoIsBoss is not None:
-        return ' | Boss: ' + str(whoIsBoss)
-
     bottype = None
     botlist = TachyonBattle["botlist"]
     if len(botlist) > 0:
@@ -166,49 +163,36 @@ def buildBattleTeaser():
         else:
             bottype = "AI"
 
-    if TachyonBattle['preset'] == 'ffa':
-        newbattleteaser = " | FFA"
-        if bottype is not None:
-            newbattleteaser += " vs " + bottype
-        return newbattleteaser
-
-    elif TachyonBattle['preset'] == 'duel':
-        newbattleteaser = " | Duel"
-        if bottype is not None:
-            newbattleteaser += " vs " + bottype
-        return newbattleteaser
-
-    elif TachyonBattle['preset'] == 'team':
-        newbattleteaser = " | Team"
-        if bottype is not None:
-            newbattleteaser += " vs " + bottype
-        else:
-            newbattleteaser += ' ' + \
-                'v'.join([str(TachyonBattle['teamSize'])]
-                            * int(TachyonBattle['nbTeams']))
-        return newbattleteaser
-
-    elif TachyonBattle['preset'] == 'draft':
-        return " | Captains " + \
+    if bottype is not None:
+        if TachyonBattle['preset'] == 'ffa':
+            return " | FFA vs " + bottype
+        elif TachyonBattle['preset'] == 'duel':
+            return " | Duel vs " + bottype
+        elif TachyonBattle['preset'] == 'team':
+            return " | Team vs " + bottype
+        elif TachyonBattle['preset'] == 'tourney':
+            return " | Tourney"
+        elif TachyonBattle['preset'] == 'coop':
+            return " | Coop vs " + bottype
+        elif TachyonBattle['preset'] == 'custom':
+            return " | Custom vs " + bottype
+    else:
+        if TachyonBattle['preset'] == 'ffa':
+            return " | FFA"
+        elif TachyonBattle['preset'] == 'duel':
+            return " | Duel"
+        elif TachyonBattle['preset'] == 'team':
+            return " | " + \
             'v'.join([str(TachyonBattle['teamSize'])]
                     * int(TachyonBattle['nbTeams']))
-
-    elif TachyonBattle['preset'] == 'tourney':
-        return " | Tourney"
-
-    elif TachyonBattle['preset'] == 'coop':
-        newbattleteaser = " | Coop"
-        if bottype is not None:
-            newbattleteaser += " vs " + bottype
-        return newbattleteaser
-
-    elif TachyonBattle['preset'] == 'custom':
-        if bottype is not None:
-            return " | Custom vs " + bottype
-        else:
-            return ' | Custom ' + \
-                'v'.join([str(TachyonBattle['teamSize'])]
-                            * int(TachyonBattle['nbTeams']))
+        elif TachyonBattle['preset'] == 'tourney':
+            return " | Tourney"
+        elif TachyonBattle['preset'] == 'coop':
+            return " | Coop"
+        elif TachyonBattle['preset'] == 'custom':
+            return " | " + \
+            'v'.join([str(TachyonBattle['teamSize'])]
+                    * int(TachyonBattle['nbTeams']))
 
 def sendTachyonBattleTeaser():
     global myBattlePassword, myBattleTeaser
