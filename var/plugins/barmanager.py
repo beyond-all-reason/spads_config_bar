@@ -816,7 +816,7 @@ class BarManager:
 
             # We check "len(params) > 1" here so that only commands like "callvote boss UserName"
             # are considered, and commands like "callvote boss" are allowed.
-            if command == "callvote" and len(params) > 1 and params[0] == "boss":
+            if command == "callvote" and len(params) > 1 and params[0] == "boss" and myBattlePassword == "*":
                 battle = spads.getLobbyInterface().getBattle()
                 numPlayers = sum(1 for u in battle['users'].values() if u['battleStatus']['mode'] == 1)
                 accessLevel = 0
