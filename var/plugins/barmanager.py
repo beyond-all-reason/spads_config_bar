@@ -387,6 +387,7 @@ class BarManager:
         # We declare our new command and the associated handler
         spads.addSpadsCommandHandler({'myCommand': hMyCommand})
         spads.addSpadsCommandHandler({'aiProfile': hAiProfile})
+        spads.addSpadsCommandHandler({'setAllAiBonus': hSetAllAiBonus})
         spads.addSpadsCommandHandler({'splitbattle': hSplitBattle})
         spads.addSpadsCommandHandler(
             {'barmanagerdebuglevel': hbarmanagerdebuglevel})
@@ -469,6 +470,7 @@ class BarManager:
     def onUnload(self, reason):
         spads.removeSpadsCommandHandler(['myCommand'])
         spads.removeSpadsCommandHandler(['aiProfile'])
+        spads.removeSpadsCommandHandler(['setAllAiBonus'])
         spads.removeSpadsCommandHandler(['splitbattle'])
         spads.removeSpadsCommandHandler(['barmanagerdebuglevel'])
         spads.removeSpadsCommandHandler(['barmanagerprintstate'])
@@ -1078,6 +1080,40 @@ def hAiProfile(source, user, params, checkOnly):
         # We log the command call as notice message
         spads.slog("User %s called command hAiProfile with parameter(s) \"%s\"" % (
             user, ','.join(params)), 3)
+
+    except Exception as e:
+        spads.slog("Unhandled exception: " + str(sys.exc_info()
+                   [0]) + "\n" + str(traceback.format_exc()), 0)
+
+def hSetAllAiBonus(source, user, params, checkOnly):
+    try:
+        user = spads.fix_string(user)
+        for i in range(len(params)):
+            params[i] = spads.fix_string(params[i])
+
+        if len(params) != 1 or not params[0].isdigit():
+            spads.sayPrivate(user, "setAllAiBonus: Bad syntax (must specify a single number between 0-100)")
+            return False
+
+        newBonus = int(params[0])
+
+        if newBonus < 0 or newBonus > 100:
+            spads.sayPrivate(user, "setAllAiBonus: Bad syntax (must specify a single number between 0-100)")
+            return False
+
+        # checkOnly is true if this is just a check for callVote command, not a real command execution
+        if checkOnly:
+            return 1
+
+        lobbyInterface = spads.getLobbyInterface()
+        battle = lobbyInterface.getBattle()
+
+        bots = {} if 'bots' not in battle else battle['bots']
+
+        for bot in bots:
+            forceParams = ["%" + bot, "bonus", str(newBonus)]
+            spads.slog("Calling hForce with params: " + str(forceParams), DBGLEVEL)
+            perl.hForce("pv", "*", forceParams, False)
 
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
