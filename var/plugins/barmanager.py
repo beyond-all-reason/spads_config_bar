@@ -151,7 +151,7 @@ def refreshChobbyState():
     SendChobbyState()
 
 def buildBattleTeaser():
-    global TachyonBattle, whoIsBoss
+    global TachyonBattle
 
     bottype = None
     botlist = TachyonBattle["botlist"]
@@ -816,7 +816,7 @@ class BarManager:
 
             # We check "len(params) > 1" here so that only commands like "callvote boss UserName"
             # are considered, and commands like "callvote boss" are allowed.
-            if command == "callvote" and len(params) > 1 and params[0] == "boss":
+            if command == "callvote" and len(params) > 1 and params[0] == "boss" and myBattlePassword == "*":
                 battle = spads.getLobbyInterface().getBattle()
                 numPlayers = sum(1 for u in battle['users'].values() if u['battleStatus']['mode'] == 1)
                 accessLevel = 0
@@ -921,7 +921,6 @@ class BarManager:
         return
 
     def changeUserAccessLevel(self, userName, userData, isAuthenticated, currentAccessLevel):
-        global whoIsBoss
         #  updateStatusInfo: params={'Name': '[teh]behetest', 'Skill': '[16.67 ???]', 'ID': '3726', 'Rank': 2},3726,Beyond All Reason test-24450-6c81e38,Duel,30
 
         try:
@@ -1274,8 +1273,8 @@ def setRatingLevelsCommandHandler(source, user, params, checkOnly):
         # All parameter checking was successful, return now if no action is desired
         if checkOnly:
             return True
-		
-	#Clamp new rating values within sane ranges and insure a non-empty range
+
+        #Clamp new rating values within sane ranges and insure a non-empty range
         newMinValue = min(999,  max(0,               newMinValue))
         newMaxValue = min(1000, max(newMinValue + 1, newMaxValue))
 
@@ -1346,9 +1345,18 @@ def hLEFTBATTLE(command, battleID, userName):
                 sendTachyonBattleTeaser()
 
             if whoIsBoss == userName:
+                # Set 'whoIsBoss' to another boss in the lobby, or None if there are no other bosses
                 whoIsBoss = None
-                ChobbyStateChanged("boss", "")
-                updateTachyonBattle("boss", "")
+                bosses = spads.getBosses()
+                if userName in bosses:
+                    del bosses[userName]
+                if len(bosses) > 0:
+                    whoIsBoss = next(iter(bosses.keys()))
+
+                ChobbyStateChanged(
+                    "boss", "" if whoIsBoss is None else whoIsBoss)
+                updateTachyonBattle(
+                    "boss", "" if whoIsBoss is None else whoIsBoss)
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
                    [0]) + "\n" + str(traceback.format_exc()), 0)
