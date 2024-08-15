@@ -46,8 +46,6 @@ playersInMyBattle = {}
 myBattleTeaser = ""
 myBattlePassword = '*'  # which means no password
 
-whoIsBoss = None
-
 hwInfoIngame = {}  # maps playernum to hwinfo dics {0: {}} this reverse mapping is needed because hwinfo arrives before playername
 
 aiProfiles = {}  # there are multiple ai profiles one can set, especially for barbarians, This info is currently discarded, but could use a new command
@@ -762,7 +760,6 @@ class BarManager:
                        [command, source, user, params, commandResult])), DBGLEVEL)
             if commandResult == 0:
                 return
-            global whoIsBoss
 
             if command == "lock":
                 ChobbyStateChanged("locked", "locked")
@@ -786,25 +783,12 @@ class BarManager:
             elif command == "vote":
                 sendCurrentVote()
             elif command == "boss":
-                if len(params) == 0:
-                    whoIsBoss = None
-                else:
-                    # params[0] is shorthand, e.g. !boss behe will make [teh]Beherith boss, but will present here as behe
-                    # try to search within players, to match the shorthand
-                    whoIsBoss = params[0]
-                    matching = []
-                    for playername in playersInMyBattle.keys():
-                        if whoIsBoss in playername.lower():
-                            matching.append(playername)
-                    if len(matching) == 1:
-                        whoIsBoss = matching[0]
-                    else:
-                        spads.slog("Multiple possible bosses: for " +
-                                   whoIsBoss + " in " + str(matching), 3)
-                ChobbyStateChanged(
-                    "boss", "" if whoIsBoss is None else whoIsBoss)
-                updateTachyonBattle(
-                    "boss", "" if whoIsBoss is None else whoIsBoss)
+                bosses = "" + ','.join(spads.getBosses())
+
+                spads.slog("TEMP_DEBUG (bosses): " + bosses, 0)
+
+                ChobbyStateChanged("boss", bosses)
+                updateTachyonBattle("boss", bosses)
 
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()
@@ -1024,7 +1008,6 @@ def hbarmanagerprintstate(source, user, params, checkOnly):
         spads.slog("TachyonBattle: " + str(TachyonBattle), 3)
         spads.slog("playersInMyBattle: " + str(playersInMyBattle), 3)
         spads.slog("myBattleTeaser: " + str(myBattleTeaser), 3)
-        spads.slog("whoIsBoss: " + str(whoIsBoss), 3)
         spads.slog("hwInfoIngame: " + str(hwInfoIngame), 3)
 
         spads.sayPrivate(user, "DBGLEVEL: " + str(DBGLEVEL))
@@ -1033,7 +1016,6 @@ def hbarmanagerprintstate(source, user, params, checkOnly):
         spads.sayPrivate(user, "TachyonBattle: " + str(TachyonBattle))
         spads.sayPrivate(user, "playersInMyBattle: " + str(playersInMyBattle))
         spads.sayPrivate(user, "myBattleTeaser: " + str(myBattleTeaser))
-        spads.sayPrivate(user, "whoIsBoss: " + str(whoIsBoss))
         # Also say these in private to caller
 
     except Exception as e:
@@ -1343,7 +1325,6 @@ def hUPDATEBATTLEINFO(command, battleID, spectatorCount, locked, mapHash, mapNam
 
 
 def hLEFTBATTLE(command, battleID, userName):
-    global whoIsBoss
     try:
         if battleID == myBattleID and playersInMyBattle[userName]:
             spads.slog("LEFTBATTLE" + str([command, battleID, userName]), 3)
@@ -1352,19 +1333,9 @@ def hLEFTBATTLE(command, battleID, userName):
             if len(playersInMyBattle) == 0:  # when the last person leaves, reset title
                 sendTachyonBattleTeaser()
 
-            if whoIsBoss == userName:
-                # Set 'whoIsBoss' to another boss in the lobby, or None if there are no other bosses
-                whoIsBoss = None
-                bosses = spads.getBosses()
-                if userName in bosses:
-                    del bosses[userName]
-                if len(bosses) > 0:
-                    whoIsBoss = next(iter(bosses.keys()))
-
-                ChobbyStateChanged(
-                    "boss", "" if whoIsBoss is None else whoIsBoss)
-                updateTachyonBattle(
-                    "boss", "" if whoIsBoss is None else whoIsBoss)
+            bosses = "" + ','.join(spads.getBosses())
+            ChobbyStateChanged("boss", bosses)
+            updateTachyonBattle("boss", bosses)
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
                    [0]) + "\n" + str(traceback.format_exc()), 0)
