@@ -393,6 +393,7 @@ class BarManager:
         spads.addSpadsCommandHandler(
             {'barmanagerprintstate': hbarmanagerprintstate})
         spads.addSpadsCommandHandler({'getlastvote': hGetLastVote})
+
         spads.addSpadsCommandHandler({'minratinglevel': getTeiserverSingleIntegerCommandHandler("minratinglevel", 0, 0, 999)})
         spads.addSpadsCommandHandler({'maxratinglevel': getTeiserverSingleIntegerCommandHandler("maxratinglevel", 1000, 1, 1000)})
         spads.addSpadsCommandHandler({'setratinglevels': setRatingLevelsCommandHandler})
@@ -400,6 +401,7 @@ class BarManager:
         spads.addSpadsCommandHandler({'minchevlevel': getTeiserverSingleIntegerCommandHandler("minchevlevel", 0, 0, 999)})
         spads.addSpadsCommandHandler({'maxchevlevel': getTeiserverSingleIntegerCommandHandler("maxchevlevel", 1000, 1, 1000)})
         spads.addSpadsCommandHandler({'resetchevlevels': getTeiserverNoParameterCommandHandler("resetchevlevels")})
+
         spads.addSpadsCommandHandler({'rename': getTeiserverStringCommandHandler("rename", re.compile("^[a-zA-Z0-9_\\-\\[\\] \\<\\>\\+\\|:]+$"))})
         spads.addSpadsCommandHandler({'welcome-message': getTeiserverStringCommandHandler("welcome-message", re.compile("^.*$"))})
         spads.addSpadsCommandHandler({'gatekeeper': getTeiserverStringCommandHandler("gatekeeper", re.compile("^(friends|friendsplay|default)$"))})
@@ -473,14 +475,20 @@ class BarManager:
         spads.removeSpadsCommandHandler(['barmanagerdebuglevel'])
         spads.removeSpadsCommandHandler(['barmanagerprintstate'])
         spads.removeSpadsCommandHandler(['getlastvote'])
+
         spads.removeSpadsCommandHandler(['minratinglevel'])
         spads.removeSpadsCommandHandler(['maxratinglevel'])
+        spads.removeSpadsCommandHandler(['setratinglevels'])
         spads.removeSpadsCommandHandler(['resetratinglevels'])
         spads.removeSpadsCommandHandler(['minchevlevel'])
         spads.removeSpadsCommandHandler(['maxchevlevel'])
         spads.removeSpadsCommandHandler(['resetchevlevels'])
+
         spads.removeSpadsCommandHandler(['rename'])
         spads.removeSpadsCommandHandler(['welcome-message'])
+        spads.removeSpadsCommandHandler(['gatekeeper'])
+        spads.removeSpadsCommandHandler(['meme'])
+        spads.removeSpadsCommandHandler(['balancealgorithm'])
 
         spads.removeLobbyCommandHandler(["JOINEDBATTLE"])
         spads.removeLobbyCommandHandler(["LEFTBATTLE"])
