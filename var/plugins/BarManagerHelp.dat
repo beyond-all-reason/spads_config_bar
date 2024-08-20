@@ -66,6 +66,10 @@
 
 [balancealgorithm]
 !balancealgorithm <algorithm> - Sets the balance algorithm used to autobalance the teams.
-"!balancealgorithm cheeky_switcher_smart"
 "!balancealgorithm loser_picks"
-"!balancealgorithm split_one_chevs"
+"!balancealgorithm split_noobs"
+
+[setAllAiBonus]
+!setAllAiBonus <bonus> - Sets the economic bonus for each AI in the battle. The bonus must be between 0-100.
+"!setAllAiBonus 0"
+"!setAllAiBonus 100"
