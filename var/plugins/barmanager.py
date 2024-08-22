@@ -1591,6 +1591,34 @@ def h_autohost_GAME_LUAMSG(command, playerNumInt, luahandleidInt, nullStr, messa
                 spads.sayPrivate('AutohostMonitor', sentmessage)
                 spads.slog("m@pm@rk:" + str(ms) + sentmessage, DBGLEVEL)
 
+        # Pause/Unpause event
+        # Fake a chat message to document pauses
+        # local msg = string.format("p@u$3:%s", tostring(isGamePaused))
+        if len(message) > 6 and message[0:5] == "p@u$3":
+            paused = "unknown"
+            try:
+                paused = message.split(':')[1]
+            except Exception as e:
+                spads.slog(f'Failed to parse a log message for paused: {message} ' + str(
+                    sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 2)
+
+            battle = spads.getLobbyInterface().getBattle()
+            founderName = battle['founder']
+            founderID = battle['users'][founderName]['battleStatus']['id']
+
+            if playerNumInt in hwInfoIngame:
+                # Username should already be stored here
+                username = hwInfoIngame[playerNumInt]['username']
+
+                # Send the private message
+                spads.sayPrivate(
+                    'AutohostMonitor', f'match-chat-name <{founderName}>:<{founderID}> dspectators: {username} changed pause state to {paused}')
+                spads.slog(f'match-chat-name <{founderName}>:<{founderID}> dspectators: {username} changed pause state to {paused}', DBGLEVEL)
+            else:
+                spads.sayPrivate(
+                    'AutohostMonitor', f'match-chat-name <{founderName}>:<{founderID}> dspectators: Player#{playerNumInt} changed pause state to {paused}')
+                spads.slog(f'match-chat-name <{founderName}>:<{founderID}> dspectators: Player#{playerNumInt} changed pause state to {paused}', DBGLEVEL)
+
         # AddSpadsMessage event, see barwidgets.lua:AddSpadsMessage
         if len(message) > 10 and message[0:9] == "lu@$p@d$:":
             # incoming example: lu@$p@d$:ASDFASDFASDF
