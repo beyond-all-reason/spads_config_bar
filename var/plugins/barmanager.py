@@ -1614,10 +1614,12 @@ def h_autohost_GAME_LUAMSG(command, playerNumInt, luahandleidInt, nullStr, messa
                 spads.sayPrivate(
                     'AutohostMonitor', f'match-chat-name <{founderName}>:<{founderID}> dspectators: {username} changed pause state to {paused}')
                 spads.slog(f'match-chat-name <{founderName}>:<{founderID}> dspectators: {username} changed pause state to {paused}', DBGLEVEL)
+                spads.sayBattle(f'match-chat-name <{founderName}>:<{founderID}> dspectators: {username} changed pause state to {paused}')
             else:
                 spads.sayPrivate(
                     'AutohostMonitor', f'match-chat-name <{founderName}>:<{founderID}> dspectators: Player#{playerNumInt} changed pause state to {paused}')
                 spads.slog(f'match-chat-name <{founderName}>:<{founderID}> dspectators: Player#{playerNumInt} changed pause state to {paused}', DBGLEVEL)
+                spads.sayBattle(f'match-chat-name <{founderName}>:<{founderID}> dspectators: Player#{playerNumInt} changed pause state to {paused}')
 
         # AddSpadsMessage event, see barwidgets.lua:AddSpadsMessage
         if len(message) > 10 and message[0:9] == "lu@$p@d$:":
