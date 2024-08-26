@@ -62,8 +62,8 @@ def recursecopy(workdir):
 
 def configupdate(args):
 	if args.nogit != True:
-		execute("git fetch origin")
-		execute("git reset --hard FETCH_HEAD")
+		execute("git fetch origin $(git rev-parse --abbrev-ref HEAD)")
+		execute("git reset --hard origin/$(git rev-parse --abbrev-ref HEAD)")
 		execute("git clean -xfdf")
 	for root, directory, filenames in os.walk("."):
 		goodfile = True
