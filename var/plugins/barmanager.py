@@ -978,6 +978,8 @@ def hbarmanagerdebuglevel(source, user, params, checkOnly):
         # This is in case Inline::Python handles Perl strings as byte strings instead of normal strings
         # (this step can be skipped if your Inline::Python version isn't afffected by this bug)
         user = spads.fix_string(user)
+        for i in range(len(params)):
+            params[i] = spads.fix_string(params[i])
         if len(params) == 1:
             try:
                 newlevel = int(params[0])
@@ -1004,10 +1006,13 @@ def hbarmanagerprintstate(source, user, params, checkOnly):
     global DBGLEVEL
 
     try:
-        # checkOnly is true if this is just a check for callVote command, not a real command execution
-
+        user = spads.fix_string(user)
+        for i in range(len(params)):
+            params[i] = spads.fix_string(params[i])
         spads.slog("User %s called command barmanagerprintstate with parameter(s) \"%s\"" % (
             user, ','.join(params)), 3)
+
+        # checkOnly is true if this is just a check for callVote command, not a real command execution
         if checkOnly:
             # MyCommand is a basic command, we have nothing to check in case of callvote
             return 1
@@ -1043,6 +1048,9 @@ def hAiProfile(source, user, params, checkOnly):
         # checkOnly is true if this is just a check for callVote command, not a real command execution
         if checkOnly:
             return 1  # no need to check CV
+        user = spads.fix_string(user)
+        for i in range(len(params)):
+            params[i] = spads.fix_string(params[i])
         lobbyInterface = spads.getLobbyInterface()
         battle = lobbyInterface.getBattle()
 
@@ -1089,6 +1097,8 @@ def hSetAllAiBonus(source, user, params, checkOnly):
         user = spads.fix_string(user)
         for i in range(len(params)):
             params[i] = spads.fix_string(params[i])
+        spads.slog("User %s called command setAllAiBonus with parameter(s) \"%s\"" % (
+            user, ','.join(params)), DBGLEVEL)
 
         if len(params) != 1 or not params[0].isdigit():
             spads.sayPrivate(user, "setAllAiBonus: Bad syntax (must specify a single number between 0-100)")
@@ -1141,12 +1151,15 @@ def hSplitBattle(source, user, params, checkOnly):
 
 
 def hGetLastVote(source, user, params, checkOnly):
-    spads.slog("User %s called command getLastVote with parameter(s) \"%s\"" % (
-        user, ','.join(params)), DBGLEVEL)
-    if checkOnly:
-        return 1
-
     try:
+        user = spads.fix_string(user)
+        for i in range(len(params)):
+            params[i] = spads.fix_string(params[i])
+        spads.slog("User %s called command getLastVote with parameter(s) \"%s\"" % (
+            user, ','.join(params)), DBGLEVEL)
+        if checkOnly:
+            return 1
+
         historyNum = 1
         if len(params) > 1:
             spads.slog(
@@ -1185,13 +1198,12 @@ def hGetLastVote(source, user, params, checkOnly):
 
 def getTeiserverNoParameterCommandHandler(cmd):
     def handler(source, user, params, checkOnly):
-        spads.slog("User %s called command %s with parameter(s) \"%s\"" % (
-            user, cmd, ','.join(params)), DBGLEVEL)
-
         try:
             user = spads.fix_string(user)
             for i in range(len(params)):
                 params[i] = spads.fix_string(params[i])
+            spads.slog("User %s called command %s with parameter(s) \"%s\"" % (
+                user, cmd, ','.join(params)), DBGLEVEL)
 
             if len(params) > 0:
                 spads.slog(cmd + ": syntax error: more than 0 parameters", DBGLEVEL)
@@ -1210,13 +1222,12 @@ def getTeiserverNoParameterCommandHandler(cmd):
 
 def getTeiserverSingleIntegerCommandHandler(cmd, defaultValue, minValue, maxValue):
     def handler(source, user, params, checkOnly):
-        spads.slog("User %s called command %s with parameter(s) \"%s\"" % (
-            user, cmd, ','.join(params)), DBGLEVEL)
-
         try:
             user = spads.fix_string(user)
             for i in range(len(params)):
                 params[i] = spads.fix_string(params[i])
+            spads.slog("User %s called command %s with parameter(s) \"%s\"" % (
+                user, cmd, ','.join(params)), DBGLEVEL)
 
             if len(params) > 1:
                 spads.slog(cmd + ": syntax error: more than 1 parameter", DBGLEVEL)
@@ -1254,20 +1265,19 @@ def getTeiserverSingleIntegerCommandHandler(cmd, defaultValue, minValue, maxValu
 
 def getTeiserverStringCommandHandler(cmd, validRegex):
     def handler(source, user, params, checkOnly):
-        spads.slog("User %s called command %s with parameter(s) \"%s\"" % (
-            user, cmd, ','.join(params)), DBGLEVEL)
-
         try:
             user = spads.fix_string(user)
             for i in range(len(params)):
                 params[i] = spads.fix_string(params[i])
+            spads.slog("User %s called command %s with parameter(s) \"%s\"" % (
+                user, cmd, ','.join(params)), DBGLEVEL)
 
             if len(params) == 0:
                 spads.slog(cmd + ": syntax error: not enough parameters", DBGLEVEL)
                 spads.sayPrivate(user, cmd + ": Not enough parameters.")
                 return False
 
-            combinedParams = " ".join(params)
+            combinedParams = ' '.join(params)
 
             if not validRegex.search(combinedParams):
                 spads.slog(cmd + ": syntax error: regex did not match", DBGLEVEL)
@@ -1285,13 +1295,12 @@ def getTeiserverStringCommandHandler(cmd, validRegex):
     return handler
 
 def setRatingLevelsCommandHandler(source, user, params, checkOnly):
-    spads.slog("User %s called command setratinglevels with parameter(s) \"%s\"" % (
-        user, ','.join(params)), DBGLEVEL)
-
     try:
         user = spads.fix_string(user)
         for i in range(len(params)):
             params[i] = spads.fix_string(params[i])
+        spads.slog("User %s called command setratinglevels with parameter(s) \"%s\"" % (
+            user, ','.join(params)), DBGLEVEL)
 
         if len(params) != 2:
             spads.slog("setratinglevels: syntax error: wrong number of parameters", DBGLEVEL)
