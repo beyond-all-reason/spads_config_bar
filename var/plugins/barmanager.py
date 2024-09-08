@@ -136,6 +136,23 @@ def ChobbyStateChanged(changedKey, changedValue):
         spads.slog("Unhandled exception: " + str(sys.exc_info()
                    [0]) + "\n" + str(traceback.format_exc()), 0)
 
+def updateChobbyMuteState():
+    currentMutes = ",".join(queryInGameMuteList())
+    ChobbyStateChanged("mutes", currentMutes)
+
+def queryInGameMuteList():
+    igm = spads.getPlugin("InGameMute")
+    if not igm:
+        spads.slog("InGameMute plugin is not loaded, mute-related information is not available.", 1)
+        return []
+
+    muteList = []
+    lobbyUsers = spads.getLobbyInterface().getBattle()['users']
+    for user in lobbyUsers:
+        igmData = igm.getUserMuteData(user)
+        if igmData and igmData["chat"]:
+            muteList.append(user)
+    return muteList
 
 def refreshChobbyState():
     spadsConf = spads.getSpadsConf()
@@ -148,6 +165,7 @@ def refreshChobbyState():
     ChobbyState['balanceMode'] = spadsConf['balanceMode']
     ChobbyState['preset'] = spadsConf['preset']
     updateTachyonBattle('preset', spadsConf['preset'])
+    ChobbyState["mutes"] = ",".join(queryInGameMuteList())
     SendChobbyState()
 
 def buildBattleTeaser():
@@ -799,6 +817,10 @@ class BarManager:
                     "boss", "" if whoIsBoss is None else whoIsBoss)
                 updateTachyonBattle(
                     "boss", "" if whoIsBoss is None else whoIsBoss)
+            elif command == "mute":
+                updateChobbyMuteState()
+            elif command == "unmute":
+                updateChobbyMuteState()
 
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()
@@ -1402,6 +1424,7 @@ def hLEFTBATTLE(command, battleID, userName):
                     "boss", "" if whoIsBoss is None else whoIsBoss)
                 updateTachyonBattle(
                     "boss", "" if whoIsBoss is None else whoIsBoss)
+            updateChobbyMuteState()
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
                    [0]) + "\n" + str(traceback.format_exc()), 0)
@@ -1420,6 +1443,7 @@ def hJOINEDBATTLE(command, battleID, userName, battleStatus=0):
             if len(playersInMyBattle) == 1:  # when the first person joins, set teaser
                 sendTachyonBattleTeaser()
             # spads.queueLobbyCommand(["SAYBATTLEEX", "hello dude"])
+            updateChobbyMuteState()
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
                    [0]) + "\n" + str(traceback.format_exc()), 0)
