@@ -665,6 +665,9 @@ class BarManager:
             barmanagermessage = BMP + json.dumps({"onVoteStart": currentVote})
             spads.sayBattle(barmanagermessage)
             spads.slog(barmanagermessage, DBGLEVEL)
+
+            # Ring all potential voters, by calling SPADS's "!ring" command handler
+            perl.hRing("battle", spads.getSpadsConf()['lobbyLogin'], [], 0)
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()
                        [0]) + "\n" + str(traceback.format_exc()), 0)
