@@ -134,6 +134,23 @@ def ChobbyStateChanged(changedKey, changedValue):
         spads.slog("Unhandled exception: " + str(sys.exc_info()
                    [0]) + "\n" + str(traceback.format_exc()), 0)
 
+def updateChobbyMuteState():
+    currentMutes = ",".join(queryInGameMuteList())
+    ChobbyStateChanged("mutes", currentMutes)
+
+def queryInGameMuteList():
+    igm = spads.getPlugin("InGameMute")
+    if not igm:
+        spads.slog("InGameMute plugin is not loaded, mute-related information is not available.", 1)
+        return []
+
+    muteList = []
+    lobbyUsers = spads.getLobbyInterface().getBattle()['users']
+    for user in lobbyUsers:
+        igmData = igm.getUserMuteData(user)
+        if igmData and igmData["chat"]:
+            muteList.append(user)
+    return muteList
 
 def refreshChobbyState():
     spadsConf = spads.getSpadsConf()
@@ -146,6 +163,7 @@ def refreshChobbyState():
     ChobbyState['balanceMode'] = spadsConf['balanceMode']
     ChobbyState['preset'] = spadsConf['preset']
     updateTachyonBattle('preset', spadsConf['preset'])
+    ChobbyState["mutes"] = ",".join(queryInGameMuteList())
     SendChobbyState()
 
 def buildBattleTeaser():
@@ -671,6 +689,9 @@ class BarManager:
             barmanagermessage = BMP + json.dumps({"onVoteStart": currentVote})
             spads.sayBattle(barmanagermessage)
             spads.slog(barmanagermessage, DBGLEVEL)
+
+            # Ring all potential voters, by calling SPADS's "!ring" command handler
+            perl.hRing("battle", spads.getSpadsConf()['lobbyLogin'], [], 0)
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()
                        [0]) + "\n" + str(traceback.format_exc()), 0)
@@ -789,6 +810,10 @@ class BarManager:
 
                 ChobbyStateChanged("boss", bosses)
                 updateTachyonBattle("boss", bosses)
+            elif command == "mute":
+                updateChobbyMuteState()
+            elif command == "unmute":
+                updateChobbyMuteState()
 
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()
@@ -1379,6 +1404,8 @@ def hLEFTBATTLE(command, battleID, userName):
             bosses = "" + ','.join(spads.getBosses())
             ChobbyStateChanged("boss", bosses)
             updateTachyonBattle("boss", bosses)
+
+            updateChobbyMuteState()
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
                    [0]) + "\n" + str(traceback.format_exc()), 0)
@@ -1397,6 +1424,7 @@ def hJOINEDBATTLE(command, battleID, userName, battleStatus=0):
             if len(playersInMyBattle) == 1:  # when the first person joins, set teaser
                 sendTachyonBattleTeaser()
             # spads.queueLobbyCommand(["SAYBATTLEEX", "hello dude"])
+            updateChobbyMuteState()
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
                    [0]) + "\n" + str(traceback.format_exc()), 0)
@@ -1576,6 +1604,34 @@ def h_autohost_GAME_LUAMSG(command, playerNumInt, luahandleidInt, nullStr, messa
                 sentmessage = f'match-chat-name <{ms[5]}>:<{ms[2]}> dallies: Added Point {ms[6]}'
                 spads.sayPrivate('AutohostMonitor', sentmessage)
                 spads.slog("m@pm@rk:" + str(ms) + sentmessage, DBGLEVEL)
+
+        # Pause/Unpause event
+        # Fake a chat message to document pauses
+        # local msg = string.format("p@u$3:%s", tostring(isGamePaused))
+        if len(message) > 6 and message[0:5] == "p@u$3":
+            paused = "unknown"
+            try:
+                paused = message.split(':')[1]
+            except Exception as e:
+                spads.slog(f'Failed to parse a log message for paused: {message} ' + str(
+                    sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 2)
+
+            battle = spads.getLobbyInterface().getBattle()
+            founderName = battle['founder']
+            founderID = battle['users'][founderName]['battleStatus']['id']
+
+            if playerNumInt in hwInfoIngame:
+                # Username should already be stored here
+                username = hwInfoIngame[playerNumInt]['username']
+
+                # Send the private message
+                spads.sayPrivate(
+                    'AutohostMonitor', f'match-chat-name <{founderName}>:<{founderID}> dspectators: {username} changed pause state to {paused}')
+                spads.slog(f'match-chat-name <{founderName}>:<{founderID}> dspectators: {username} changed pause state to {paused}', DBGLEVEL)
+            else:
+                spads.sayPrivate(
+                    'AutohostMonitor', f'match-chat-name <{founderName}>:<{founderID}> dspectators: Player#{playerNumInt} changed pause state to {paused}')
+                spads.slog(f'match-chat-name <{founderName}>:<{founderID}> dspectators: Player#{playerNumInt} changed pause state to {paused}', DBGLEVEL)
 
         # AddSpadsMessage event, see barwidgets.lua:AddSpadsMessage
         if len(message) > 10 and message[0:9] == "lu@$p@d$:":
