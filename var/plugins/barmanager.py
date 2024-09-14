@@ -46,8 +46,6 @@ playersInMyBattle = {}
 myBattleTeaser = ""
 myBattlePassword = '*'  # which means no password
 
-whoIsBoss = None
-
 hwInfoIngame = {}  # maps playernum to hwinfo dics {0: {}} this reverse mapping is needed because hwinfo arrives before playername
 
 aiProfiles = {}  # there are multiple ai profiles one can set, especially for barbarians, This info is currently discarded, but could use a new command
@@ -412,6 +410,7 @@ class BarManager:
         spads.addSpadsCommandHandler(
             {'barmanagerprintstate': hbarmanagerprintstate})
         spads.addSpadsCommandHandler({'getlastvote': hGetLastVote})
+
         spads.addSpadsCommandHandler({'minratinglevel': getTeiserverSingleIntegerCommandHandler("minratinglevel", 0, 0, 999)})
         spads.addSpadsCommandHandler({'maxratinglevel': getTeiserverSingleIntegerCommandHandler("maxratinglevel", 1000, 1, 1000)})
         spads.addSpadsCommandHandler({'setratinglevels': setRatingLevelsCommandHandler})
@@ -419,6 +418,7 @@ class BarManager:
         spads.addSpadsCommandHandler({'minchevlevel': getTeiserverSingleIntegerCommandHandler("minchevlevel", 0, 0, 999)})
         spads.addSpadsCommandHandler({'maxchevlevel': getTeiserverSingleIntegerCommandHandler("maxchevlevel", 1000, 1, 1000)})
         spads.addSpadsCommandHandler({'resetchevlevels': getTeiserverNoParameterCommandHandler("resetchevlevels")})
+
         spads.addSpadsCommandHandler({'rename': getTeiserverStringCommandHandler("rename", re.compile("^[a-zA-Z0-9_\\-\\[\\] \\<\\>\\+\\|:]+$"))})
         spads.addSpadsCommandHandler({'welcome-message': getTeiserverStringCommandHandler("welcome-message", re.compile("^.*$"))})
         spads.addSpadsCommandHandler({'gatekeeper': getTeiserverStringCommandHandler("gatekeeper", re.compile("^(friends|friendsplay|default)$"))})
@@ -493,14 +493,20 @@ class BarManager:
         spads.removeSpadsCommandHandler(['barmanagerdebuglevel'])
         spads.removeSpadsCommandHandler(['barmanagerprintstate'])
         spads.removeSpadsCommandHandler(['getlastvote'])
+
         spads.removeSpadsCommandHandler(['minratinglevel'])
         spads.removeSpadsCommandHandler(['maxratinglevel'])
+        spads.removeSpadsCommandHandler(['setratinglevels'])
         spads.removeSpadsCommandHandler(['resetratinglevels'])
         spads.removeSpadsCommandHandler(['minchevlevel'])
         spads.removeSpadsCommandHandler(['maxchevlevel'])
         spads.removeSpadsCommandHandler(['resetchevlevels'])
+
         spads.removeSpadsCommandHandler(['rename'])
         spads.removeSpadsCommandHandler(['welcome-message'])
+        spads.removeSpadsCommandHandler(['gatekeeper'])
+        spads.removeSpadsCommandHandler(['meme'])
+        spads.removeSpadsCommandHandler(['balancealgorithm'])
 
         spads.removeLobbyCommandHandler(["JOINEDBATTLE"])
         spads.removeLobbyCommandHandler(["LEFTBATTLE"])
@@ -777,7 +783,6 @@ class BarManager:
                        [command, source, user, params, commandResult])), DBGLEVEL)
             if commandResult == 0:
                 return
-            global whoIsBoss
 
             if command == "lock":
                 ChobbyStateChanged("locked", "locked")
@@ -801,25 +806,10 @@ class BarManager:
             elif command == "vote":
                 sendCurrentVote()
             elif command == "boss":
-                if len(params) == 0:
-                    whoIsBoss = None
-                else:
-                    # params[0] is shorthand, e.g. !boss behe will make [teh]Beherith boss, but will present here as behe
-                    # try to search within players, to match the shorthand
-                    whoIsBoss = params[0]
-                    matching = []
-                    for playername in playersInMyBattle.keys():
-                        if whoIsBoss in playername.lower():
-                            matching.append(playername)
-                    if len(matching) == 1:
-                        whoIsBoss = matching[0]
-                    else:
-                        spads.slog("Multiple possible bosses: for " +
-                                   whoIsBoss + " in " + str(matching), 3)
-                ChobbyStateChanged(
-                    "boss", "" if whoIsBoss is None else whoIsBoss)
-                updateTachyonBattle(
-                    "boss", "" if whoIsBoss is None else whoIsBoss)
+                bosses = "" + ','.join(spads.getBosses())
+
+                ChobbyStateChanged("boss", bosses)
+                updateTachyonBattle("boss", bosses)
             elif command == "mute":
                 updateChobbyMuteState()
             elif command == "unmute":
@@ -1048,7 +1038,6 @@ def hbarmanagerprintstate(source, user, params, checkOnly):
         spads.slog("TachyonBattle: " + str(TachyonBattle), 3)
         spads.slog("playersInMyBattle: " + str(playersInMyBattle), 3)
         spads.slog("myBattleTeaser: " + str(myBattleTeaser), 3)
-        spads.slog("whoIsBoss: " + str(whoIsBoss), 3)
         spads.slog("hwInfoIngame: " + str(hwInfoIngame), 3)
 
         spads.sayPrivate(user, "DBGLEVEL: " + str(DBGLEVEL))
@@ -1057,7 +1046,6 @@ def hbarmanagerprintstate(source, user, params, checkOnly):
         spads.sayPrivate(user, "TachyonBattle: " + str(TachyonBattle))
         spads.sayPrivate(user, "playersInMyBattle: " + str(playersInMyBattle))
         spads.sayPrivate(user, "myBattleTeaser: " + str(myBattleTeaser))
-        spads.sayPrivate(user, "whoIsBoss: " + str(whoIsBoss))
         # Also say these in private to caller
 
     except Exception as e:
@@ -1405,7 +1393,6 @@ def hUPDATEBATTLEINFO(command, battleID, spectatorCount, locked, mapHash, mapNam
 
 
 def hLEFTBATTLE(command, battleID, userName):
-    global whoIsBoss
     try:
         if battleID == myBattleID and playersInMyBattle[userName]:
             spads.slog("LEFTBATTLE" + str([command, battleID, userName]), 3)
@@ -1414,19 +1401,10 @@ def hLEFTBATTLE(command, battleID, userName):
             if len(playersInMyBattle) == 0:  # when the last person leaves, reset title
                 sendTachyonBattleTeaser()
 
-            if whoIsBoss == userName:
-                # Set 'whoIsBoss' to another boss in the lobby, or None if there are no other bosses
-                whoIsBoss = None
-                bosses = spads.getBosses()
-                if userName in bosses:
-                    del bosses[userName]
-                if len(bosses) > 0:
-                    whoIsBoss = next(iter(bosses.keys()))
+            bosses = "" + ','.join(spads.getBosses())
+            ChobbyStateChanged("boss", bosses)
+            updateTachyonBattle("boss", bosses)
 
-                ChobbyStateChanged(
-                    "boss", "" if whoIsBoss is None else whoIsBoss)
-                updateTachyonBattle(
-                    "boss", "" if whoIsBoss is None else whoIsBoss)
             updateChobbyMuteState()
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
