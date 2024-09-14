@@ -268,6 +268,16 @@ def updateTachyonBattle(key, value):
                    [0]) + "\n" + str(traceback.format_exc()), 0)
     return False
 
+# Attempt to call a Perl function from SPADS by name, but raise a RuntimeError if no function with that name exists.
+#
+# This is needed because attempting to call a nonexistant Perl function would raise an exception in Perl, which
+# can't be caught in Python code.
+def callPerlFunction(name, *args):
+    if name in dir(perl):
+        spads.slog("Calling Perl function '" + name + "' with params: " + str(args), DBGLEVEL)
+        return getattr(perl, name)(*args)
+    else:
+        raise RuntimeError("Attempted to call a non-existant Perl function (was it renamed during a SPADS update?): '" + name + "'.")
 
 def onTeiServerMessage(command, args):
     try:
@@ -691,7 +701,7 @@ class BarManager:
             spads.slog(barmanagermessage, DBGLEVEL)
 
             # Ring all potential voters, by calling SPADS's "!ring" command handler
-            perl.hRing("battle", spads.getSpadsConf()['lobbyLogin'], [], 0)
+            callPerlFunction("hRing", "battle", spads.getSpadsConf()['lobbyLogin'], [], 0)
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()
                        [0]) + "\n" + str(traceback.format_exc()), 0)
@@ -1134,8 +1144,7 @@ def hSetAllAiBonus(source, user, params, checkOnly):
 
         for bot in bots:
             forceParams = ["%" + bot, "bonus", str(newBonus)]
-            spads.slog("Calling hForce with params: " + str(forceParams), DBGLEVEL)
-            perl.hForce("pv", "*", forceParams, False)
+            callPerlFunction("hForce", "pv", "*", forceParams, False)
 
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
