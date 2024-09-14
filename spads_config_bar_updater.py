@@ -62,7 +62,9 @@ def recursecopy(workdir):
 
 def configupdate(args):
 	if args.nogit != True:
-		execute("git pull https://github.com/beyond-all-reason/spads_config_bar.git")
+		execute("git fetch origin $(git rev-parse --abbrev-ref HEAD)")
+		execute("git reset --hard origin/$(git rev-parse --abbrev-ref HEAD)")
+		execute("git clean -xfdf")
 	for root, directory, filenames in os.walk("."):
 		goodfile = True
 		for ignorefiletype in ignorefiletypes:
