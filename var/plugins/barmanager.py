@@ -787,8 +787,6 @@ class BarManager:
             elif command == "boss":
                 bosses = "" + ','.join(spads.getBosses())
 
-                spads.slog("TEMP_DEBUG (bosses): " + bosses, 0)
-
                 ChobbyStateChanged("boss", bosses)
                 updateTachyonBattle("boss", bosses)
 
