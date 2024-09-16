@@ -46,8 +46,6 @@ playersInMyBattle = {}
 myBattleTeaser = ""
 myBattlePassword = '*'  # which means no password
 
-whoIsBoss = None
-
 hwInfoIngame = {}  # maps playernum to hwinfo dics {0: {}} this reverse mapping is needed because hwinfo arrives before playername
 
 aiProfiles = {}  # there are multiple ai profiles one can set, especially for barbarians, This info is currently discarded, but could use a new command
@@ -136,6 +134,23 @@ def ChobbyStateChanged(changedKey, changedValue):
         spads.slog("Unhandled exception: " + str(sys.exc_info()
                    [0]) + "\n" + str(traceback.format_exc()), 0)
 
+def updateChobbyMuteState():
+    currentMutes = ",".join(queryInGameMuteList())
+    ChobbyStateChanged("mutes", currentMutes)
+
+def queryInGameMuteList():
+    igm = spads.getPlugin("InGameMute")
+    if not igm:
+        spads.slog("InGameMute plugin is not loaded, mute-related information is not available.", 1)
+        return []
+
+    muteList = []
+    lobbyUsers = spads.getLobbyInterface().getBattle()['users']
+    for user in lobbyUsers:
+        igmData = igm.getUserMuteData(user)
+        if igmData and igmData["chat"]:
+            muteList.append(user)
+    return muteList
 
 def refreshChobbyState():
     spadsConf = spads.getSpadsConf()
@@ -148,6 +163,7 @@ def refreshChobbyState():
     ChobbyState['balanceMode'] = spadsConf['balanceMode']
     ChobbyState['preset'] = spadsConf['preset']
     updateTachyonBattle('preset', spadsConf['preset'])
+    ChobbyState["mutes"] = ",".join(queryInGameMuteList())
     SendChobbyState()
 
 def buildBattleTeaser():
@@ -252,6 +268,16 @@ def updateTachyonBattle(key, value):
                    [0]) + "\n" + str(traceback.format_exc()), 0)
     return False
 
+# Attempt to call a Perl function from SPADS by name, but raise a RuntimeError if no function with that name exists.
+#
+# This is needed because attempting to call a nonexistant Perl function would raise an exception in Perl, which
+# can't be caught in Python code.
+def callPerlFunction(name, *args):
+    if name in dir(perl):
+        spads.slog("Calling Perl function '" + name + "' with params: " + str(args), DBGLEVEL)
+        return getattr(perl, name)(*args)
+    else:
+        raise RuntimeError("Attempted to call a non-existant Perl function (was it renamed during a SPADS update?): '" + name + "'.")
 
 def onTeiServerMessage(command, args):
     try:
@@ -394,6 +420,7 @@ class BarManager:
         spads.addSpadsCommandHandler(
             {'barmanagerprintstate': hbarmanagerprintstate})
         spads.addSpadsCommandHandler({'getlastvote': hGetLastVote})
+
         spads.addSpadsCommandHandler({'minratinglevel': getTeiserverSingleIntegerCommandHandler("minratinglevel", 0, 0, 999)})
         spads.addSpadsCommandHandler({'maxratinglevel': getTeiserverSingleIntegerCommandHandler("maxratinglevel", 1000, 1, 1000)})
         spads.addSpadsCommandHandler({'setratinglevels': setRatingLevelsCommandHandler})
@@ -401,6 +428,7 @@ class BarManager:
         spads.addSpadsCommandHandler({'minchevlevel': getTeiserverSingleIntegerCommandHandler("minchevlevel", 0, 0, 999)})
         spads.addSpadsCommandHandler({'maxchevlevel': getTeiserverSingleIntegerCommandHandler("maxchevlevel", 1000, 1, 1000)})
         spads.addSpadsCommandHandler({'resetchevlevels': getTeiserverNoParameterCommandHandler("resetchevlevels")})
+
         spads.addSpadsCommandHandler({'rename': getTeiserverStringCommandHandler("rename", re.compile("^[a-zA-Z0-9_\\-\\[\\] \\<\\>\\+\\|:]+$"))})
         spads.addSpadsCommandHandler({'welcome-message': getTeiserverStringCommandHandler("welcome-message", re.compile("^.*$"))})
         spads.addSpadsCommandHandler({'gatekeeper': getTeiserverStringCommandHandler("gatekeeper", re.compile("^(friends|friendsplay|default)$"))})
@@ -475,14 +503,20 @@ class BarManager:
         spads.removeSpadsCommandHandler(['barmanagerdebuglevel'])
         spads.removeSpadsCommandHandler(['barmanagerprintstate'])
         spads.removeSpadsCommandHandler(['getlastvote'])
+
         spads.removeSpadsCommandHandler(['minratinglevel'])
         spads.removeSpadsCommandHandler(['maxratinglevel'])
+        spads.removeSpadsCommandHandler(['setratinglevels'])
         spads.removeSpadsCommandHandler(['resetratinglevels'])
         spads.removeSpadsCommandHandler(['minchevlevel'])
         spads.removeSpadsCommandHandler(['maxchevlevel'])
         spads.removeSpadsCommandHandler(['resetchevlevels'])
+
         spads.removeSpadsCommandHandler(['rename'])
         spads.removeSpadsCommandHandler(['welcome-message'])
+        spads.removeSpadsCommandHandler(['gatekeeper'])
+        spads.removeSpadsCommandHandler(['meme'])
+        spads.removeSpadsCommandHandler(['balancealgorithm'])
 
         spads.removeLobbyCommandHandler(["JOINEDBATTLE"])
         spads.removeLobbyCommandHandler(["LEFTBATTLE"])
@@ -665,6 +699,9 @@ class BarManager:
             barmanagermessage = BMP + json.dumps({"onVoteStart": currentVote})
             spads.sayBattle(barmanagermessage)
             spads.slog(barmanagermessage, DBGLEVEL)
+
+            # Ring all potential voters, by calling SPADS's "!ring" command handler
+            callPerlFunction("hRing", "battle", spads.getSpadsConf()['lobbyLogin'], [], 0)
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()
                        [0]) + "\n" + str(traceback.format_exc()), 0)
@@ -756,7 +793,6 @@ class BarManager:
                        [command, source, user, params, commandResult])), DBGLEVEL)
             if commandResult == 0:
                 return
-            global whoIsBoss
 
             if command == "lock":
                 ChobbyStateChanged("locked", "locked")
@@ -780,25 +816,14 @@ class BarManager:
             elif command == "vote":
                 sendCurrentVote()
             elif command == "boss":
-                if len(params) == 0:
-                    whoIsBoss = None
-                else:
-                    # params[0] is shorthand, e.g. !boss behe will make [teh]Beherith boss, but will present here as behe
-                    # try to search within players, to match the shorthand
-                    whoIsBoss = params[0]
-                    matching = []
-                    for playername in playersInMyBattle.keys():
-                        if whoIsBoss in playername.lower():
-                            matching.append(playername)
-                    if len(matching) == 1:
-                        whoIsBoss = matching[0]
-                    else:
-                        spads.slog("Multiple possible bosses: for " +
-                                   whoIsBoss + " in " + str(matching), 3)
-                ChobbyStateChanged(
-                    "boss", "" if whoIsBoss is None else whoIsBoss)
-                updateTachyonBattle(
-                    "boss", "" if whoIsBoss is None else whoIsBoss)
+                bosses = "" + ','.join(spads.getBosses())
+
+                ChobbyStateChanged("boss", bosses)
+                updateTachyonBattle("boss", bosses)
+            elif command == "mute":
+                updateChobbyMuteState()
+            elif command == "unmute":
+                updateChobbyMuteState()
 
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()
@@ -1023,7 +1048,6 @@ def hbarmanagerprintstate(source, user, params, checkOnly):
         spads.slog("TachyonBattle: " + str(TachyonBattle), 3)
         spads.slog("playersInMyBattle: " + str(playersInMyBattle), 3)
         spads.slog("myBattleTeaser: " + str(myBattleTeaser), 3)
-        spads.slog("whoIsBoss: " + str(whoIsBoss), 3)
         spads.slog("hwInfoIngame: " + str(hwInfoIngame), 3)
 
         spads.sayPrivate(user, "DBGLEVEL: " + str(DBGLEVEL))
@@ -1032,7 +1056,6 @@ def hbarmanagerprintstate(source, user, params, checkOnly):
         spads.sayPrivate(user, "TachyonBattle: " + str(TachyonBattle))
         spads.sayPrivate(user, "playersInMyBattle: " + str(playersInMyBattle))
         spads.sayPrivate(user, "myBattleTeaser: " + str(myBattleTeaser))
-        spads.sayPrivate(user, "whoIsBoss: " + str(whoIsBoss))
         # Also say these in private to caller
 
     except Exception as e:
@@ -1121,8 +1144,7 @@ def hSetAllAiBonus(source, user, params, checkOnly):
 
         for bot in bots:
             forceParams = ["%" + bot, "bonus", str(newBonus)]
-            spads.slog("Calling hForce with params: " + str(forceParams), DBGLEVEL)
-            perl.hForce("pv", "*", forceParams, False)
+            callPerlFunction("hForce", "pv", "*", forceParams, False)
 
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
@@ -1380,7 +1402,6 @@ def hUPDATEBATTLEINFO(command, battleID, spectatorCount, locked, mapHash, mapNam
 
 
 def hLEFTBATTLE(command, battleID, userName):
-    global whoIsBoss
     try:
         if battleID == myBattleID and playersInMyBattle[userName]:
             spads.slog("LEFTBATTLE" + str([command, battleID, userName]), 3)
@@ -1389,19 +1410,11 @@ def hLEFTBATTLE(command, battleID, userName):
             if len(playersInMyBattle) == 0:  # when the last person leaves, reset title
                 sendTachyonBattleTeaser()
 
-            if whoIsBoss == userName:
-                # Set 'whoIsBoss' to another boss in the lobby, or None if there are no other bosses
-                whoIsBoss = None
-                bosses = spads.getBosses()
-                if userName in bosses:
-                    del bosses[userName]
-                if len(bosses) > 0:
-                    whoIsBoss = next(iter(bosses.keys()))
+            bosses = "" + ','.join(spads.getBosses())
+            ChobbyStateChanged("boss", bosses)
+            updateTachyonBattle("boss", bosses)
 
-                ChobbyStateChanged(
-                    "boss", "" if whoIsBoss is None else whoIsBoss)
-                updateTachyonBattle(
-                    "boss", "" if whoIsBoss is None else whoIsBoss)
+            updateChobbyMuteState()
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
                    [0]) + "\n" + str(traceback.format_exc()), 0)
@@ -1420,6 +1433,7 @@ def hJOINEDBATTLE(command, battleID, userName, battleStatus=0):
             if len(playersInMyBattle) == 1:  # when the first person joins, set teaser
                 sendTachyonBattleTeaser()
             # spads.queueLobbyCommand(["SAYBATTLEEX", "hello dude"])
+            updateChobbyMuteState()
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
                    [0]) + "\n" + str(traceback.format_exc()), 0)
@@ -1599,6 +1613,34 @@ def h_autohost_GAME_LUAMSG(command, playerNumInt, luahandleidInt, nullStr, messa
                 sentmessage = f'match-chat-name <{ms[5]}>:<{ms[2]}> dallies: Added Point {ms[6]}'
                 spads.sayPrivate('AutohostMonitor', sentmessage)
                 spads.slog("m@pm@rk:" + str(ms) + sentmessage, DBGLEVEL)
+
+        # Pause/Unpause event
+        # Fake a chat message to document pauses
+        # local msg = string.format("p@u$3:%s", tostring(isGamePaused))
+        if len(message) > 6 and message[0:5] == "p@u$3":
+            paused = "unknown"
+            try:
+                paused = message.split(':')[1]
+            except Exception as e:
+                spads.slog(f'Failed to parse a log message for paused: {message} ' + str(
+                    sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 2)
+
+            battle = spads.getLobbyInterface().getBattle()
+            founderName = battle['founder']
+            founderID = battle['users'][founderName]['battleStatus']['id']
+
+            if playerNumInt in hwInfoIngame:
+                # Username should already be stored here
+                username = hwInfoIngame[playerNumInt]['username']
+
+                # Send the private message
+                spads.sayPrivate(
+                    'AutohostMonitor', f'match-chat-name <{founderName}>:<{founderID}> dspectators: {username} changed pause state to {paused}')
+                spads.slog(f'match-chat-name <{founderName}>:<{founderID}> dspectators: {username} changed pause state to {paused}', DBGLEVEL)
+            else:
+                spads.sayPrivate(
+                    'AutohostMonitor', f'match-chat-name <{founderName}>:<{founderID}> dspectators: Player#{playerNumInt} changed pause state to {paused}')
+                spads.slog(f'match-chat-name <{founderName}>:<{founderID}> dspectators: Player#{playerNumInt} changed pause state to {paused}', DBGLEVEL)
 
         # AddSpadsMessage event, see barwidgets.lua:AddSpadsMessage
         if len(message) > 10 and message[0:9] == "lu@$p@d$:":
