@@ -74,3 +74,8 @@
 !setAllAiBonus <bonus> - Sets the economic bonus for each AI in the battle. The bonus must be between 0-100.
 "!setAllAiBonus 0"
 "!setAllAiBonus 100"
+
+[unboss]
+!unboss <*|username> - Disables boss mode, either for all players (with '*') or for a single player (with a username).
+"!unboss *"
+"!unboss UserToUnboss"

@@ -436,6 +436,7 @@ class BarManager:
             re.compile("^(undo|ticks|nodefence|nodefence2|greenfields|rich|poor|hardt1|crazy|deathmatch|noscout|hoversonly|nofusion|armonly|coronly|legonly|armvcor)$"))})
         spads.addSpadsCommandHandler({'balancealgorithm': getTeiserverStringCommandHandler("balancealgorithm",
             re.compile("^(default|split_noobs|auto)$"))})
+        spads.addSpadsCommandHandler({'unboss': hUnboss})
 
         # We need to add the lobby command handlers before we are fully connected, or we dont get the JOINEDBATTLE stuff
         # These will get replaced automatically when connect again
@@ -517,6 +518,7 @@ class BarManager:
         spads.removeSpadsCommandHandler(['gatekeeper'])
         spads.removeSpadsCommandHandler(['meme'])
         spads.removeSpadsCommandHandler(['balancealgorithm'])
+        spads.removeSpadsCommandHandler(['unboss'])
 
         spads.removeLobbyCommandHandler(["JOINEDBATTLE"])
         spads.removeLobbyCommandHandler(["LEFTBATTLE"])
@@ -1214,6 +1216,43 @@ def hGetLastVote(source, user, params, checkOnly):
 
         spads.sayPrivate(
             user, BMP + json.dumps({"getlastvote": voteHistory[len(voteHistory) - historyNum]}))
+    except Exception as e:
+        spads.slog("Unhandled exception: " + str(sys.exc_info()
+                   [0]) + "\n" + str(traceback.format_exc()), 0)
+
+def hUnboss(source, user, params, checkOnly):
+    try:
+        spads.slog("User %s called command unboss with parameter(s) \"%s\"" % (
+            user, ','.join(params)), DBGLEVEL)
+        bosses = spads.getBosses()
+
+        if len(bosses) == 0:
+            spads.sayBattle(user + ", there are no bosses in the lobby right now.")
+            return 0
+
+        if len(params) != 1:
+            spads.sayBattle(user + ", wrong number of parameters (expected '*' or a single username).")
+            return 0
+
+        if params[0] != '*' and params[0] not in bosses:
+            spads.sayBattle(user + ", there is currently no boss named '%s'" % params[0])
+            return 0
+
+        if checkOnly:
+            return 1
+
+        if params[0] == '*':
+            callPerlFunction("hBoss", "battle", user, [], False) # Just use the SPADS handler
+        else:
+            perl.eval("delete %::bosses{" + params[0] + "};")
+            spads.sayBattle("Boss mode disabled for %s (by %s)" % (params[0], user))
+
+        newBosses = "" + ','.join(spads.getBosses())
+
+        ChobbyStateChanged("boss", newBosses)
+        updateTachyonBattle("boss", newBosses)
+        return 1
+
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
                    [0]) + "\n" + str(traceback.format_exc()), 0)
