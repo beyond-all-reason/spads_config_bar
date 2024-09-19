@@ -413,7 +413,6 @@ class BarManager:
         # We declare our new command and the associated handler
         spads.addSpadsCommandHandler({'aiProfile': hAiProfile})
         spads.addSpadsCommandHandler({'setAllAiBonus': hSetAllAiBonus})
-        spads.addSpadsCommandHandler({'splitbattle': hSplitBattle})
         spads.addSpadsCommandHandler(
             {'barmanagerdebuglevel': hbarmanagerdebuglevel})
         spads.addSpadsCommandHandler(
@@ -498,7 +497,6 @@ class BarManager:
     def onUnload(self, reason):
         spads.removeSpadsCommandHandler(['aiProfile'])
         spads.removeSpadsCommandHandler(['setAllAiBonus'])
-        spads.removeSpadsCommandHandler(['splitbattle'])
         spads.removeSpadsCommandHandler(['barmanagerdebuglevel'])
         spads.removeSpadsCommandHandler(['barmanagerprintstate'])
         spads.removeSpadsCommandHandler(['getlastvote'])
@@ -1118,27 +1116,6 @@ def hSetAllAiBonus(source, user, params, checkOnly):
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
                    [0]) + "\n" + str(traceback.format_exc()), 0)
-
-
-def hSplitBattle(source, user, params, checkOnly):
-    # checkOnly is true if this is just a check for callVote command, not a real command execution
-    if checkOnly:
-        return 1
-
-    # Fix strings received from Perl if needed
-    # This is in case Inline::Python handles Perl strings as byte strings instead of normal strings
-    # (this step can be skipped if your Inline::Python version isn't afffected by this bug)
-    user = spads.fix_string(user)
-    for i in range(len(params)):
-        params[i] = spads.fix_string(params[i])
-
-    # We join the parameters provided (if any), using ',' as delimiter
-    paramsString = ','.join(params)
-
-    # We log the command call as notice message
-    spads.slog("User %s called command hSplitBattle with parameter(s) \"%s\"" % (
-        user, paramsString), 3)
-
 
 def hGetLastVote(source, user, params, checkOnly):
     try:
