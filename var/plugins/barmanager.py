@@ -1224,6 +1224,9 @@ def hGetLastVote(source, user, params, checkOnly):
 
 def hUnboss(source, user, params, checkOnly):
     try:
+        user = spads.fix_string(user)
+        for i in range(len(params)):
+            params[i] = spads.fix_string(params[i])
         spads.slog("User %s called command unboss with parameter(s) \"%s\"" % (
             user, ','.join(params)), DBGLEVEL)
         bosses = spads.getBosses()
