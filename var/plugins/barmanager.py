@@ -411,7 +411,6 @@ class BarManager:
     def __init__(self, context):
         global DBGLEVEL, voteHistoryMax
         # We declare our new command and the associated handler
-        spads.addSpadsCommandHandler({'myCommand': hMyCommand})
         spads.addSpadsCommandHandler({'aiProfile': hAiProfile})
         spads.addSpadsCommandHandler({'setAllAiBonus': hSetAllAiBonus})
         spads.addSpadsCommandHandler({'splitbattle': hSplitBattle})
@@ -497,7 +496,6 @@ class BarManager:
 
     # This is the callback called when the plugin is unloaded
     def onUnload(self, reason):
-        spads.removeSpadsCommandHandler(['myCommand'])
         spads.removeSpadsCommandHandler(['aiProfile'])
         spads.removeSpadsCommandHandler(['setAllAiBonus'])
         spads.removeSpadsCommandHandler(['splitbattle'])
@@ -967,38 +965,12 @@ class BarManager:
                        [0]) + "\n" + str(traceback.format_exc()), 0)
         return
 
-
-# This is the handler for our new command
-def hMyCommand(source, user, params, checkOnly):
-    # checkOnly is true if this is just a check for callVote command, not a real command execution
-    if checkOnly:
-        # MyCommand is a basic command, we have nothing to check in case of callvote
-        return 1
-
-    # Fix strings received from Perl if needed
-    # This is in case Inline::Python handles Perl strings as byte strings instead of normal strings
-    # (this step can be skipped if your Inline::Python version isn't afffected by this bug)
-    user = spads.fix_string(user)
-    for i in range(len(params)):
-        params[i] = spads.fix_string(params[i])
-
-    # We join the parameters provided (if any), using ',' as delimiter
-    paramsString = ','.join(params)
-
-    # We log the command call as notice message
-    spads.slog("User %s called command myCommand with parameter(s) \"%s\"" % (
-        user, paramsString), 3)
-
-# This is the handler for our new command
-
-
 def hbarmanagerdebuglevel(source, user, params, checkOnly):
     global DBGLEVEL
 
     try:
         # checkOnly is true if this is just a check for callVote command, not a real command execution
         if checkOnly:
-            # MyCommand is a basic command, we have nothing to check in case of callvote
             return 1
 
         # Fix strings received from Perl if needed
@@ -1026,9 +998,6 @@ def hbarmanagerdebuglevel(source, user, params, checkOnly):
         spads.slog("Unhandled exception: " + str(sys.exc_info()
                    [0]) + "\n" + str(traceback.format_exc()), 0)
 
-# This is the handler for our new command
-
-
 def hbarmanagerprintstate(source, user, params, checkOnly):
     global DBGLEVEL
 
@@ -1041,7 +1010,6 @@ def hbarmanagerprintstate(source, user, params, checkOnly):
 
         # checkOnly is true if this is just a check for callVote command, not a real command execution
         if checkOnly:
-            # MyCommand is a basic command, we have nothing to check in case of callvote
             return 1
 
         spads.slog("DBGLEVEL: " + str(DBGLEVEL), 3)
@@ -1063,9 +1031,6 @@ def hbarmanagerprintstate(source, user, params, checkOnly):
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
                    [0]) + "\n" + str(traceback.format_exc()), 0)
-
-# This is the handler for our new command
-
 
 # !aiProfile BARbarianAI(1) {"testtag":"testvalue"}
 def hAiProfile(source, user, params, checkOnly):
@@ -1158,7 +1123,6 @@ def hSetAllAiBonus(source, user, params, checkOnly):
 def hSplitBattle(source, user, params, checkOnly):
     # checkOnly is true if this is just a check for callVote command, not a real command execution
     if checkOnly:
-        # MyCommand is a basic command, we have nothing to check in case of callvote
         return 1
 
     # Fix strings received from Perl if needed
