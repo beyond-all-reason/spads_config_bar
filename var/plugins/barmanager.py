@@ -854,7 +854,7 @@ class BarManager:
                 except TypeError:
                     pass
                 if numPlayers > 1 and accessLevel < 100:
-                    spads.sayBattle(user + ", you are not allowed to call command \"callvote boss\" in current context (there is more than one player in the lobby)")
+                    spads.answer(user + ", you are not allowed to call command \"callvote boss\" in current context (there is more than one player in the lobby)")
                     return 0
 
         except Exception as e:
@@ -1126,13 +1126,13 @@ def hSetAllAiBonus(source, user, params, checkOnly):
             user, ','.join(params)), DBGLEVEL)
 
         if len(params) != 1 or not params[0].isdigit():
-            spads.sayPrivate(user, "setAllAiBonus: Bad syntax (must specify a single number between 0-100)")
+            spads.invalidSyntax(user, "setallaibonus", "must specify a single number between 0-100")
             return False
 
         newBonus = int(params[0])
 
         if newBonus < 0 or newBonus > 100:
-            spads.sayPrivate(user, "setAllAiBonus: Bad syntax (must specify a single number between 0-100)")
+            spads.invalidSyntax(user, "setallaibonus", "must specify a single number between 0-100")
             return False
 
         # checkOnly is true if this is just a check for callVote command, not a real command execution
@@ -1147,6 +1147,8 @@ def hSetAllAiBonus(source, user, params, checkOnly):
         for bot in bots:
             forceParams = ["%" + bot, "bonus", str(newBonus)]
             callPerlFunction("hForce", "pv", "*", forceParams, False)
+
+        spads.broadcastMsg("Bonus for all AI players has been set to %s (by %s)" % (params[0], user))
 
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
@@ -1227,15 +1229,15 @@ def hUnboss(source, user, params, checkOnly):
         bosses = spads.getBosses()
 
         if len(bosses) == 0:
-            spads.sayBattle(user + ", there are no bosses in the lobby right now.")
+            spads.answer(user + ", there are no bosses in the lobby right now.")
             return 0
 
         if len(params) != 1:
-            spads.sayBattle(user + ", wrong number of parameters (expected '*' or a single username).")
+            spads.invalidSyntax(user, "unboss", "expected '*' or a single username")
             return 0
 
         if params[0] != '*' and params[0] not in bosses:
-            spads.sayBattle(user + ", there is currently no boss named '%s'" % params[0])
+            spads.answer(user + ", there is currently no boss named '%s'" % params[0])
             return 0
 
         if checkOnly:
@@ -1245,7 +1247,7 @@ def hUnboss(source, user, params, checkOnly):
             callPerlFunction("hBoss", "battle", user, [], False) # Just use the SPADS handler
         else:
             perl.eval("delete %::bosses{" + params[0] + "};")
-            spads.sayBattle("Boss mode disabled for %s (by %s)" % (params[0], user))
+            spads.broadcastMsg("Boss mode disabled for %s (by %s)" % (params[0], user))
 
         newBosses = "" + ','.join(spads.getBosses())
 
@@ -1268,7 +1270,7 @@ def getTeiserverNoParameterCommandHandler(cmd):
 
             if len(params) > 0:
                 spads.slog(cmd + ": syntax error: more than 0 parameters", DBGLEVEL)
-                spads.sayPrivate(user, cmd + ": Too many parameters.")
+                spads.invalidSyntax(user, cmd, "too many parameters")
                 return False
 
             # All parameter checking was successful, return now if no action is desired
@@ -1292,7 +1294,7 @@ def getTeiserverSingleIntegerCommandHandler(cmd, defaultValue, minValue, maxValu
 
             if len(params) > 1:
                 spads.slog(cmd + ": syntax error: more than 1 parameter", DBGLEVEL)
-                spads.sayPrivate(user, cmd + ": Too many parameters.")
+                spads.invalidSyntax(user, cmd, "too many parameters")
                 return False
 
             newValue = None
@@ -1305,7 +1307,7 @@ def getTeiserverSingleIntegerCommandHandler(cmd, defaultValue, minValue, maxValu
 
             if newValue is None:
                 spads.slog(cmd + ": value error: param 1 is not numeric", DBGLEVEL)
-                spads.sayPrivate(user, cmd + ": Parameter is not numeric")
+                spads.invalidSyntax(user, cmd, "parameter is not numeric")
                 return False
 
             # All parameter checking was successful, return now if no action is desired
@@ -1335,14 +1337,14 @@ def getTeiserverStringCommandHandler(cmd, validRegex):
 
             if len(params) == 0:
                 spads.slog(cmd + ": syntax error: not enough parameters", DBGLEVEL)
-                spads.sayPrivate(user, cmd + ": Not enough parameters.")
+                spads.invalidSyntax(user, cmd, "not enough parameters")
                 return False
 
             combinedParams = ' '.join(params)
 
             if not validRegex.search(combinedParams):
                 spads.slog(cmd + ": syntax error: regex did not match", DBGLEVEL)
-                spads.sayPrivate(user, cmd + ": Invalid parameters, check the help entry for advice: \"!help " + cmd + "\"")
+                spads.invalidSyntax(user, cmd, "unrecognized string provided, or an unsupported character was included")
                 return False
 
             # All parameter checking was successful, return now if no action is desired
@@ -1365,12 +1367,12 @@ def setRatingLevelsCommandHandler(source, user, params, checkOnly):
 
         if len(params) != 2:
             spads.slog("setratinglevels: syntax error: wrong number of parameters", DBGLEVEL)
-            spads.sayPrivate(user, "setratinglevels: you must provide exactly two parameters (no more, no less).")
+            spads.invalidSyntax(user, "setratinglevels", "you must provide exactly two parameters")
             return False
 
         if not params[0].isdecimal() or not params[1].isdecimal():
             spads.slog("setratinglevels: value error: a param is not numeric", DBGLEVEL)
-            spads.sayPrivate(user, "setratinglevels: all parameters must be numbers.")
+            spads.invalidSyntax(user, "setratinglevels", "all parameters must be numeric")
             return False
 
         newMinValue = int(params[0])
