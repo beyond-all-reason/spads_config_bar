@@ -38,8 +38,6 @@ TachyonBattle = {"boss": "", 'preset': "",
 timerTachyonBattle = False  # do we have a timer set to update the game?
 
 myBattleID = None
-# key playername, value battlestatus on join, FIXME: track battlestatus here!
-playersInMyBattle = {}
 # A teaser is intended to advertise settings used by the lobby. For example, at time of writing, Teiserver includes the teaser as part of the lobby's name:
 # - Lobby_Name: [Default/Custom Title] [BarManager Teaser] [Teiserver Postfix]
 # While the lobby's title may be customized by a user, the teaser is automatically chosen by BarManager whenever a relevant setting changes.
@@ -109,6 +107,11 @@ def jsonGzipBase64(toencode):
 def jsonBase64(toencode):
     return base64.urlsafe_b64encode(json.dumps(toencode).encode("utf-8")).decode()
 
+def getNumUsersInMyBattle():
+    lobbyLogin = spads.getSpadsConf()['lobbyLogin']
+    users = spads.getLobbyInterface().getBattle()['users']
+
+    return (len(users)-1) if (lobbyLogin in users) else len(users)
 
 def SendChobbyState():
     try:
@@ -216,7 +219,7 @@ def sendTachyonBattleTeaser():
         newbattleteaser = ""
         # We'll use the default (blank) Teaser for private and empty lobbies
         # Otherwise, build a Teaser based on the lobby's current settings
-        if myBattlePassword == "*" and len(playersInMyBattle) != 0:
+        if myBattlePassword == "*" and getNumUsersInMyBattle() != 0:
             newbattleteaser = buildBattleTeaser();
 
         spads.slog("Trying to update battle title: " +
@@ -1014,7 +1017,6 @@ def hbarmanagerprintstate(source, user, params, checkOnly):
         spads.slog("myBattleID: " + str(myBattleID), 3)
         spads.slog("ChobbyState: " + str(ChobbyState), 3)
         spads.slog("TachyonBattle: " + str(TachyonBattle), 3)
-        spads.slog("playersInMyBattle: " + str(playersInMyBattle), 3)
         spads.slog("myBattleTeaser: " + str(myBattleTeaser), 3)
         spads.slog("hwInfoIngame: " + str(hwInfoIngame), 3)
 
@@ -1022,7 +1024,6 @@ def hbarmanagerprintstate(source, user, params, checkOnly):
         spads.sayPrivate(user, "myBattleID: " + str(myBattleID))
         spads.sayPrivate(user, "ChobbyState: " + str(ChobbyState))
         spads.sayPrivate(user, "TachyonBattle: " + str(TachyonBattle))
-        spads.sayPrivate(user, "playersInMyBattle: " + str(playersInMyBattle))
         spads.sayPrivate(user, "myBattleTeaser: " + str(myBattleTeaser))
         # Also say these in private to caller
 
@@ -1388,11 +1389,10 @@ def hUPDATEBATTLEINFO(command, battleID, spectatorCount, locked, mapHash, mapNam
 
 def hLEFTBATTLE(command, battleID, userName):
     try:
-        if battleID == myBattleID and playersInMyBattle[userName]:
+        if battleID == myBattleID:
             spads.slog("LEFTBATTLE" + str([command, battleID, userName]), 3)
-            del playersInMyBattle[userName]
-            # spads.slog("playersInMyBattle" + str(playersInMyBattle), 3)
-            if len(playersInMyBattle) == 0:  # when the last person leaves, reset title
+
+            if getNumUsersInMyBattle() == 0:  # when the last person leaves, reset title
                 sendTachyonBattleTeaser()
 
             bosses = "" + ','.join(spads.getBosses())
@@ -1413,11 +1413,9 @@ def hJOINEDBATTLE(command, battleID, userName, battleStatus=0):
             spads.slog(
                 "JOINEDBATTLE" + str([command, battleID, myBattleID, userName, battleStatus]), DBGLEVEL)
             SendChobbyState()
-            playersInMyBattle[userName] = battleStatus
             sendCurrentVote()
-            if len(playersInMyBattle) == 1:  # when the first person joins, set teaser
+            if getNumUsersInMyBattle() == 1:  # when the first person joins, set teaser
                 sendTachyonBattleTeaser()
-            # spads.queueLobbyCommand(["SAYBATTLEEX", "hello dude"])
             updateChobbyMuteState()
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
@@ -1428,12 +1426,6 @@ def hCLIENTBATTLESTATUS(command, userName, battleStatus, teamColor):
     try:
         spads.slog("hCLIENTBATTLESTATUS" +
                    str([command, userName, battleStatus, teamColor]), DBGLEVEL)
-        if userName in playersInMyBattle:
-            playersInMyBattle[userName] = battleStatus
-        else:
-            spads.slog("hCLIENTBATTLESTATUS: User not found in battle " +
-                       str(userName) + " " + str(playersInMyBattle.keys()), 3)
-        # spads.queueLobbyCommand(["SAYBATTLEEX", "hello dude"])
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
                    [0]) + "\n" + str(traceback.format_exc()), 0)
