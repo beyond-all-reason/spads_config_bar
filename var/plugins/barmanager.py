@@ -434,7 +434,7 @@ class BarManager:
         spads.addSpadsCommandHandler({'welcome-message': getTeiserverStringCommandHandler("welcome-message", re.compile("^.*$"))})
         spads.addSpadsCommandHandler({'gatekeeper': getTeiserverStringCommandHandler("gatekeeper", re.compile("^(friends|friendsplay|default)$"))})
         spads.addSpadsCommandHandler({'meme': getTeiserverStringCommandHandler("meme",
-            re.compile("^(undo|ticks|nodefence|nodefence2|greenfields|rich|poor|hardt1|crazy|deathmatch|noscout|hoversonly|nofusion|armonly|coronly|legonly|armvcor)$"))})
+            re.compile("^(undo|ticks|rich|poor|crazy|deathmatch)$"))})
         spads.addSpadsCommandHandler({'balancealgorithm': getTeiserverStringCommandHandler("balancealgorithm",
             re.compile("^(default|split_noobs|auto)$"))})
         spads.addSpadsCommandHandler({'unboss': hUnboss})

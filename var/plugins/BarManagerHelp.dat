@@ -48,21 +48,10 @@
 !meme <meme> - A predefined bunch of settings for meme games. It's all Rikerss' fault.
 "!meme undo": Removes all meme effects
 "!meme ticks": Ticks only, don't go Cortex!
-"!meme nodefence": No defences
-"!meme nodefence2": No defence meme, No LLTs ver
-"!meme greenfields": No metal extractors
 "!meme rich": Infinite money
 "!meme poor": No money generation
-"!meme hardt1": T1 but no seaplanes or hovers either
 "!meme crazy": Random combination of several settings
 "!meme deathmatch": Start with 35k metal and 1k energy. Everything builds fast, runs fast, and hits hard. Anti-nukes are disabled.
-"!meme noscout": No scout, radar, or spy units
-"!meme hoversonly": Limited to hovers only, including your commander
-"!meme nofusion": No T2 Fusion Energy production
-"!meme armonly": A fight of Technological Supremacy upon you
-"!meme coronly": May pure Brute Strength grant you Honour in battle
-"!meme legonly": Scorched Earth be upon us all
-"!meme armvcor": Armada vs Cortex (+vs legion if enabled) mode
 
 [balancealgorithm]
 !balancealgorithm <algorithm> - Sets the balance algorithm used to autobalance the teams.
