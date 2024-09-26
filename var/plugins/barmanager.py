@@ -38,8 +38,6 @@ TachyonBattle = {"boss": "", 'preset': "",
 timerTachyonBattle = False  # do we have a timer set to update the game?
 
 myBattleID = None
-# key playername, value battlestatus on join, FIXME: track battlestatus here!
-playersInMyBattle = {}
 # A teaser is intended to advertise settings used by the lobby. For example, at time of writing, Teiserver includes the teaser as part of the lobby's name:
 # - Lobby_Name: [Default/Custom Title] [BarManager Teaser] [Teiserver Postfix]
 # While the lobby's title may be customized by a user, the teaser is automatically chosen by BarManager whenever a relevant setting changes.
@@ -109,6 +107,11 @@ def jsonGzipBase64(toencode):
 def jsonBase64(toencode):
     return base64.urlsafe_b64encode(json.dumps(toencode).encode("utf-8")).decode()
 
+def getNumUsersInMyBattle():
+    lobbyLogin = spads.getSpadsConf()['lobbyLogin']
+    users = spads.getLobbyInterface().getBattle()['users']
+
+    return (len(users)-1) if (lobbyLogin in users) else len(users)
 
 def SendChobbyState():
     try:
@@ -216,7 +219,7 @@ def sendTachyonBattleTeaser():
         newbattleteaser = ""
         # We'll use the default (blank) Teaser for private and empty lobbies
         # Otherwise, build a Teaser based on the lobby's current settings
-        if myBattlePassword == "*" and len(playersInMyBattle) != 0:
+        if myBattlePassword == "*" and getNumUsersInMyBattle() != 0:
             newbattleteaser = buildBattleTeaser();
 
         spads.slog("Trying to update battle title: " +
@@ -411,10 +414,8 @@ class BarManager:
     def __init__(self, context):
         global DBGLEVEL, voteHistoryMax
         # We declare our new command and the associated handler
-        spads.addSpadsCommandHandler({'myCommand': hMyCommand})
         spads.addSpadsCommandHandler({'aiProfile': hAiProfile})
         spads.addSpadsCommandHandler({'setAllAiBonus': hSetAllAiBonus})
-        spads.addSpadsCommandHandler({'splitbattle': hSplitBattle})
         spads.addSpadsCommandHandler(
             {'barmanagerdebuglevel': hbarmanagerdebuglevel})
         spads.addSpadsCommandHandler(
@@ -433,9 +434,10 @@ class BarManager:
         spads.addSpadsCommandHandler({'welcome-message': getTeiserverStringCommandHandler("welcome-message", re.compile("^.*$"))})
         spads.addSpadsCommandHandler({'gatekeeper': getTeiserverStringCommandHandler("gatekeeper", re.compile("^(friends|friendsplay|default)$"))})
         spads.addSpadsCommandHandler({'meme': getTeiserverStringCommandHandler("meme",
-            re.compile("^(undo|ticks|nodefence|nodefence2|greenfields|rich|poor|hardt1|crazy|deathmatch|noscout|hoversonly|nofusion|armonly|coronly|legonly|armvcor)$"))})
+            re.compile("^(undo|ticks|rich|poor|crazy|deathmatch)$"))})
         spads.addSpadsCommandHandler({'balancealgorithm': getTeiserverStringCommandHandler("balancealgorithm",
             re.compile("^(default|split_noobs|auto)$"))})
+        spads.addSpadsCommandHandler({'unboss': hUnboss})
 
         # We need to add the lobby command handlers before we are fully connected, or we dont get the JOINEDBATTLE stuff
         # These will get replaced automatically when connect again
@@ -496,10 +498,8 @@ class BarManager:
 
     # This is the callback called when the plugin is unloaded
     def onUnload(self, reason):
-        spads.removeSpadsCommandHandler(['myCommand'])
         spads.removeSpadsCommandHandler(['aiProfile'])
         spads.removeSpadsCommandHandler(['setAllAiBonus'])
-        spads.removeSpadsCommandHandler(['splitbattle'])
         spads.removeSpadsCommandHandler(['barmanagerdebuglevel'])
         spads.removeSpadsCommandHandler(['barmanagerprintstate'])
         spads.removeSpadsCommandHandler(['getlastvote'])
@@ -517,6 +517,7 @@ class BarManager:
         spads.removeSpadsCommandHandler(['gatekeeper'])
         spads.removeSpadsCommandHandler(['meme'])
         spads.removeSpadsCommandHandler(['balancealgorithm'])
+        spads.removeSpadsCommandHandler(['unboss'])
 
         spads.removeLobbyCommandHandler(["JOINEDBATTLE"])
         spads.removeLobbyCommandHandler(["LEFTBATTLE"])
@@ -852,7 +853,7 @@ class BarManager:
                 except TypeError:
                     pass
                 if numPlayers > 1 and accessLevel < 100:
-                    spads.sayBattle(user + ", you are not allowed to call command \"callvote boss\" in current context (there is more than one player in the lobby)")
+                    spads.answer(user + ", you are not allowed to call command \"callvote boss\" in current context (there is more than one player in the lobby)")
                     return 0
 
         except Exception as e:
@@ -965,38 +966,12 @@ class BarManager:
                        [0]) + "\n" + str(traceback.format_exc()), 0)
         return
 
-
-# This is the handler for our new command
-def hMyCommand(source, user, params, checkOnly):
-    # checkOnly is true if this is just a check for callVote command, not a real command execution
-    if checkOnly:
-        # MyCommand is a basic command, we have nothing to check in case of callvote
-        return 1
-
-    # Fix strings received from Perl if needed
-    # This is in case Inline::Python handles Perl strings as byte strings instead of normal strings
-    # (this step can be skipped if your Inline::Python version isn't afffected by this bug)
-    user = spads.fix_string(user)
-    for i in range(len(params)):
-        params[i] = spads.fix_string(params[i])
-
-    # We join the parameters provided (if any), using ',' as delimiter
-    paramsString = ','.join(params)
-
-    # We log the command call as notice message
-    spads.slog("User %s called command myCommand with parameter(s) \"%s\"" % (
-        user, paramsString), 3)
-
-# This is the handler for our new command
-
-
 def hbarmanagerdebuglevel(source, user, params, checkOnly):
     global DBGLEVEL
 
     try:
         # checkOnly is true if this is just a check for callVote command, not a real command execution
         if checkOnly:
-            # MyCommand is a basic command, we have nothing to check in case of callvote
             return 1
 
         # Fix strings received from Perl if needed
@@ -1024,9 +999,6 @@ def hbarmanagerdebuglevel(source, user, params, checkOnly):
         spads.slog("Unhandled exception: " + str(sys.exc_info()
                    [0]) + "\n" + str(traceback.format_exc()), 0)
 
-# This is the handler for our new command
-
-
 def hbarmanagerprintstate(source, user, params, checkOnly):
     global DBGLEVEL
 
@@ -1039,14 +1011,12 @@ def hbarmanagerprintstate(source, user, params, checkOnly):
 
         # checkOnly is true if this is just a check for callVote command, not a real command execution
         if checkOnly:
-            # MyCommand is a basic command, we have nothing to check in case of callvote
             return 1
 
         spads.slog("DBGLEVEL: " + str(DBGLEVEL), 3)
         spads.slog("myBattleID: " + str(myBattleID), 3)
         spads.slog("ChobbyState: " + str(ChobbyState), 3)
         spads.slog("TachyonBattle: " + str(TachyonBattle), 3)
-        spads.slog("playersInMyBattle: " + str(playersInMyBattle), 3)
         spads.slog("myBattleTeaser: " + str(myBattleTeaser), 3)
         spads.slog("hwInfoIngame: " + str(hwInfoIngame), 3)
 
@@ -1054,16 +1024,12 @@ def hbarmanagerprintstate(source, user, params, checkOnly):
         spads.sayPrivate(user, "myBattleID: " + str(myBattleID))
         spads.sayPrivate(user, "ChobbyState: " + str(ChobbyState))
         spads.sayPrivate(user, "TachyonBattle: " + str(TachyonBattle))
-        spads.sayPrivate(user, "playersInMyBattle: " + str(playersInMyBattle))
         spads.sayPrivate(user, "myBattleTeaser: " + str(myBattleTeaser))
         # Also say these in private to caller
 
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
                    [0]) + "\n" + str(traceback.format_exc()), 0)
-
-# This is the handler for our new command
-
 
 # !aiProfile BARbarianAI(1) {"testtag":"testvalue"}
 def hAiProfile(source, user, params, checkOnly):
@@ -1124,13 +1090,13 @@ def hSetAllAiBonus(source, user, params, checkOnly):
             user, ','.join(params)), DBGLEVEL)
 
         if len(params) != 1 or not params[0].isdigit():
-            spads.sayPrivate(user, "setAllAiBonus: Bad syntax (must specify a single number between 0-100)")
+            spads.invalidSyntax(user, "setallaibonus", "must specify a single number between 0-100")
             return False
 
         newBonus = int(params[0])
 
         if newBonus < 0 or newBonus > 100:
-            spads.sayPrivate(user, "setAllAiBonus: Bad syntax (must specify a single number between 0-100)")
+            spads.invalidSyntax(user, "setallaibonus", "must specify a single number between 0-100")
             return False
 
         # checkOnly is true if this is just a check for callVote command, not a real command execution
@@ -1146,31 +1112,11 @@ def hSetAllAiBonus(source, user, params, checkOnly):
             forceParams = ["%" + bot, "bonus", str(newBonus)]
             callPerlFunction("hForce", "pv", "*", forceParams, False)
 
+        spads.broadcastMsg("Bonus for all AI players has been set to %s (by %s)" % (params[0], user))
+
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
                    [0]) + "\n" + str(traceback.format_exc()), 0)
-
-
-def hSplitBattle(source, user, params, checkOnly):
-    # checkOnly is true if this is just a check for callVote command, not a real command execution
-    if checkOnly:
-        # MyCommand is a basic command, we have nothing to check in case of callvote
-        return 1
-
-    # Fix strings received from Perl if needed
-    # This is in case Inline::Python handles Perl strings as byte strings instead of normal strings
-    # (this step can be skipped if your Inline::Python version isn't afffected by this bug)
-    user = spads.fix_string(user)
-    for i in range(len(params)):
-        params[i] = spads.fix_string(params[i])
-
-    # We join the parameters provided (if any), using ',' as delimiter
-    paramsString = ','.join(params)
-
-    # We log the command call as notice message
-    spads.slog("User %s called command hSplitBattle with parameter(s) \"%s\"" % (
-        user, paramsString), 3)
-
 
 def hGetLastVote(source, user, params, checkOnly):
     try:
@@ -1218,6 +1164,46 @@ def hGetLastVote(source, user, params, checkOnly):
         spads.slog("Unhandled exception: " + str(sys.exc_info()
                    [0]) + "\n" + str(traceback.format_exc()), 0)
 
+def hUnboss(source, user, params, checkOnly):
+    try:
+        user = spads.fix_string(user)
+        for i in range(len(params)):
+            params[i] = spads.fix_string(params[i])
+        spads.slog("User %s called command unboss with parameter(s) \"%s\"" % (
+            user, ','.join(params)), DBGLEVEL)
+        bosses = spads.getBosses()
+
+        if len(bosses) == 0:
+            spads.answer(user + ", there are no bosses in the lobby right now.")
+            return 0
+
+        if len(params) != 1:
+            spads.invalidSyntax(user, "unboss", "expected '*' or a single username")
+            return 0
+
+        if params[0] != '*' and params[0] not in bosses:
+            spads.answer(user + ", there is currently no boss named '%s'" % params[0])
+            return 0
+
+        if checkOnly:
+            return 1
+
+        if params[0] == '*':
+            callPerlFunction("hBoss", "battle", user, [], False) # Just use the SPADS handler
+        else:
+            perl.eval("delete $::bosses{" + params[0] + "};")
+            spads.broadcastMsg("Boss mode disabled for %s (by %s)" % (params[0], user))
+
+        newBosses = "" + ','.join(spads.getBosses())
+
+        ChobbyStateChanged("boss", newBosses)
+        updateTachyonBattle("boss", newBosses)
+        return 1
+
+    except Exception as e:
+        spads.slog("Unhandled exception: " + str(sys.exc_info()
+                   [0]) + "\n" + str(traceback.format_exc()), 0)
+
 def getTeiserverNoParameterCommandHandler(cmd):
     def handler(source, user, params, checkOnly):
         try:
@@ -1229,7 +1215,7 @@ def getTeiserverNoParameterCommandHandler(cmd):
 
             if len(params) > 0:
                 spads.slog(cmd + ": syntax error: more than 0 parameters", DBGLEVEL)
-                spads.sayPrivate(user, cmd + ": Too many parameters.")
+                spads.invalidSyntax(user, cmd, "too many parameters")
                 return False
 
             # All parameter checking was successful, return now if no action is desired
@@ -1253,7 +1239,7 @@ def getTeiserverSingleIntegerCommandHandler(cmd, defaultValue, minValue, maxValu
 
             if len(params) > 1:
                 spads.slog(cmd + ": syntax error: more than 1 parameter", DBGLEVEL)
-                spads.sayPrivate(user, cmd + ": Too many parameters.")
+                spads.invalidSyntax(user, cmd, "too many parameters")
                 return False
 
             newValue = None
@@ -1266,7 +1252,7 @@ def getTeiserverSingleIntegerCommandHandler(cmd, defaultValue, minValue, maxValu
 
             if newValue is None:
                 spads.slog(cmd + ": value error: param 1 is not numeric", DBGLEVEL)
-                spads.sayPrivate(user, cmd + ": Parameter is not numeric")
+                spads.invalidSyntax(user, cmd, "parameter is not numeric")
                 return False
 
             # All parameter checking was successful, return now if no action is desired
@@ -1296,14 +1282,14 @@ def getTeiserverStringCommandHandler(cmd, validRegex):
 
             if len(params) == 0:
                 spads.slog(cmd + ": syntax error: not enough parameters", DBGLEVEL)
-                spads.sayPrivate(user, cmd + ": Not enough parameters.")
+                spads.invalidSyntax(user, cmd, "not enough parameters")
                 return False
 
             combinedParams = ' '.join(params)
 
             if not validRegex.search(combinedParams):
                 spads.slog(cmd + ": syntax error: regex did not match", DBGLEVEL)
-                spads.sayPrivate(user, cmd + ": Invalid parameters, check the help entry for advice: \"!help " + cmd + "\"")
+                spads.invalidSyntax(user, cmd, "unrecognized string provided, or an unsupported character was included")
                 return False
 
             # All parameter checking was successful, return now if no action is desired
@@ -1326,12 +1312,12 @@ def setRatingLevelsCommandHandler(source, user, params, checkOnly):
 
         if len(params) != 2:
             spads.slog("setratinglevels: syntax error: wrong number of parameters", DBGLEVEL)
-            spads.sayPrivate(user, "setratinglevels: you must provide exactly two parameters (no more, no less).")
+            spads.invalidSyntax(user, "setratinglevels", "you must provide exactly two parameters")
             return False
 
         if not params[0].isdecimal() or not params[1].isdecimal():
             spads.slog("setratinglevels: value error: a param is not numeric", DBGLEVEL)
-            spads.sayPrivate(user, "setratinglevels: all parameters must be numbers.")
+            spads.invalidSyntax(user, "setratinglevels", "all parameters must be numeric")
             return False
 
         newMinValue = int(params[0])
@@ -1403,11 +1389,10 @@ def hUPDATEBATTLEINFO(command, battleID, spectatorCount, locked, mapHash, mapNam
 
 def hLEFTBATTLE(command, battleID, userName):
     try:
-        if battleID == myBattleID and playersInMyBattle[userName]:
+        if battleID == myBattleID:
             spads.slog("LEFTBATTLE" + str([command, battleID, userName]), 3)
-            del playersInMyBattle[userName]
-            # spads.slog("playersInMyBattle" + str(playersInMyBattle), 3)
-            if len(playersInMyBattle) == 0:  # when the last person leaves, reset title
+
+            if getNumUsersInMyBattle() == 0:  # when the last person leaves, reset title
                 sendTachyonBattleTeaser()
 
             bosses = "" + ','.join(spads.getBosses())
@@ -1428,11 +1413,9 @@ def hJOINEDBATTLE(command, battleID, userName, battleStatus=0):
             spads.slog(
                 "JOINEDBATTLE" + str([command, battleID, myBattleID, userName, battleStatus]), DBGLEVEL)
             SendChobbyState()
-            playersInMyBattle[userName] = battleStatus
             sendCurrentVote()
-            if len(playersInMyBattle) == 1:  # when the first person joins, set teaser
+            if getNumUsersInMyBattle() == 1:  # when the first person joins, set teaser
                 sendTachyonBattleTeaser()
-            # spads.queueLobbyCommand(["SAYBATTLEEX", "hello dude"])
             updateChobbyMuteState()
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
@@ -1443,12 +1426,6 @@ def hCLIENTBATTLESTATUS(command, userName, battleStatus, teamColor):
     try:
         spads.slog("hCLIENTBATTLESTATUS" +
                    str([command, userName, battleStatus, teamColor]), DBGLEVEL)
-        if userName in playersInMyBattle:
-            playersInMyBattle[userName] = battleStatus
-        else:
-            spads.slog("hCLIENTBATTLESTATUS: User not found in battle " +
-                       str(userName) + " " + str(playersInMyBattle.keys()), 3)
-        # spads.queueLobbyCommand(["SAYBATTLEEX", "hello dude"])
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
                    [0]) + "\n" + str(traceback.format_exc()), 0)
