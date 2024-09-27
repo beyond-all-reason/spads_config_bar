@@ -436,7 +436,7 @@ class BarManager:
         spads.addSpadsCommandHandler({'meme': getTeiserverStringCommandHandler("meme",
             re.compile("^(undo|ticks|rich|poor|crazy|deathmatch)$"))})
         spads.addSpadsCommandHandler({'balancealgorithm': getTeiserverStringCommandHandler("balancealgorithm",
-            re.compile("^(default|split_noobs|auto)$"))})
+            re.compile("^(default|split_noobs|auto|loser_picks)$"))})
         spads.addSpadsCommandHandler({'unboss': hUnboss})
 
         # We need to add the lobby command handlers before we are fully connected, or we dont get the JOINEDBATTLE stuff
