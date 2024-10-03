@@ -8,6 +8,7 @@ import zlib
 import os
 import time
 import re
+import hashlib
 
 from datetime import datetime, timezone
 # from https://blog.miguelgrinberg.com/post/it-s-time-for-a-change-datetime-utcnow-is-now-deprecated
@@ -22,10 +23,11 @@ def naive_utcfromtimestamp(timestamp):
 spads = perl.BarManager
 
 # ------------------ Instance global "constants" -------------
-
 BMP = "BarManager|"
 DBGLEVEL = 3
 pluginParams = {}
+selfFileHash = ""
+
 # ---------------- Battleroom Variables to Track --------------
 AiProfiles = {}  # dict of BotName : {username : Owner, profile: Defensive} dunno the format yet, should support script tags to set AI profiles
 isBattleLocked = False
@@ -412,7 +414,7 @@ class BarManager:
 
     # This is our constructor, called when the plugin is loaded by SPADS (mandatory callback)
     def __init__(self, context):
-        global DBGLEVEL, voteHistoryMax
+        global DBGLEVEL, voteHistoryMax, selfFileHash
         # We declare our new command and the associated handler
         spads.addSpadsCommandHandler({'aiProfile': hAiProfile})
         spads.addSpadsCommandHandler({'setAllAiBonus': hSetAllAiBonus})
@@ -474,6 +476,19 @@ class BarManager:
             else:
                 spads.slog("OK:CrashDir already exists" + CrashDir, DBGLEVEL)
 
+        except Exception as e:
+            spads.slog("Unhandled exception: " + str(sys.exc_info()
+                       [0]) + "\n" + str(traceback.format_exc()), 0)
+
+        try:
+            with open(__file__, 'rb') as f:
+                sha256 = hashlib.sha256()
+                data = f.read(32768)
+                while data:
+                    sha256.update(data)
+                    data = f.read(32768)
+                selfFileHash = "{0}".format(sha256.hexdigest()[:6])
+                spads.slog("Calculated source file's hash: " + selfFileHash, 3)
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()
                        [0]) + "\n" + str(traceback.format_exc()), 0)
@@ -1019,12 +1034,14 @@ def hbarmanagerprintstate(source, user, params, checkOnly):
         spads.slog("TachyonBattle: " + str(TachyonBattle), 3)
         spads.slog("myBattleTeaser: " + str(myBattleTeaser), 3)
         spads.slog("hwInfoIngame: " + str(hwInfoIngame), 3)
+        spads.slog("selfFileHash: " + str(selfFileHash), 3)
 
         spads.sayPrivate(user, "DBGLEVEL: " + str(DBGLEVEL))
         spads.sayPrivate(user, "myBattleID: " + str(myBattleID))
         spads.sayPrivate(user, "ChobbyState: " + str(ChobbyState))
         spads.sayPrivate(user, "TachyonBattle: " + str(TachyonBattle))
         spads.sayPrivate(user, "myBattleTeaser: " + str(myBattleTeaser))
+        spads.sayPrivate(user, "selfFileHash: " + str(selfFileHash))
         # Also say these in private to caller
 
     except Exception as e:
