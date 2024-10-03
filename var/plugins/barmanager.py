@@ -484,11 +484,11 @@ class BarManager:
             spads.slog("Unhandled exception: " + str(sys.exc_info()
                        [0]) + "\n" + str(traceback.format_exc()), 0)
 
-    def onLobbyConnected(self, lobbyInterface):
+    def onLobbyLogin(self, lobbyInterface):
         try:
             # spads lobby command handlers are unloaded when connection is lost.
             # Thus we need to readd them according to
-            # https://springrts.com/wiki/SPADS_plugin_development_(Python)#Writing_plugin_code_2
+            # https://github.com/Yaribz/SPADS/wiki/SPADS-plugin-development-(Python)#user-content-Writing_plugin_code-2
             self.addLobbyCommandHandlers()
 
         except Exception as e:
