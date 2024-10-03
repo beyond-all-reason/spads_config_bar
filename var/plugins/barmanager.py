@@ -1459,7 +1459,7 @@ def hLEFT_pre(command, chanName, userName, reason=""):
         if userName in knownUsers:
             return
         else:
-            spads.slog("hLEFT_pre cannot be exectuted" +
+            spads.slog("hLEFT_pre was called for an unknown user, skipping " +
                        str([command, chanName, userName, reason, userName in knownUsers]), 2)
             # spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
             # return "DROP"
@@ -1475,7 +1475,7 @@ def hLEFTBATTLE_pre(command, battleID, userName):
         if userName in knownUsers:
             return
         else:
-            spads.slog("hLEFTBATTLE_pre cannot be exectuted" +
+            spads.slog("hLEFTBATTLE_pre was called for an unknown user, skipping " +
                        str([command, battleID, userName, userName in knownUsers]), 2)
             # spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
             # return "DROP"
@@ -1492,7 +1492,7 @@ def hREMOVEUSER_pre(command, userName):
             del knownUsers[userName]
             return
         else:
-            spads.slog("hREMOVEUSER_pre cannot be exectuted" +
+            spads.slog("hREMOVEUSER_pre was called for an unknown user, skipping " +
                        str([command, userName, userName in knownUsers]), 2)
             # spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
             # return "DROP"
@@ -1508,7 +1508,7 @@ def hCLIENTSTATUS_pre(command, userName, status):
         if userName in knownUsers:
             return
         else:
-            spads.slog("hCLIENTSTATUS_pre cannot be exectuted" +
+            spads.slog("hCLIENTSTATUS_pre was called for an unknown user, skipping " +
                        str([command, userName, status, userName in knownUsers]), 2)
             # spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
             # return "DROP"
@@ -1524,7 +1524,7 @@ def hJOINEDBATTLE_pre(command, battleID, userName, scriptPassword=""):
         if userName in knownUsers:
             return
         else:
-            spads.slog("hJOINEDBATTLE_pre cannot be exectuted" + str(
+            spads.slog("hJOINEDBATTLE_pre was called for an unknown user, skipping " + str(
                 [command, battleID, userName, scriptPassword, userName in knownUsers]), 2)
             # spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
             # return "DROP"
