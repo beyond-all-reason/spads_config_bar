@@ -29,7 +29,7 @@
 [resetchevlevels]
 !resetchevlevels - removes the minimum/maximum rank requirements
 
-[resetratinglevels]
+[setratinglevels]
 !setratinglevels <min-rating> <max-rating> - Sets the minimum and maximum rating levels for players.
 
 [rename]
@@ -58,6 +58,7 @@
 "!balancealgorithm default"
 "!balancealgorithm split_noobs"
 "!balancealgorithm auto"
+"!balancealgorithm loser_picks"
 
 [setAllAiBonus]
 !setAllAiBonus <bonus> - Sets the economic bonus for each AI in the battle. The bonus must be between 0-100.
