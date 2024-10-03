@@ -241,6 +241,9 @@ def sendTachyonBattle():
     global timerTachyonBattle, TachyonBattle
     try:
         timerTachyonBattle = False
+        if spads.getLobbyState() < 6: # 6 -> BATTLE OPENED
+            return
+
         bsjson = json.dumps(TachyonBattle)
         spads.slog("Trying to update tachyonbattlestatus " + bsjson, DBGLEVEL)
         spads.queueLobbyCommand(["c.battle.update_host", bsjson])
