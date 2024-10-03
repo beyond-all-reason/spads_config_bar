@@ -108,6 +108,9 @@ def jsonBase64(toencode):
     return base64.urlsafe_b64encode(json.dumps(toencode).encode("utf-8")).decode()
 
 def getNumUsersInMyBattle():
+    if spads.getLobbyState() < 6: # 6 -> BATTLE OPENED
+        return 0 # We don't have a battle, so we don't have users in it.
+
     lobbyLogin = spads.getSpadsConf()['lobbyLogin']
     users = spads.getLobbyInterface().getBattle()['users']
 
