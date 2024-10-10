@@ -863,6 +863,10 @@ class BarManager:
             spads.slog("preSpadsCommand: " + ','.join(map(str,
                        [command, source, user, params])), DBGLEVEL)
 
+            if (command == "boss" and len(params) == 0) or (command == "callvote" and len(params) == 1 and params[0] == "boss"):
+                spads.answer(user + ", you must specify a user to boss. (Use '!unboss <USERNAME>' or '!unboss *' to remove bosses)")
+                return 0
+
             # We check "len(params) > 1" here so that only commands like "callvote boss UserName"
             # are considered, and commands like "callvote boss" are allowed.
             if command == "callvote" and len(params) > 1 and params[0] == "boss" and myBattlePassword == "*":
