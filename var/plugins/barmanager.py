@@ -695,14 +695,28 @@ class BarManager:
         # $user is the name of the user requesting the vote
         # \@command is an array reference containing the command for which a vote is requested
         # \%remainingVoters is a reference to a hash containing the players allowed to vote. This hash is indexed by player names. Perl plugins can filter these players by removing the corresponding entries from the hash directly, but Python plugins must use the alternate method based on the return value described below.
+        # This callback must return 0 to prevent the vote call from happening, or 1 to allow it without changing the remaining voters list, or an array reference containing the player names that should be removed from the remaining voters list.
         try:
             spads.slog("onVoteRequest: " + ','.join(map(str,
                        [source, user, command, remainingVoters])), DBGLEVEL)
 
+            if command and command[0] == "joinAs" and len(command) > 1:
+                if command[1] == "spec" or command[1] == user:
+                    # if someone will be joining either the spectator team or the team of the user who called the vote
+                    return 1
+                elif command[1] not in remainingVoters:
+                    # if the target user is not eligible to vote
+                    return 0
+                else:
+                    # only allow the target to vote, remove everyone else
+                    votersToBeRemoved = list(remainingVoters.keys())
+                    votersToBeRemoved.remove(command[1])
+                    return votersToBeRemoved
+
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()
                        [0]) + "\n" + str(traceback.format_exc()), 0)
-        return 1  # allow the vote, 0 for disallow
+        return 1
 
     def onVoteStart(self, user, command):
         # command is an array reference containing the command for which a vote is started
