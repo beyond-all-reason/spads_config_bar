@@ -1218,7 +1218,7 @@ def hUnboss(source, user, params, checkOnly):
         if params[0] == '*':
             callPerlFunction("hBoss", "battle", user, [], False) # Just use the SPADS handler
         else:
-            perl.eval("delete $::bosses{" + params[0] + "};")
+            perl.eval("delete $::bosses{'" + params[0] + "'};")
             spads.broadcastMsg("Boss mode disabled for %s (by %s)" % (params[0], user))
 
         newBosses = "" + ','.join(spads.getBosses())
