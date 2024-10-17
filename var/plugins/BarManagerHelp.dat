@@ -57,7 +57,7 @@
 !balancealgorithm <algorithm> - Sets the balance algorithm used to autobalance the teams.
 "!balancealgorithm default"
 "!balancealgorithm split_noobs"
-"!balancealgorithm auto"
+"!balancealgorithm respect_avoids"
 "!balancealgorithm loser_picks"
 
 [setAllAiBonus]
