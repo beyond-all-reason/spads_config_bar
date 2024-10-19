@@ -8,6 +8,7 @@ import zlib
 import os
 import time
 import re
+import hashlib
 
 from datetime import datetime, timezone
 # from https://blog.miguelgrinberg.com/post/it-s-time-for-a-change-datetime-utcnow-is-now-deprecated
@@ -22,10 +23,11 @@ def naive_utcfromtimestamp(timestamp):
 spads = perl.BarManager
 
 # ------------------ Instance global "constants" -------------
-
 BMP = "BarManager|"
 DBGLEVEL = 3
 pluginParams = {}
+selfFileHash = ""
+
 # ---------------- Battleroom Variables to Track --------------
 AiProfiles = {}  # dict of BotName : {username : Owner, profile: Defensive} dunno the format yet, should support script tags to set AI profiles
 isBattleLocked = False
@@ -114,6 +116,9 @@ def jsonBase64(toencode):
     return base64.urlsafe_b64encode(json.dumps(toencode).encode("utf-8")).decode()
 
 def getNumUsersInMyBattle():
+    if spads.getLobbyState() < 6: # 6 -> BATTLE OPENED
+        return 0 # We don't have a battle, so we don't have users in it.
+
     lobbyLogin = spads.getSpadsConf()['lobbyLogin']
     users = spads.getLobbyInterface().getBattle()['users']
 
@@ -244,6 +249,9 @@ def sendTachyonBattle():
     global timerTachyonBattle, TachyonBattle
     try:
         timerTachyonBattle = False
+        if spads.getLobbyState() < 6: # 6 -> BATTLE OPENED
+            return
+
         bsjson = json.dumps(TachyonBattle)
         spads.slog("Trying to update tachyonbattlestatus " + bsjson, DBGLEVEL)
         spads.queueLobbyCommand(["c.battle.update_host", bsjson])
@@ -418,7 +426,7 @@ class BarManager:
 
     # This is our constructor, called when the plugin is loaded by SPADS (mandatory callback)
     def __init__(self, context):
-        global DBGLEVEL, voteHistoryMax
+        global DBGLEVEL, voteHistoryMax, selfFileHash
         # We declare our new command and the associated handler
         spads.addSpadsCommandHandler({'aiProfile': hAiProfile})
         spads.addSpadsCommandHandler({'setAllAiBonus': hSetAllAiBonus})
@@ -442,7 +450,7 @@ class BarManager:
         spads.addSpadsCommandHandler({'meme': getTeiserverStringCommandHandler("meme",
             re.compile("^(undo|ticks|rich|poor|crazy|deathmatch)$"))})
         spads.addSpadsCommandHandler({'balancealgorithm': getTeiserverStringCommandHandler("balancealgorithm",
-            re.compile("^(default|split_noobs|auto)$"))})
+            re.compile("^(default|split_noobs|respect_avoids|loser_picks)$"))})
         spads.addSpadsCommandHandler({'unboss': hUnboss})
 
         # We need to add the lobby command handlers before we are fully connected, or we dont get the JOINEDBATTLE stuff
@@ -484,11 +492,24 @@ class BarManager:
             spads.slog("Unhandled exception: " + str(sys.exc_info()
                        [0]) + "\n" + str(traceback.format_exc()), 0)
 
-    def onLobbyConnected(self, lobbyInterface):
+        try:
+            with open(__file__, 'rb') as f:
+                sha256 = hashlib.sha256()
+                data = f.read(32768)
+                while data:
+                    sha256.update(data)
+                    data = f.read(32768)
+                selfFileHash = "{0}".format(sha256.hexdigest()[:6])
+                spads.slog("Calculated source file's hash: " + selfFileHash, 3)
+        except Exception as e:
+            spads.slog("Unhandled exception: " + str(sys.exc_info()
+                       [0]) + "\n" + str(traceback.format_exc()), 0)
+
+    def onLobbyLogin(self, lobbyInterface):
         try:
             # spads lobby command handlers are unloaded when connection is lost.
             # Thus we need to readd them according to
-            # https://springrts.com/wiki/SPADS_plugin_development_(Python)#Writing_plugin_code_2
+            # https://github.com/Yaribz/SPADS/wiki/SPADS-plugin-development-(Python)#user-content-Writing_plugin_code-2
             self.addLobbyCommandHandlers()
 
         except Exception as e:
@@ -868,6 +889,10 @@ class BarManager:
             spads.slog("preSpadsCommand: " + ','.join(map(str,
                        [command, source, user, params])), DBGLEVEL)
 
+            if (command == "boss" and len(params) == 0) or (command == "callvote" and len(params) == 1 and params[0] == "boss"):
+                spads.answer(user + ", you must specify a user to boss. (Use '!unboss <USERNAME>' or '!unboss *' to remove bosses)")
+                return 0
+
             # We check "len(params) > 1" here so that only commands like "callvote boss UserName"
             # are considered, and commands like "callvote boss" are allowed.
             if command == "callvote" and len(params) > 1 and params[0] == "boss" and myBattlePassword == "*":
@@ -1064,6 +1089,7 @@ def hbarmanagerprintstate(source, user, params, checkOnly):
         spads.slog("myBattleTeaser: " + str(myBattleTeaser), 3)
         spads.slog("hwInfoIngame: " + str(hwInfoIngame), 3)
         spads.slog("deferredVotes: " + str(deferredVotes), 3)
+        spads.slog("selfFileHash: " + str(selfFileHash), 3)
 
         spads.sayPrivate(user, "DBGLEVEL: " + str(DBGLEVEL))
         spads.sayPrivate(user, "myBattleID: " + str(myBattleID))
@@ -1071,6 +1097,7 @@ def hbarmanagerprintstate(source, user, params, checkOnly):
         spads.sayPrivate(user, "TachyonBattle: " + str(TachyonBattle))
         spads.sayPrivate(user, "myBattleTeaser: " + str(myBattleTeaser))
         spads.sayPrivate(user, "deferredVotes: " + str(deferredVotes))
+        spads.sayPrivate(user, "selfFileHash: " + str(selfFileHash))
         # Also say these in private to caller
 
     except Exception as e:
@@ -1237,7 +1264,7 @@ def hUnboss(source, user, params, checkOnly):
         if params[0] == '*':
             callPerlFunction("hBoss", "battle", user, [], False) # Just use the SPADS handler
         else:
-            perl.eval("delete $::bosses{" + params[0] + "};")
+            perl.eval("delete $::bosses{'" + params[0] + "'};")
             spads.broadcastMsg("Boss mode disabled for %s (by %s)" % (params[0], user))
 
         newBosses = "" + ','.join(spads.getBosses())
@@ -1499,7 +1526,7 @@ def hLEFT_pre(command, chanName, userName, reason=""):
         if userName in knownUsers:
             return
         else:
-            spads.slog("hLEFT_pre cannot be exectuted" +
+            spads.slog("hLEFT_pre was called for an unknown user, skipping " +
                        str([command, chanName, userName, reason, userName in knownUsers]), 2)
             # spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
             # return "DROP"
@@ -1515,7 +1542,7 @@ def hLEFTBATTLE_pre(command, battleID, userName):
         if userName in knownUsers:
             return
         else:
-            spads.slog("hLEFTBATTLE_pre cannot be exectuted" +
+            spads.slog("hLEFTBATTLE_pre was called for an unknown user, skipping " +
                        str([command, battleID, userName, userName in knownUsers]), 2)
             # spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
             # return "DROP"
@@ -1532,7 +1559,7 @@ def hREMOVEUSER_pre(command, userName):
             del knownUsers[userName]
             return
         else:
-            spads.slog("hREMOVEUSER_pre cannot be exectuted" +
+            spads.slog("hREMOVEUSER_pre was called for an unknown user, skipping " +
                        str([command, userName, userName in knownUsers]), 2)
             # spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
             # return "DROP"
@@ -1548,7 +1575,7 @@ def hCLIENTSTATUS_pre(command, userName, status):
         if userName in knownUsers:
             return
         else:
-            spads.slog("hCLIENTSTATUS_pre cannot be exectuted" +
+            spads.slog("hCLIENTSTATUS_pre was called for an unknown user, skipping " +
                        str([command, userName, status, userName in knownUsers]), 2)
             # spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
             # return "DROP"
@@ -1564,7 +1591,7 @@ def hJOINEDBATTLE_pre(command, battleID, userName, scriptPassword=""):
         if userName in knownUsers:
             return
         else:
-            spads.slog("hJOINEDBATTLE_pre cannot be exectuted" + str(
+            spads.slog("hJOINEDBATTLE_pre was called for an unknown user, skipping " + str(
                 [command, battleID, userName, scriptPassword, userName in knownUsers]), 2)
             # spads.sayPrivate('AutohostMonitor', 'broken_connection ' + userName)
             # return "DROP"
