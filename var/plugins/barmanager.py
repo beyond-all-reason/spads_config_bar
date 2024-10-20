@@ -1668,6 +1668,19 @@ def h_autohost_GAME_LUAMSG(command, playerNumInt, luahandleidInt, nullStr, messa
             matcheventmessage = f'match-event <{username}> <{eventType}> <{gameTime}>'
             spads.slog(f'Sent: {matcheventmessage}', 3)
             spads.sayPrivate('AutohostMonitor', matcheventmessage)
+        
+        if len(message) > 10 and message.startswith("complex-match-event:"):
+            payload = json.loads(base64.urlsafe_b64decode(message.partition(':')[2]).decode())
+            # complex-match-event format and example at https://github.com/beyond-all-reason/Beyond-All-Reason/pull/3862
+            username = payload.get('username')
+            timeseconds = int(payload.get('frame'))//30
+            eventtype = payload.get('eventtype')
+            if username and timeseconds and eventtype:
+                complexMatchEventMessage = f'complex-match-event <{username}> <{eventtype}> <{timeseconds}> <{message.partition(":")[2].strip() }>'
+                spads.slog(f'Sent: complexMatchEventMessage {complexMatchEventMessage}', 3)
+                spads.sayPrivate('AutohostMonitor', complexMatchEventMessage)
+            else:
+                spads.slog(f'Failed to parse a complex-match-event message: {message}', 2)
 
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
