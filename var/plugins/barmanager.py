@@ -1669,7 +1669,7 @@ def h_autohost_GAME_LUAMSG(command, playerNumInt, luahandleidInt, nullStr, messa
             spads.slog(f'Sent: {matcheventmessage}', 3)
             spads.sayPrivate('AutohostMonitor', matcheventmessage)
         
-        if len(message) > 10 and message.startswith("complex-match-event:"):
+        if len(message) > 10 and message[0:20] == "complex-match-event:":
             payload = json.loads(base64.urlsafe_b64decode(message.partition(':')[2]).decode())
             # complex-match-event format and example at https://github.com/beyond-all-reason/Beyond-All-Reason/pull/3862
             username = payload.get('username')
