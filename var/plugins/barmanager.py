@@ -60,6 +60,12 @@ knownUsers = {}  # this one is for tracking failed commands
 voteHistoryMax = 1
 voteHistory = []  # stores serialized currentVote objects
 
+# In some situations, we may need to wait for certain players to vote before allowing other players to vote.
+# When that happens, those other players' votes added to this dict so that they can be processed later.
+# This should only ever contain votes submitted for an ongoing vote. When the votes are processed (or the vote ends), they should be removed.
+# Schema: Username -> { "source": source, "vote": vote }
+deferredVotes = {}
+
 # ------------------ JSON OBJECT INFO ------------------
 # Each json string will contain a dict, for example, for a votestart
 
@@ -695,6 +701,7 @@ class BarManager:
         # $user is the name of the user requesting the vote
         # \@command is an array reference containing the command for which a vote is requested
         # \%remainingVoters is a reference to a hash containing the players allowed to vote. This hash is indexed by player names. Perl plugins can filter these players by removing the corresponding entries from the hash directly, but Python plugins must use the alternate method based on the return value described below.
+        # This callback must return 0 to prevent the vote call from happening, or 1 to allow it without changing the remaining voters list, or an array reference containing the player names that should be removed from the remaining voters list.
         try:
             spads.slog("onVoteRequest: " + ','.join(map(str,
                        [source, user, command, remainingVoters])), DBGLEVEL)
@@ -702,7 +709,7 @@ class BarManager:
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()
                        [0]) + "\n" + str(traceback.format_exc()), 0)
-        return 1  # allow the vote, 0 for disallow
+        return 1
 
     def onVoteStart(self, user, command):
         # command is an array reference containing the command for which a vote is started
@@ -729,10 +736,12 @@ class BarManager:
                        [0]) + "\n" + str(traceback.format_exc()), 0)
 
     def onVoteStop(self, voteResult):
+        global deferredVotes
         # This callback is called each time a vote poll is stoped.
         # $voteResult indicates the result of the vote: -1 (vote failed), 0 (vote cancelled), 1 (vote passed)
         try:
             spads.slog("onVoteStop: voteResult=" + str(voteResult), DBGLEVEL)
+            deferredVotes = {}
             lastVote = spads.getCurrentVote()
 
             # use string timestamps, because lua can't handle linux timestamps (signed integer is too big)
@@ -803,6 +812,7 @@ class BarManager:
         return None  #
 
     def postSpadsCommand(self, command, source, user, params, commandResult):
+        global deferredVotes
         # This callback is called each time a SPADS command has been called.
         # $command is the name of the command (without the parameters)
         # $source indicates the way the command has been called ("pv": private lobby message, "battle": battle lobby message, "chan": master lobby channel message, "game": in game message)
@@ -836,6 +846,21 @@ class BarManager:
                     checkForBarGameTypeChange(teamsize=params[1])
 
             elif command == "vote":
+                voteState = spads.getCurrentVote()
+                voteCmdParts = voteState["command"] or [] # voteCmdParts[0] is the actual command, the rest is parameters
+                if len(voteCmdParts) >= 2 and voteCmdParts[0] == "joinAs" and voteCmdParts[1] == user:
+                    # The target of a "!joinAs" vote has just voted.
+                    manualVoters = voteState["manualVoters"]
+                    voteFromTarget = manualVoters[voteCmdParts[1]]
+                    if voteFromTarget == "no":
+                        callPerlFunction("hEndVote", source, spads.getSpadsConf()['lobbyLogin'], [], 0)
+                        return # No need to send the current vote state if we're ending it now.
+                    elif len(deferredVotes) > 0:
+                        for deferredUser,deferredVote in deferredVotes.items():
+                            callPerlFunction("hVote", deferredVote["source"], deferredUser, [deferredVote["vote"]], 0)
+                        deferredVotes = {}
+                        spads.answer("All previously-deferred votes have been counted.")
+
                 sendCurrentVote()
             elif command == "boss":
                 bosses = "" + ','.join(spads.getBosses())
@@ -853,6 +878,7 @@ class BarManager:
         return None  #
 
     def preSpadsCommand(self, command, source, user, params):
+        global deferredVotes
         # This callback is called each time a SPADS command is called, just before it is actually executed.
         # $command is the name of the command (without the parameters)
         # $source indicates the way the command has been called ("pv": private lobby message, "battle": battle lobby message, "chan": master lobby channel message, "game": in game message)
@@ -879,6 +905,24 @@ class BarManager:
                     pass
                 if numPlayers > 1 and accessLevel < 100:
                     spads.answer(user + ", you are not allowed to call command \"callvote boss\" in current context (there is more than one player in the lobby)")
+                    return 0
+
+            elif command == "vote":
+                if len(params) < 1:
+                    return 1
+
+                vote = params[0]
+                voteState = spads.getCurrentVote()
+                voteCmdParts = voteState["command"] or [] # voteCmdParts[0] is the actual command, the rest is parameters
+
+                if len(voteCmdParts) < 2 or voteCmdParts[0] != "joinAs" or voteCmdParts[1] == user or voteCmdParts[1] == "spec":
+                    return 1
+
+                manualVoters = voteState["manualVoters"] or {}
+
+                if voteCmdParts[1] not in manualVoters:
+                    spads.answer(user + ", your vote was deferred and will be counted after " + voteCmdParts[1] + " has voted.")
+                    deferredVotes[user] = { "source": source, "vote": vote }
                     return 0
 
         except Exception as e:
@@ -1044,6 +1088,7 @@ def hbarmanagerprintstate(source, user, params, checkOnly):
         spads.slog("TachyonBattle: " + str(TachyonBattle), 3)
         spads.slog("myBattleTeaser: " + str(myBattleTeaser), 3)
         spads.slog("hwInfoIngame: " + str(hwInfoIngame), 3)
+        spads.slog("deferredVotes: " + str(deferredVotes), 3)
         spads.slog("selfFileHash: " + str(selfFileHash), 3)
 
         spads.sayPrivate(user, "DBGLEVEL: " + str(DBGLEVEL))
@@ -1051,6 +1096,7 @@ def hbarmanagerprintstate(source, user, params, checkOnly):
         spads.sayPrivate(user, "ChobbyState: " + str(ChobbyState))
         spads.sayPrivate(user, "TachyonBattle: " + str(TachyonBattle))
         spads.sayPrivate(user, "myBattleTeaser: " + str(myBattleTeaser))
+        spads.sayPrivate(user, "deferredVotes: " + str(deferredVotes))
         spads.sayPrivate(user, "selfFileHash: " + str(selfFileHash))
         # Also say these in private to caller
 
