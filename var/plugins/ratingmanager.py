@@ -42,6 +42,7 @@ class RatingManager:
     def __init__(self, context):
         global server_url, rating_url, balance_url
         try:
+            raw_data = ""
             spads.slog("RatingManager plugin loaded (version %s)" %
                        pluginVersion, 3)
             spadsConf = spads.getSpadsConf()
