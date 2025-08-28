@@ -9,6 +9,7 @@ import os
 import time
 import re
 import hashlib
+import urllib.request
 
 from datetime import datetime, timezone
 # from https://blog.miguelgrinberg.com/post/it-s-time-for-a-change-datetime-utcnow-is-now-deprecated
@@ -82,6 +83,9 @@ globalPluginParams = {'crashDir': ['notNull'], 'crashFilePattern': ['notNull'], 
                       'voteHistoryMax': ['notNull'],
                       }
 presetPluginParams = None
+
+# For sending end game data
+end_game_data_url = "https://localhost:4000/teiserver/api/spads/end_game_data"
 
 # This is how SPADS gets our version number (mandatory callback)
 
@@ -648,8 +652,19 @@ class BarManager:
 
             # set to 3 from DBGLEVEL
             spads.slog("endGameData: " + str(cleanEndGameData), 3)
-            spads.sayPrivate('AutohostMonitor', 'endGameData ' +
-                             jsonGzipBase64(cleanEndGameData))
+            
+            spadsConf = spads.getSpadsConf()
+            credentials = f"{spadsConf['lobbyLogin']}:{spadsConf['lobbyPassword']}"
+            encoded_credentials = base64.b64encode(credentials.encode('utf-8')).decode('utf-8')
+            
+            # Send a post request to end_game_data_url containing clean end game data
+            req = urllib.request.Request(end_game_data_url, data=jsonGzipBase64(cleanEndGameData))
+            req.add_header("Authorization", f"Basic {encoded_credentials}")
+
+            with urllib.request.urlopen(req) as f:
+                response = f.read().decode('utf-8')
+                spads.slog("end_game_data response: " + str(response), DBGLEVEL)
+
             hwInfoIngame = {}
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()
