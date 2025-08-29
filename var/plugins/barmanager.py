@@ -84,9 +84,6 @@ globalPluginParams = {'crashDir': ['notNull'], 'crashFilePattern': ['notNull'], 
                       }
 presetPluginParams = None
 
-# For sending end game data
-end_game_data_url = "https://server4.beyondallreason.info/teiserver/api/spads/end_game_data"
-
 # This is how SPADS gets our version number (mandatory callback)
 
 
@@ -658,6 +655,7 @@ class BarManager:
             encoded_credentials = base64.b64encode(credentials.encode('utf-8')).decode('utf-8')
 
             # Send a post request to end_game_data_url containing clean end game data
+            end_game_data_url = f"https://{spadsConf['lobbyHost']}/teiserver/api/spads/end_game_data"
             data = urllib.parse.urlencode({"data": jsonGzipBase64(cleanEndGameData)}).encode('utf-8')
             req = urllib.request.Request(end_game_data_url, data)
             req.add_header("authorization", f"Basic {encoded_credentials}")
