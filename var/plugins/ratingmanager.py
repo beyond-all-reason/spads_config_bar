@@ -4,6 +4,7 @@ import perl
 import sys
 import traceback
 import sys
+import base64
 
 spads = perl.RatingManager
 
@@ -40,7 +41,8 @@ def getBarGameType(teamsize, teamcount):
 
 class RatingManager:
     def __init__(self, context):
-        global server_url, rating_url, balance_url
+        global server_url, rating_url, balance_url, encoded_credentials
+
         try:
             raw_data = ""
             spads.slog("RatingManager plugin loaded (version %s)" %
@@ -52,6 +54,9 @@ class RatingManager:
                 rating_url = f"{server_url}/teiserver/api/spads/get_rating"
                 balance_url = f"{server_url}/teiserver/api/spads/balance_battle"
                 spads.slog("RatingManager server_url (%s)" % server_url, 3)
+
+            credentials = f"{spadsConf['lobbyLogin']}:{spadsConf['lobbyPassword']}"
+            encoded_credentials = base64.b64encode(credentials.encode('utf-8')).decode('utf-8')
         except Exception as e:
             spads.slog("Unhandled exception: [updatePlayerSkill]" + "[" + raw_data + "]" + str(sys.exc_info()
                        [0]) + "\n" + str(traceback.format_exc()), 0)
@@ -65,7 +70,10 @@ class RatingManager:
             barGameType = getBarGameType(teamsize, teamcount)
             barGameType = barGameType.replace(" ", "%20")
 
-            with urllib.request.urlopen(f"{rating_url}/{accountId}/{barGameType}") as f:
+            req = urllib.request.Request(f"{rating_url}/{accountId}/{barGameType}")
+            req.add_header("authorization", f"Basic {encoded_credentials}")
+
+            with urllib.request.urlopen(req) as f:
                 raw_data = f.read().decode('utf-8')
                 data = json.loads(raw_data)
 
@@ -88,7 +96,10 @@ class RatingManager:
             })
             data = data.encode('ascii')
 
-            with urllib.request.urlopen(balance_url, data) as f:
+            req = urllib.request.Request(balance_url, data)
+            req.add_header("authorization", f"Basic {encoded_credentials}")
+
+            with urllib.request.urlopen(req) as f:
                 raw_response = f.read().decode('utf-8')
                 response_data = json.loads(raw_response)
 
