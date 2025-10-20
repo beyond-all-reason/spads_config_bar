@@ -954,7 +954,7 @@ class BarManager:
                     spads.slog("Setting AI profile" +
                                str(extraaitags) + ' for ' + botname, 3)
 
-                return {'aiData': extraaitags}
+                return {'aiData': extraaitags, 'game/modoption/damgamsramgam': 'yes'}
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()
                        [0]) + "\n" + str(traceback.format_exc()), 0)
