@@ -932,6 +932,7 @@ class BarManager:
 		'''
 
         try:
+            res = {}
             spads.slog("addStartScriptTags: " + str(AiProfiles), DBGLEVEL)
             if len(AiProfiles) > 0:
                 extraaitags = {}
@@ -940,7 +941,26 @@ class BarManager:
                     spads.slog("Setting AI profile" +
                                str(extraaitags) + ' for ' + botname, 3)
 
-                return {'aiData': extraaitags}
+                res['aiData'] = extraaitags
+
+            # Set custom user account info property `boss` for all bosses
+            playerData = {}
+            users = spads.getLobbyInterface().getUsers()
+            for boss in spads.getBosses():
+                accountId = users.get(boss, {}).get('accountId')  # it should be always set, but just in case
+                if accountId:
+                    playerData[accountId] = {"boss": 1}
+                pass
+            res['playerData'] = playerData
+
+            # Set current date and time modoptions
+            now = datetime.now(timezone.utc)
+            res['game/modoptions/date_day'] = now.day
+            res['game/modoptions/date_month'] = now.month
+            res['game/modoptions/date_year'] = now.year
+            res['game/modoptions/date_hour'] = now.hour
+
+            return res
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()
                        [0]) + "\n" + str(traceback.format_exc()), 0)
