@@ -50,6 +50,7 @@ myBattlePassword = '*'  # which means no password
 hwInfoIngame = {}  # maps playernum to hwinfo dics {0: {}} this reverse mapping is needed because hwinfo arrives before playername
 
 aiProfiles = {}  # there are multiple ai profiles one can set, especially for barbarians, This info is currently discarded, but could use a new command
+negativeBonusOverrides = {}  # map of user/bot name to negative handicap override for start script
 
 spadsConf = None  # {'lobbyReconnectDelay': 15, 'banList': 'empty', 'mapLink': 'http://springfiles.com/search_result.php?search=%m&select=select_all', 'promoteMsg': '%pplayer(s) needed for battle "%b" [%o, %a] (%u)', 'autoLock': 'off', 'lobbyPassword': 'petike', 'lobbyFollowRedirect': '1', 'lobbyHost': 'bar.teifion.co.uk', 'allowedLocalAIs': 'E323AI;HughAI;KAIK;RAI', 'logGameChat': '1', 'msgFloodAutoKick': '15;7', 'masterChannel': 'autohosts', 'allowGhostMaps': '0', 'maxBots': '16', 'lobbyInterfaceLogLevel': '5', 'opOnMasterChannel': '0', 'teamSize': 6, 'lobbyPort': '8200', 'commandsFile': 'commands.conf', 'unlockSpecDelay': '5;30', 'logPvChat': '1', 'extraBox': '0', 'alertDuration': '72', 'privacyTrustLevel': '130', 'springServer': '/home/eru/spads/var/spring/spring_bar_.BAR.104.0.1-1956-g0092498_linux-64-minimal-portable/spring-headless', 'simpleEventLogLevel': '5', 'springDataDir': '/home/eru/spads/var/spring/data', 'autoBlockColors': '0', 'autoManagedSpringDir': '/home/eru/spads/var/spring', 'rotationManual': 'random', 'rotationType': 'map;certified', 'defaultPreset': 'team', 'spoofProtection': 'warn', 'minPlayers': 1, 'welcomeMsgInGame': 'Hi %u (%d), welcome to %n .', 'shareId': '', 'autoCallvote': '1', 'ircColors': '0', 'voteMode': 'normal', 'autoStart': 'on', 'reCallVoteDelay': 10, 'springServerType': 'headless', 'promoteChannels': 'main', 'autoHostPort': '53199', 'welcomeMsg': 'Hi %u (%d), welcome to %n .', 'maxAutoHostMsgLength': '240', 'rotationEndGame': 'off', 'logBattleJoinLeave': '1', 'cmdFloodAutoIgnore': '8;8;4', 'pluginsDir': '/home/eru/spads/var/plugins', 'autoSpecExtraPlayers': '1', 'autoLearnMaps': '1', 'voteTime': 45, 'springConfig': '', 'description': 'Team Game Global Settings', 'advertDelay': '15', 'logChanChat': '0', 'kickFloodAutoBan': '5;120;5', 'dataDumpDelay': 60, 'clanMode': 'tag(5);pref(5)', 'nbTeams': 2, 'rotationEmpty': 'random', 'alertDelay': '6', 'lobbyLogin': '[teh]host15', 'botsRank': '3', 'hostingPreset': 'enginetesting', 'noSpecDraw': '0', 'autoManagedSpringVersion': '', 'battlePreset': 'team', 'autoAddBotNb': 0, 'freeSettings': 'autoLock;teamSize(1-8)', 'maxSpecs': '', 'colorSensitivity': 55, 'autoReloadArchivesMinDelay': 30, 'endGameAwards': '1', 'ghostMapLink': 'http://springfiles.com/search_result.php?search=%m&select=select_all', 'broadcastChannels': 'autohosts', 'maxChatMessageLength': 1024, 'logDir': '/home/eru/spads/var/spads_host15/log', 'autoBlockBalance': '1', 'autoHostInterfaceLogLevel': '5', 'hideMapPresets': '0', 'kickBanDuration': '300', 'maxBytesSent': 49000, 'logBattleChat': '1', 'useWin32Process': '0', 'map': 'Comet Catcher Remake 1.8', 'allowMapOptionsValues': '1', 'autoSaveBoxes': '2', 'voteRingDelay': '0', 'allowModOptionsValues': '1', 'eventModel': 'auto', 'promoteDelay': '600', 'maxLocalBots': '16', 'votePvMsgDelay': '0', 'maxRemoteBots': '16', 'statusFloodAutoKick': '24;8', 'userDataRetention': '-1;-1;-1', 'autoSetVoteMode': '1', 'logGameServerMsg': '1', 'instanceDir': '/home/eru/spads/var/spads_host15', 'maxLowPrioBytesSent': 48000, 'allowSettingsShortcut': '1', 'autoStop': 'gameOver', 'skillMode': 'TrueSkill', 'rankMode': 'account', 'localLanIp': '192.168.1.102', 'minTeamSize': '1', 'rotationDelay': 600, 'idShareMode': 'off', 'logChanJoinLeave': '0', 'forceHostIp': '', 'spadsLogLevel': '5', 'autoLockClients': 64, 'endGameCommandEnv': '', 'speedControl': '2', 'endGameCommand': '', 'autoLoadPlugins': 'BarManager;AutoRegister;JsonStatus;InGameMute', 'restoreDefaultPresetDelay': '30', 'springieEmulation': 'warn', 'logGameJoinLeave': '1', 'sendRecordPeriod': 5, 'noSpecChat': '0', 'autoLockRunningBattle': '0', 'balanceMode': 'clan;skill', 'updaterLogLevel': '5', 'varDir': '/home/eru/spads/var', 'midGameSpecLevel': '0', 'handleSuggestions': '0', 'unitsyncDir': '/home/eru/spads/var/spring/spring_bar_.BAR.104.0.1-1956-g0092498_linux-64-minimal-portable/', 'endGameCommandMsg': '', 'etcDir': '/home/eru/spads/etc', 'localBots': 'joe 0 E323AI;jim core#FF0000 KAIK', 'minRingDelay': '20', 'minVoteParticipation': '50', 'advertMsg': '', 'maxChildProcesses': '32', 'autoRestartForUpdate': 'off', 'forwardLobbyToGame': '1', 'nbPlayerById': 1, 'autoLoadMapPreset': '0', 'autoFixColors': 'advanced', 'preset': 'team', 'alertLevel': 130, 'autoBalance': 'advanced', 'maxSpecsImmuneLevel': '100', 'floodImmuneLevel': 100, 'autoUpdateRelease': '', 'mapList': 'all', 'autoUpdateDelay': '300'}
 
@@ -109,6 +110,20 @@ def jsonGzipBase64(toencode):
 
 def jsonBase64(toencode):
     return base64.urlsafe_b64encode(json.dumps(toencode).encode("utf-8")).decode()
+
+def clearNegativeBonusOverride(name):
+    negativeBonusOverrides.pop(name, None)
+    negativeBonusOverrides.pop("%" + name, None)
+
+def applyBonusOverride(target, bonus_value):
+    if bonus_value < 0:
+        negativeBonusOverrides[target] = bonus_value
+        wire_bonus = 0
+    else:
+        clearNegativeBonusOverride(target)
+        wire_bonus = bonus_value
+    forceParams = [target, "bonus", str(wire_bonus)]
+    callPerlFunction("hForce", "pv", "*", forceParams, False)
 
 def getNumUsersInMyBattle():
     if spads.getLobbyState() < 6: # 6 -> BATTLE OPENED
@@ -895,6 +910,14 @@ class BarManager:
                     spads.answer(user + ", you are not allowed to call command \"callvote boss\" in current context (there is more than one player in the lobby)")
                     return 0
 
+            if command == "force" and len(params) >= 3 and params[1].lower() == "bonus":
+                if re.match(r"^-?\d+$", params[2]):
+                    bonus_value = int(params[2])
+                    if bonus_value < 0:
+                        applyBonusOverride(params[0], bonus_value)
+                        return 0
+                    clearNegativeBonusOverride(params[0])
+
         except Exception as e:
             spads.slog("Unhandled exception: " + str(sys.exc_info()
                        [0]) + "\n" + str(traceback.format_exc()), 0)
@@ -966,6 +989,35 @@ class BarManager:
                     playerData[accountId] = {"boss": 1}
                 pass
             res['playerData'] = playerData
+
+            battle = spads.getLobbyInterface().getBattle()
+            teamData = {}
+            for user_name, user_data in battle.get('users', {}).items():
+                bonus_override = negativeBonusOverrides.get(user_name)
+                if bonus_override is None:
+                    bonus_override = negativeBonusOverrides.get("%" + user_name)
+                if bonus_override is None or bonus_override >= 0:
+                    continue
+                battle_status = user_data.get('battleStatus', {})
+                if str(battle_status.get('mode')) != "1":
+                    continue
+                team_id = battle_status.get('id')
+                if team_id is not None:
+                    teamData[team_id] = {"Handicap": bonus_override}
+
+            for bot_name, bot_data in battle.get('bots', {}).items():
+                bonus_override = negativeBonusOverrides.get("%" + bot_name)
+                if bonus_override is None:
+                    bonus_override = negativeBonusOverrides.get(bot_name)
+                if bonus_override is None or bonus_override >= 0:
+                    continue
+                battle_status = bot_data.get('battleStatus', {})
+                team_id = battle_status.get('id')
+                if team_id is not None:
+                    teamData[team_id] = {"Handicap": bonus_override}
+
+            if teamData:
+                res['teamData'] = teamData
 
             # Set current date and time modoptions
             now = datetime.now(timezone.utc)
@@ -1150,14 +1202,14 @@ def hSetAllAiBonus(source, user, params, checkOnly):
         spads.slog("User %s called command setAllAiBonus with parameter(s) \"%s\"" % (
             user, ','.join(params)), DBGLEVEL)
 
-        if len(params) != 1 or not params[0].isdigit():
-            spads.invalidSyntax(user, "setallaibonus", "must specify a single number between 0-100")
+        if len(params) != 1 or not re.match(r"^-?\d+$", params[0]):
+            spads.invalidSyntax(user, "setallaibonus", "must specify a single number between -99 and 100")
             return False
 
         newBonus = int(params[0])
 
-        if newBonus < 0 or newBonus > 100:
-            spads.invalidSyntax(user, "setallaibonus", "must specify a single number between 0-100")
+        if newBonus < -99 or newBonus > 100:
+            spads.invalidSyntax(user, "setallaibonus", "must specify a single number between -99 and 100")
             return False
 
         # checkOnly is true if this is just a check for callVote command, not a real command execution
@@ -1170,8 +1222,7 @@ def hSetAllAiBonus(source, user, params, checkOnly):
         bots = {} if 'bots' not in battle else battle['bots']
 
         for bot in bots:
-            forceParams = ["%" + bot, "bonus", str(newBonus)]
-            callPerlFunction("hForce", "pv", "*", forceParams, False)
+            applyBonusOverride("%" + bot, newBonus)
 
         spads.broadcastMsg("Bonus for all AI players has been set to %s (by %s)" % (params[0], user))
 
@@ -1421,6 +1472,7 @@ def hREMOVEBOT(command, battleID, botName):
         if battleID == myBattleID:
             if botName in AiProfiles:
                 del AiProfiles[botName]
+            clearNegativeBonusOverride(botName)
             updatebotlist()
 
     except:
@@ -1452,6 +1504,7 @@ def hLEFTBATTLE(command, battleID, userName):
     try:
         if battleID == myBattleID:
             spads.slog("LEFTBATTLE" + str([command, battleID, userName]), 3)
+            clearNegativeBonusOverride(userName)
 
             if getNumUsersInMyBattle() == 0:  # when the last person leaves, reset title
                 sendTachyonBattleTeaser()
