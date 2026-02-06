@@ -550,6 +550,16 @@ sub generateStartData {
     my $team=$teamsMap{$p_battleStatus->{id}};
     $teamsData{$team}{TeamLeader}=aindex(@{$battleData{userList}},$battleData{bots}{$bot}{owner});
   }
+
+  if(exists $p_additionalData->{teamData}) {
+    foreach my $teamId (keys %{$p_additionalData->{teamData}}) {
+      next unless exists $teamsMap{$teamId};
+      my $teamIndex = $teamsMap{$teamId};
+      foreach my $tag (keys %{$p_additionalData->{teamData}{$teamId}}) {
+        $teamsData{$teamIndex}{$tag} = $p_additionalData->{teamData}{$teamId}{$tag};
+      }
+    }
+  }
   
   foreach my $allyTeam (keys %allyTeamsMap) {
     my $realAllyTeam = $allyTeamsMap{$allyTeam};
@@ -764,7 +774,7 @@ sub generateStartData {
   push(@startData,"  }");
 
   foreach my $tag (sort keys %{$p_additionalData}) {
-    next if(any {$tag eq $_} (qw'playerData aiData'));
+    next if(any {$tag eq $_} (qw'playerData aiData teamData'));
     if(ref $p_additionalData->{$tag} eq 'HASH') {
       push(@startData,"  [$tag]");
       push(@startData,"  {");
