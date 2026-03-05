@@ -425,6 +425,7 @@ class BarManager:
         # We declare our new command and the associated handler
         spads.addSpadsCommandHandler({'aiProfile': hAiProfile})
         spads.addSpadsCommandHandler({'setAllAiBonus': hSetAllAiBonus})
+        spads.addSpadsCommandHandler({'teambonus': hTeamBonus})
         spads.addSpadsCommandHandler(
             {'barmanagerdebuglevel': hbarmanagerdebuglevel})
         spads.addSpadsCommandHandler(
@@ -522,6 +523,7 @@ class BarManager:
     def onUnload(self, reason):
         spads.removeSpadsCommandHandler(['aiProfile'])
         spads.removeSpadsCommandHandler(['setAllAiBonus'])
+        spads.removeSpadsCommandHandler(['teambonus'])
         spads.removeSpadsCommandHandler(['barmanagerdebuglevel'])
         spads.removeSpadsCommandHandler(['barmanagerprintstate'])
         spads.removeSpadsCommandHandler(['getlastvote'])
@@ -1174,6 +1176,71 @@ def hSetAllAiBonus(source, user, params, checkOnly):
             callPerlFunction("hForce", "pv", "*", forceParams, False)
 
         spads.broadcastMsg("Bonus for all AI players has been set to %s (by %s)" % (params[0], user))
+
+    except Exception as e:
+        spads.slog("Unhandled exception: " + str(sys.exc_info()
+                   [0]) + "\n" + str(traceback.format_exc()), 0)
+
+def hTeamBonus(source, user, params, checkOnly):
+    try:
+        user = spads.fix_string(user)
+        for i in range(len(params)):
+            params[i] = spads.fix_string(params[i])
+        spads.slog("User %s called command teambonus with parameter(s) \"%s\"" % (
+            user, ','.join(params)), DBGLEVEL)
+
+        team_token = None
+        bonus_token = None
+        if len(params) == 2:
+            team_token = params[0]
+            bonus_token = params[1]
+        elif len(params) == 3 and params[0].lower() == "team":
+            team_token = params[1]
+            bonus_token = params[2]
+
+        team_number = None
+        if team_token is not None:
+            team_match = re.match(r"^team(\d+)$", team_token.lower())
+            if team_match:
+                team_number = int(team_match.group(1))
+            elif team_token.isdigit():
+                team_number = int(team_token)
+
+        if team_number is None or team_number < 1 or bonus_token is None or not bonus_token.isdigit():
+            spads.invalidSyntax(user, "teambonus", "usage: !teambonus team1|team 1 <bonus> (0-100)")
+            return False
+
+        bonus_amount = int(bonus_token)
+        if bonus_amount < 0 or bonus_amount > 100:
+            spads.invalidSyntax(user, "teambonus", "bonus must be between 0-100")
+            return False
+
+        # checkOnly is true if this is just a check for callVote command, not a real command execution
+        if checkOnly:
+            return 1
+
+        team_index = team_number - 1
+        lobbyInterface = spads.getLobbyInterface()
+        battle = lobbyInterface.getBattle()
+
+        users = {} if 'users' not in battle else battle['users']
+        bots = {} if 'bots' not in battle else battle['bots']
+
+        for user_name, user_data in users.items():
+            battle_status = user_data.get('battleStatus', {})
+            mode_value = battle_status.get('mode')
+            team_value = battle_status.get('team')
+            if str(mode_value) == "1" and str(team_value) == str(team_index):
+                forceParams = [user_name, "bonus", str(bonus_amount)]
+                callPerlFunction("hForce", "pv", "*", forceParams, False)
+
+        for bot_name, bot_data in bots.items():
+            battle_status = bot_data.get('battleStatus', {})
+            if str(battle_status.get('team')) == str(team_index):
+                forceParams = ["%" + bot_name, "bonus", str(bonus_amount)]
+                callPerlFunction("hForce", "pv", "*", forceParams, False)
+
+        spads.broadcastMsg("Bonus for team %s has been set to %s (by %s)" % (team_number, bonus_amount, user))
 
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
