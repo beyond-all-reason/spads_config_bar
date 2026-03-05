@@ -13,7 +13,15 @@ import urllib.request
 
 from datetime import datetime, timezone
 # from https://blog.miguelgrinberg.com/post/it-s-time-for-a-change-datetime-utcnow-is-now-deprecated
+# --- add near the top of the file where globals are declared (next to knownUsers, voteHistory etc.)
+import time
 
+knownUsers = {}  # this one is for tracking failed commands
+lastCallVoteTimes = {}  # username -> last successful vote call time (epoch seconds)
+
+voteHistoryMax = 1
+voteHistory = []  # stores serialized currentVote objects
+# ...
 
 def naive_utcfromtimestamp(timestamp):
     return datetime.fromtimestamp(timestamp, timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
@@ -705,22 +713,49 @@ class BarManager:
         return 0  # return 1 if dont want Spads core to parse this message
 
     def onVoteRequest(self, source, user, command, remainingVoters):
-        # $source indicates the way the vote has been requested ("pv": private lobby message, "battle": battle lobby message, "chan": master lobby channel message, "game": in game message)
-        # $user is the name of the user requesting the vote
-        # \@command is an array reference containing the command for which a vote is requested
-        # \%remainingVoters is a reference to a hash containing the players allowed to vote. This hash is indexed by player names. Perl plugins can filter these players by removing the corresponding entries from the hash directly, but Python plugins must use the alternate method based on the return value described below.
+        # $source indicates the way the vote has been requested ("pv", "battle", "chan", "game")
         try:
             spads.slog("onVoteRequest: " + ','.join(map(str,
                        [source, user, command, remainingVoters])), DBGLEVEL)
 
+            # --- spam protection: enforce reCallVoteDelay from spads config ---
+            try:
+                spadsConf = spads.getSpadsConf()
+                delay = int(spadsConf.get('reCallVoteDelay', 30))
+                immune_level = int(spadsConf.get('floodImmuneLevel', 100))
+            except Exception:
+                delay = 30
+                immune_level = 100
+
+            try:
+                accessLevel = int(spads.getUserAccessLevel(user))
+            except Exception:
+                accessLevel = 0
+
+            now = int(time.time())
+            last = lastCallVoteTimes.get(user, 0)
+
+            if accessLevel < immune_level and (now - last) < delay:
+                wait = delay - (now - last)
+                spads.answer(user + ", you must wait %d second(s) before calling another vote." % wait)
+                spads.slog("onVoteRequest: rejected vote from %s (called %d seconds ago, delay=%d)" % (user, now - last, delay), DBGLEVEL)
+                return 0  # disallow the vote request
+
+            # (if not rejected, fall-through to allow plugins/SPADS to process the request)
         except Exception as e:
-            spads.slog("Unhandled exception: " + str(sys.exc_info()
-                       [0]) + "\n" + str(traceback.format_exc()), 0)
-        return 1  # allow the vote, 0 for disallow
+            spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
+        # Return 1 to allow the vote (or other logic may override)
+        return 1
 
     def onVoteStart(self, user, command):
         # command is an array reference containing the command for which a vote is started
         try:
+            # Record the time this user successfully started a vote so cooldown applies from here
+            try:
+                lastCallVoteTimes[user] = int(time.time())
+            except Exception:
+                pass
+
             currentVote = spads.getCurrentVote()
             for user in currentVote['remainingVoters']:
                 currentVote['remainingVoters'][user]['voteMode'] = spads.getUserPref(
@@ -739,8 +774,7 @@ class BarManager:
             # Ring all potential voters, by calling SPADS's "!ring" command handler
             callPerlFunction("hRing", "battle", spads.getSpadsConf()['lobbyLogin'], [], 0)
         except Exception as e:
-            spads.slog("Unhandled exception: " + str(sys.exc_info()
-                       [0]) + "\n" + str(traceback.format_exc()), 0)
+            spads.slog("Unhandled exception: " + str(sys.exc_info()[0]) + "\n" + str(traceback.format_exc()), 0)
 
     def onVoteStop(self, voteResult):
         # This callback is called each time a vote poll is stoped.
