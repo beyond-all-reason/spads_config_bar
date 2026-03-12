@@ -6,6 +6,10 @@ Remember to look through the paths to set them correcly for your host, as well a
 
 Spads available here: http://planetspads.free.fr/
 
+## Provisioning
+
+Refer to the [Ansible Spads](https://github.com/beyond-all-reason/ansible-spads-setup)
+repository for the current provisioning scheme used by BAR.
 
 ## Service Script
 
