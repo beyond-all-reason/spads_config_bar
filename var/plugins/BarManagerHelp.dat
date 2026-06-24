@@ -65,6 +65,11 @@
 "!setAllAiBonus 0"
 "!setAllAiBonus 100"
 
+[teambonus]
+!teambonus <team> <bonus> - Sets the economic bonus for every player and AI on the given team (team1 or team 1). Bonus must be 0-100.
+"!teambonus team1 20"
+"!teambonus team 2 50"
+
 [unboss]
 !unboss <*|username> - Disables boss mode, either for all players (with '*') or for a single player (with a username).
 "!unboss *"
