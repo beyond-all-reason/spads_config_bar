@@ -4,6 +4,7 @@ This directory contains the configuration information and map-game updater scrip
 
 Remember to look through the paths to set them correcly for your host, as well as the logins and passwords!
 
+Spads github: https://github.com/Yaribz/SPADS/tree/master
 Spads available here: http://planetspads.free.fr/
 
 ## Provisioning
