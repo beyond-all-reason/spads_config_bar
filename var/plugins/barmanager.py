@@ -816,6 +816,37 @@ class BarManager:
                        [0]) + "\n" + str(traceback.format_exc()), 0)
         return None  #
 
+    def commandRightsOverride(self, lowerCaseCommandName, command, source, user, effectiveUserAccessLevel, userAccessLevel, requiredAccessLevels):
+        # This callback is called each time a SPADS command is called by a user, just before checking the user access level requirements. It allows plugins to bypass this check and implement their own logic to allow or disallow the command execution. This callback is called before the preSpadsCommand callback, which can still be used to prevent the command execution later in the workflow even though the commandRightsOverride callback allowed it.
+        # $lowerCaseCommandName is the name of the command being called (in lowercase)
+        # \@command is an array reference containing the full command being called
+        # $source indicates the way the command was called ("pv": private lobby message, "battle": battle lobby message, "chan": master lobby channel message, "game": in game message)
+        # $user is the name of the user who called the command
+        # $effectiveUserAccessLevel is the effective access level of the user who called the command (taking boss mode into account if applicable)
+        # $userAccessLevel is the original access level of the user who called the command (ignoring boss mode)
+        # \%requiredAccessLevels is a reference to a hash containing the access levels normally required to call the command in current context. The hash keys are directLevel for the access level required to call the command directly, and voteLevel for the access level required to call a vote for the command. The values can be undefined or empty string when there is no access level associated (i.e. the command cannot be called), or the corresponding required access level value (integer).
+        # The return value of the callback determines whether the default access level requirements for the command must be bypassed. If an undefined value is returned, the default behavior is applied (no bypass of access level requirements). If a true value is returned, the access level requirements are bypassed and the user is allowed to call the command directly. If a false value is returned, the user is denied the right to call the command directly, regardless of his access level.
+        try:
+            if lowerCaseCommandName == 'endvote':
+                currentVote = spads.getCurrentVote()
+                if not currentVote:
+                    return None
+                if currentVote['command'][0].lower() == 'unboss':
+                    # An unboss vote may only be canceled by the user who
+                    # initiated the vote or a user with very high privileges. It
+                    # does not matter if the caller is currently a boss, as this
+                    # would defeat the purpose of an unboss vote.
+                    if currentVote['user'] == user:
+                        return None
+                    highPrivilegeLevel = 110
+                    if int(userAccessLevel) < highPrivilegeLevel:
+                        spads.answer(user + ", you are not allowed to cancel an unboss vote.")
+                        return False
+        except Exception as e:
+            spads.slog("Unhandled exception: " + str(sys.exc_info()
+                       [0]) + "\n" + str(traceback.format_exc()), 0)
+        return None
+    
     def postSpadsCommand(self, command, source, user, params, commandResult):
         # This callback is called each time a SPADS command has been called.
         # $command is the name of the command (without the parameters)
