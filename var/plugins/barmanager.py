@@ -442,8 +442,6 @@ class BarManager:
         spads.addSpadsCommandHandler({'rename': getTeiserverStringCommandHandler("rename", re.compile("^[a-zA-Z0-9_\\-\\[\\] \\<\\>\\+\\|:]+$"))})
         spads.addSpadsCommandHandler({'welcome-message': getTeiserverStringCommandHandler("welcome-message", re.compile("^.*$"))})
         spads.addSpadsCommandHandler({'gatekeeper': getTeiserverStringCommandHandler("gatekeeper", re.compile("^(friends|friendsplay|default)$"))})
-        spads.addSpadsCommandHandler({'meme': getTeiserverStringCommandHandler("meme",
-            re.compile("^(undo|ticks|rich|poor|crazy|deathmatch)$"))})
         spads.addSpadsCommandHandler({'balancealgorithm': getTeiserverStringCommandHandler("balancealgorithm",
             re.compile("^(default|split_noobs|respect_avoids|loser_picks)$"))})
         spads.addSpadsCommandHandler({'unboss': hUnboss})
@@ -537,7 +535,6 @@ class BarManager:
         spads.removeSpadsCommandHandler(['rename'])
         spads.removeSpadsCommandHandler(['welcome-message'])
         spads.removeSpadsCommandHandler(['gatekeeper'])
-        spads.removeSpadsCommandHandler(['meme'])
         spads.removeSpadsCommandHandler(['balancealgorithm'])
         spads.removeSpadsCommandHandler(['unboss'])
 
