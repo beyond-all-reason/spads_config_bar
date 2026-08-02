@@ -1,0 +1,4 @@
+[kickban]
+!kickban <playerName> [<duration>] - kicks a player from the game and lobby for 15 minutes or for <duration> minutes if specified. <duration> must be between 0 and 60 inclusive
+"!kickban joe" kicks joe for 15 minutes
+"!kickban joe 0" kicks joe, but allows him to rejoin instantly
