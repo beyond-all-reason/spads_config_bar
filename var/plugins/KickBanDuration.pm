@@ -95,55 +95,50 @@ sub doKickBanDuration {
 
   #if duration minutes was specified, set the kickBanDuration config value to that duration in
   #seconds for the duration of this call only, then delegate to the real handler
-  if($durationMinutes != -1) {
-    my $p_conf=getSpadsConf();
-    local $p_conf->{kickBanDuration}=$durationMinutes*60;
+  my $p_conf=getSpadsConf();
+  local $p_conf->{kickBanDuration} = $durationMinutes != -1 ? $durationMinutes*60 : $p_conf->{kickBanDuration};
 
-    # If the player already has a ban in place which could have been added by a
-    # previous kickban, replace it below so the new duration actually takes
-    # effect instead of being shadowed by the older entry (see getUserBan's
-    # banType tie-break, which keeps the first matching ban of a given type,
-    # not the newest).
+  # If the player already has a ban in place which could have been added by a
+  # previous kickban, replace it below so the new duration actually takes
+  # effect instead of being shadowed by the older entry (see getUserBan's
+  # banType tie-break, which keeps the first matching ban of a given type,
+  # not the newest).
 
-    #resolve the target player by checking that kickban wouldn't error and would resolve to a player's name
-    my $resolveRes = ::hKickBan($source,$user,[$playerOrError],1);
-    return $resolveRes unless(ref($resolveRes) eq 'ARRAY'); #if it doesn't resolve to a name, return the error/failure result unchanged
-    #this early return also prevents unbanning a player over an invalid/ambiguous/not-found kickban call
-    my $bannedUser = $resolveRes->[1];
+  #resolve the target player by checking that kickban wouldn't error and would resolve to a player's name
+  my $resolveRes = ::hKickBan($source,$user,[$playerOrError],1);
+  return $resolveRes unless(ref($resolveRes) eq 'ARRAY'); #if it doesn't resolve to a name, return the error/failure result unchanged
+  #this early return also prevents unbanning a player over an invalid/ambiguous/not-found kickban call
+  my $bannedUser = $resolveRes->[1];
 
-    #only actually clear anything when this is a real execution, not a checkOnly
-    #syntax/vote pre-check - a pre-check must never have side effects
-    if(! $checkOnly) {
-      #before applying a new ban, remove existing battle type bans for the player if they exist, this is done to override existing bans with the new duration,
-      # Only clear an existing kickban entry if its remaining time is already under the max allowed time for a kickban, otherwise leave it alone.
-      #this is done as an extra check to avoid clearing bans that were set by other means (e.g. a manual ban) that may have a longer duration than the max allowed for a kickban.
-      my $maxClearableRemainingSeconds = MAXBANDURATION*60;
-      my $p_existingBans = getSpadsConfFull()->getDynamicBans(); #get existing ban entries
-      for my $p_banEntry (@{$p_existingBans}) {
-        my ($p_existingUser,$p_existingBanData) = @{$p_banEntry};
-        next unless(defined $p_existingBanData->{banType} && $p_existingBanData->{banType} == 1);
+  #only actually clear anything when this is a real execution, not a checkOnly
+  #syntax/vote pre-check - a pre-check must never have side effects
+  if(! $checkOnly) {
+    #before applying a new ban, remove existing battle type bans for the player if they exist, this is done to override existing bans with the new duration,
+    # Only clear an existing kickban entry if its remaining time is already under the max allowed time for a kickban, otherwise leave it alone.
+    #this is done as an extra check to avoid clearing bans that were set by other means (e.g. a manual ban) that may have a longer duration than the max allowed for a kickban.
+    my $maxClearableRemainingSeconds = MAXBANDURATION*60;
+    my $p_existingBans = getSpadsConfFull()->getDynamicBans(); #get existing ban entries
+    for my $p_banEntry (@{$p_existingBans}) {
+      my ($p_existingUser,$p_existingBanData) = @{$p_banEntry};
+      next unless(defined $p_existingBanData->{banType} && $p_existingBanData->{banType} == 1);
 
-        # search for the player by name or accountId, since the ban entry may have been created by a different name than the one used to issue the kickban command
-        my $isSamePlayer = (defined $p_existingUser->{name} && $p_existingUser->{name} eq $bannedUser)
-                        || (defined $p_existingUser->{accountId} && $p_existingUser->{accountId} =~ /\Q($bannedUser)\E$/);
-        next unless($isSamePlayer);
+      # search for the player by name or accountId, since the ban entry may have been created by a different name than the one used to issue the kickban command
+      my $isSamePlayer = (defined $p_existingUser->{name} && $p_existingUser->{name} eq $bannedUser)
+                      || (defined $p_existingUser->{accountId} && $p_existingUser->{accountId} =~ /\Q($bannedUser)\E$/);
+      next unless($isSamePlayer);
 
-        #check ban data and make sure it exists and is defined, and that the remaining time is less than the max allowed for a kickban, otherwise leave it alone
-        next unless(exists $p_existingBanData->{endDate} && defined $p_existingBanData->{endDate} && $p_existingBanData->{endDate} ne '');
-        next if($p_existingBanData->{endDate} - time > $maxClearableRemainingSeconds);
+      #check ban data and make sure it exists and is defined, and that the remaining time is less than the max allowed for a kickban, otherwise leave it alone
+      next unless(exists $p_existingBanData->{endDate} && defined $p_existingBanData->{endDate} && $p_existingBanData->{endDate} ne '');
+      next if($p_existingBanData->{endDate} - time > $maxClearableRemainingSeconds);
 
-        #if all checks pass, remove the existing ban entry to allow the new kickban to be applied with the new duration
-        getSpadsConfFull()->removeBanByHash(getSpadsConfFull()->getBanHash($p_banEntry));
-      }
+      #if all checks pass, remove the existing ban entry to allow the new kickban to be applied with the new duration
+      getSpadsConfFull()->removeBanByHash(getSpadsConfFull()->getBanHash($p_banEntry));
     }
-
-    # Now perform the real (re-)ban with the overridden duration already in scope.
-    return ::hKickBan($source,$user,[$playerOrError],$checkOnly);
-
   }
 
-  #if duration minutes was not specified, just call the original kickban handler unchanged
+  # Now perform the real (re-)ban with the overridden duration already in scope.
   return ::hKickBan($source,$user,[$playerOrError],$checkOnly);
 }
+
 
 1;
