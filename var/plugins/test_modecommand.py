@@ -15,9 +15,27 @@ import unittest
 _calls = {'slog': [], 'answer': [], 'bSet': [], 'say': []}
 
 
+class _FakeLobby:
+    hosted = 'Beyond All Reason test-24450-abc1234'
+
+    def getBattle(self):
+        return {'battleId': '7'} if self.hosted else None
+
+    def getBattles(self):
+        return {'7': {'mod': self.hosted}} if self.hosted else {}
+
+
 class _FakeSpads:
+    lobby = _FakeLobby()
+
     def getSpadsConf(self):
-        return {'modName': 'Beyond All Reason test-24450-abc1234'}
+        return {}
+
+    def getLobbyInterface(self):
+        return self.lobby
+
+    def removeTimer(self, name):
+        _calls.setdefault('timers_removed', []).append(name)
 
     def slog(self, message, level):
         _calls['slog'].append((message, level))
@@ -128,12 +146,12 @@ class BackgroundFetch(unittest.TestCase):
     def test_nothing_is_fetched_before_spads_knows_the_hosted_version(self):
         modecommand._state.update({'modName': None, 'data': {}, 'pending': None})
         fake_perl.ModeCommand.released.clear()
-        fake_perl.ModeCommand.getSpadsConf = lambda: {}
+        fake_perl.ModeCommand.lobby.hosted = None
         try:
             self.assertEqual({}, modecommand._modes())
             self.assertEqual(0, len(fake_perl.ModeCommand.released))
         finally:
-            del fake_perl.ModeCommand.getSpadsConf
+            fake_perl.ModeCommand.lobby.hosted = _FakeLobby.hosted
 
 
 if __name__ == '__main__':

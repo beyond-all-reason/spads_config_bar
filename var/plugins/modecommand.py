@@ -40,8 +40,18 @@ def _conf():
 
 
 def _current_mod_name():
+    # The hosted game as the lobby knows it, e.g. "Beyond All Reason test-24450-6c81e38":
+    # the mod of SPADS's own battle, the same field spads.pl reads. None until the
+    # battle is open.
     try:
-        return _conf().get('modName')
+        lobby = spads.getLobbyInterface()
+        battle = lobby.getBattle()
+        battle_id = battle.get('battleId') if battle else None
+        if battle_id is None:
+            return None
+        mine = lobby.getBattles().get(battle_id) or lobby.getBattles().get(str(battle_id)) or {}
+        name = mine.get('mod')
+        return spads.fix_string(name) if name else None
     except Exception:
         return None
 
@@ -190,12 +200,20 @@ class ModeCommand:
     def __init__(self, context):
         spads.addSpadsCommandHandler({'mode': hSpadsMode})
         spads.slog("Plugin loaded (version %s)" % pluginVersion, 3)
-        # Warm the modes once SPADS has its config; modName is unset at load.
-        spads.addTimer('warm', 5, 0, _modes)
+        # Warm the modes once the battle is open; until then there is no hosted
+        # game to look up. The timer retires itself on the first success.
+        spads.addTimer('warm', 5, 5, _warm)
 
     def onUnload(self, reason):
         spads.removeSpadsCommandHandler(['mode'])
         spads.slog("Plugin unloaded", 3)
+
+
+def _warm():
+    if _current_mod_name() is None:
+        return
+    _modes()
+    spads.removeTimer('warm')
 
 
 def hSpadsMode(source, user, params, checkOnly):
