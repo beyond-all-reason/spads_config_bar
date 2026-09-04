@@ -43,6 +43,21 @@ class _FakeSpads:
     def sayBattleAndGame(self, message):
         _calls['say'].append(message)
 
+    def get_flag(self, name):
+        return True
+
+    def addTimer(self, name, delay, interval, callback):
+        _calls.setdefault('timers', []).append(name)
+
+    # forkCall stand-in: run the child function now, hand the result to the
+    # callback only when the test releases it, so "asynchronous" is observable.
+    released = []
+
+    def forkCall(self, fn, callback):
+        result = fn()
+        self.released.append(lambda: callback(result))
+        return 4242
+
 
 fake_perl = types.ModuleType('perl')
 fake_perl.ModeCommand = _FakeSpads()
@@ -98,26 +113,27 @@ class LockedKeys(unittest.TestCase):
 
 
 class BackgroundFetch(unittest.TestCase):
-    def test_the_first_lookup_never_waits_on_the_network(self):
+    def test_the_first_lookup_serves_the_cache_and_the_callback_swaps_in_the_fetch(self):
         modecommand._state.update({'modName': None, 'data': {}, 'pending': None})
-        gate = threading.Event()
-
-        def slow_fetch(mod_name):
-            gate.wait(5)
-            return MODES, [('fetched', 3)]
-
-        modecommand._fetch = slow_fetch
+        fake_perl.ModeCommand.released.clear()
+        modecommand._fetch = lambda mod_name: (MODES, [('fetched', 3)])
         modecommand._load_local = lambda: {'schemaVersion': 1, 'categories': {}}
-        started = time.time()
         first = modecommand._modes()
-        self.assertLess(time.time() - started, 1.0)
         self.assertEqual({}, first['categories'])
-        gate.set()
-        deadline = time.time() + 5
-        while modecommand._state['pending'] and time.time() < deadline:
-            time.sleep(0.01)
-            modecommand._modes()
+        self.assertEqual(1, len(fake_perl.ModeCommand.released))
+        fake_perl.ModeCommand.released.pop()()
         self.assertEqual(MODES['categories'], modecommand._modes()['categories'])
+        self.assertIn(('fetched', 3), _calls['slog'])
+
+    def test_nothing_is_fetched_before_spads_knows_the_hosted_version(self):
+        modecommand._state.update({'modName': None, 'data': {}, 'pending': None})
+        fake_perl.ModeCommand.released.clear()
+        fake_perl.ModeCommand.getSpadsConf = lambda: {}
+        try:
+            self.assertEqual({}, modecommand._modes())
+            self.assertEqual(0, len(fake_perl.ModeCommand.released))
+        finally:
+            del fake_perl.ModeCommand.getSpadsConf
 
 
 if __name__ == '__main__':

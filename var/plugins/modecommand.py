@@ -2,7 +2,6 @@ import perl
 import re
 import os
 import json
-import threading
 import urllib.request
 
 spads = perl.ModeCommand
@@ -30,8 +29,7 @@ _FETCH_TIMEOUT = 5
 _SCHEMA_VERSION = 1
 
 # Modes for the hosted version (modName); a rehost to another version refetches.
-_UNSET = object()
-_state = {'modName': _UNSET, 'data': {}, 'pending': None}
+_state = {'modName': None, 'data': {}, 'pending': None}
 
 
 def _conf():
@@ -113,38 +111,48 @@ def _load_local():
     return None
 
 
-def _start_fetch(mod_name):
-    pending = {'modName': mod_name, 'done': False, 'data': None, 'log': []}
-
-    def run():
-        try:
-            pending['data'], pending['log'] = _fetch(mod_name)
-        except Exception as e:
-            pending['data'], pending['log'] = None, [('mode: fetch failed: %s' % e, 2)]
-        pending['done'] = True
-
-    _state['pending'] = pending
-    threading.Thread(target=run, name='ModeCommand-fetch', daemon=True).start()
-    return pending
+def _fetch_for_fork(mod_name):
+    # Runs in the forked child: one string crosses back to the parent.
+    data, log = _fetch(mod_name)
+    return json.dumps({'data': data, 'log': log, 'modName': mod_name})
 
 
-def _collect_fetch():
-    pending = _state['pending']
-    if not pending or not pending['done']:
-        return
+def _on_fetched(result):
+    # SPADS calls this in the main process once the child returns.
     _state['pending'] = None
-    for (message, level) in pending['log']:
+    try:
+        result = json.loads(spads.fix_string(result) if result is not None else '{}')
+    except Exception as e:
+        spads.slog('mode: unreadable fetch result: %s' % e, 1)
+        return
+    for (message, level) in result.get('log') or []:
         spads.slog(message, level)
-    if pending['data'] is not None and pending['modName'] == _state['modName']:
-        _state['data'] = _as_dict(pending['data'])
-        spads.slog('mode: modes for "%s" loaded' % pending['modName'], 3)
+    data = result.get('data')
+    if data is not None and result.get('modName') == _state['modName']:
+        _state['data'] = _as_dict(data)
+        spads.slog('mode: modes for "%s" loaded' % _state['modName'], 3)
+
+
+def _start_fetch(mod_name):
+    # SPADS's own async primitive: the fetch runs in a forked child and the
+    # callback runs here when it finishes. A Python thread would starve, since
+    # the interpreter only runs while Perl is calling into it.
+    if not spads.get_flag('can_fork'):
+        _on_fetched(_fetch_for_fork(mod_name))
+        return
+    _state['pending'] = mod_name
+    pid = spads.forkCall(lambda: _fetch_for_fork(mod_name), _on_fetched)
+    if not pid:
+        _state['pending'] = None
+        spads.slog('mode: could not fork the modes fetch', 1)
 
 
 def _modes():
-    # Never blocks: serves the cache while the fetch runs, then the fetched data.
-    _collect_fetch()
+    # Never blocks. The first lookup for a hosted version serves the last cached
+    # copy, or a host-dropped file, or {}, and starts the fetch; the callback
+    # swaps the fetched modes in when it lands. A rehost to another version repeats it.
     mod_name = _current_mod_name()
-    if mod_name != _state['modName']:
+    if mod_name is not None and mod_name != _state['modName'] and _state['pending'] != mod_name:
         _state['modName'] = mod_name
         local = _load_local()
         _state['data'] = _as_dict(local)
@@ -182,7 +190,8 @@ class ModeCommand:
     def __init__(self, context):
         spads.addSpadsCommandHandler({'mode': hSpadsMode})
         spads.slog("Plugin loaded (version %s)" % pluginVersion, 3)
-        _modes()
+        # Warm the modes once SPADS has its config; modName is unset at load.
+        spads.addTimer('warm', 5, 0, _modes)
 
     def onUnload(self, reason):
         spads.removeSpadsCommandHandler(['mode'])
