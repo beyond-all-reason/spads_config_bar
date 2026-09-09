@@ -1,0 +1,6 @@
+[gameVersion]
+!gameVersion [<rapidTag>] - switches the room to another game version, or back to the default one if no tag is given
+"!gameVersion byar:test" switches the room to the latest byar:test build
+"!gameVersion byar:pr:1234" switches the room to the build published for pull request 1234
+"!gameVersion byar:br:area-testing" switches the room to the build published for branch area-testing
+"!gameVersion" restores the default game version and battle title
