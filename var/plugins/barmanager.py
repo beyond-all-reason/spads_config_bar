@@ -29,6 +29,12 @@ DBGLEVEL = 3
 pluginParams = {}
 selfFileHash = ""
 
+PLAYER_CHAT_USES_NUMERIC_DEST = None
+MSG_DEST_ALLIES = None
+MSG_DEST_SPECTATORS = None
+MSG_DEST_EVERYONE = None
+MSG_DEST_SERVER = None
+
 # ---------------- Battleroom Variables to Track --------------
 AiProfiles = {}  # dict of BotName : {username : Owner, profile: Defensive} dunno the format yet, should support script tags to set AI profiles
 isBattleLocked = False
@@ -389,6 +395,19 @@ def updateAllRatings():
         perl.eval('::getBattleSkill("' + user + '")')
 
 
+def initAutohostInterfaceConstants():
+    global PLAYER_CHAT_USES_NUMERIC_DEST, MSG_DEST_ALLIES, MSG_DEST_SPECTATORS, MSG_DEST_EVERYONE, MSG_DEST_SERVER
+
+    springInterface = spads.getSpringInterface()
+    PLAYER_CHAT_USES_NUMERIC_DEST = float(springInterface.getVersion()) > 0.14
+
+    if PLAYER_CHAT_USES_NUMERIC_DEST:
+        MSG_DEST_ALLIES = springInterface.MSG_DEST_ALLIES()
+        MSG_DEST_SPECTATORS = springInterface.MSG_DEST_SPECTATORS()
+        MSG_DEST_EVERYONE = springInterface.MSG_DEST_EVERYONE()
+        MSG_DEST_SERVER = springInterface.MSG_DEST_SERVER()
+
+
 # This is the class implementing the plugin
 
 
@@ -422,6 +441,9 @@ class BarManager:
     # This is our constructor, called when the plugin is loaded by SPADS (mandatory callback)
     def __init__(self, context):
         global DBGLEVEL, voteHistoryMax, selfFileHash
+
+        initAutohostInterfaceConstants()
+
         # We declare our new command and the associated handler
         spads.addSpadsCommandHandler({'aiProfile': hAiProfile})
         spads.addSpadsCommandHandler({'setAllAiBonus': hSetAllAiBonus})
@@ -1750,6 +1772,19 @@ def h_autohost_GAME_LUAMSG(command, playerNumInt, luahandleidInt, nullStr, messa
 def h_autohost_PLAYER_CHAT(command, playerNumInt, destination, text):
     global hwInfoIngame
     try:
+
+        if PLAYER_CHAT_USES_NUMERIC_DEST:
+            if destination == MSG_DEST_ALLIES:
+                destination = "allies"
+            elif destination == MSG_DEST_SPECTATORS:
+                destination = "spectators"
+            elif destination == MSG_DEST_EVERYONE:
+                destination = ""
+            elif destination == MSG_DEST_SERVER:
+                destination = "server"
+            else:
+                destination = spads.getSpringInterface().getPlayerName(destination)
+
         # Based on the destination it's allied, spectator or global chat
         # we prefix it accordingly. According to the spec it is possible
         # to message a player directly which we will track slightly differently
