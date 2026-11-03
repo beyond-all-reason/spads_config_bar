@@ -73,7 +73,7 @@ class RatingManager:
             req = urllib.request.Request(f"{rating_url}/{accountId}/{barGameType}")
             req.add_header("authorization", f"Basic {encoded_credentials}")
 
-            with urllib.request.urlopen(req) as f:
+            with urllib.request.urlopen(req, timeout=10) as f:
                 raw_data = f.read().decode('utf-8')
                 data = json.loads(raw_data)
 
@@ -99,7 +99,7 @@ class RatingManager:
             req = urllib.request.Request(balance_url, data)
             req.add_header("authorization", f"Basic {encoded_credentials}")
 
-            with urllib.request.urlopen(req) as f:
+            with urllib.request.urlopen(req, timeout=10) as f:
                 raw_response = f.read().decode('utf-8')
                 response_data = json.loads(raw_response)
 

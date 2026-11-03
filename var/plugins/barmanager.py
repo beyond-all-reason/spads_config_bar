@@ -657,7 +657,7 @@ class BarManager:
             req = urllib.request.Request(end_game_data_url, data)
             req.add_header("authorization", f"Basic {encoded_credentials}")
 
-            with urllib.request.urlopen(req) as f:
+            with urllib.request.urlopen(req, timeout=10) as f:
                 response = f.read().decode('utf-8')
                 spads.slog("end_game_data response: " + str(response), DBGLEVEL)
 
