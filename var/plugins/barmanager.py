@@ -430,6 +430,7 @@ class BarManager:
         spads.addSpadsCommandHandler(
             {'barmanagerprintstate': hbarmanagerprintstate})
         spads.addSpadsCommandHandler({'getlastvote': hGetLastVote})
+        spads.addSpadsCommandHandler({'variablespeed': hVariableSpeed})
 
         spads.addSpadsCommandHandler({'minratinglevel': getTeiserverSingleIntegerCommandHandler("minratinglevel", 0, 0, 999)})
         spads.addSpadsCommandHandler({'maxratinglevel': getTeiserverSingleIntegerCommandHandler("maxratinglevel", 1000, 1, 1000)})
@@ -523,6 +524,7 @@ class BarManager:
         spads.removeSpadsCommandHandler(['barmanagerdebuglevel'])
         spads.removeSpadsCommandHandler(['barmanagerprintstate'])
         spads.removeSpadsCommandHandler(['getlastvote'])
+        spads.removeSpadsCommandHandler(['variablespeed'])
 
         spads.removeSpadsCommandHandler(['minratinglevel'])
         spads.removeSpadsCommandHandler(['maxratinglevel'])
@@ -945,6 +947,14 @@ class BarManager:
         try:
             res = {}
             spads.slog("addStartScriptTags: " + str(AiProfiles), DBGLEVEL)
+
+            battle = spads.getLobbyInterface().getBattle()
+            scriptTags = battle.get('scriptTags', {}) if battle else {}
+            variableSpeed = scriptTags.get('game/modoptions/variablespeed', '0')
+            if str(variableSpeed).lower() not in ('1', 'true'):
+                res['game/modoptions/minspeed'] = 1
+                res['game/modoptions/maxspeed'] = 1
+
             if len(AiProfiles) > 0:
                 extraaitags = {}
                 for botname, aiprofile in AiProfiles.items():
@@ -1261,6 +1271,14 @@ def hUnboss(source, user, params, checkOnly):
     except Exception as e:
         spads.slog("Unhandled exception: " + str(sys.exc_info()
                    [0]) + "\n" + str(traceback.format_exc()), 0)
+
+def hVariableSpeed(source, user, params, checkOnly):
+    if len(params) != 1 or params[0] not in ('0', '1'):
+        spads.invalidSyntax(user, 'variablespeed', 'expected 0 or 1')
+        return False
+
+    return callPerlFunction('hBSet', source, user, ['variablespeed', params[0]], checkOnly)
+
 
 def getTeiserverNoParameterCommandHandler(cmd):
     def handler(source, user, params, checkOnly):

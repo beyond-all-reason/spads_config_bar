@@ -3,6 +3,9 @@
 "!getlastvote" returns most recent vote result
 "!getlastvote 2" returns 2nd most recent vote result
 
+[variablespeed]
+!variablespeed <0|1> - Vote before the game to lock speed at 1x or allow the usual speed range.
+
 [minratinglevel]
 !minratinglevel [rating] - sets the minimum skill rating required to become a player
 "!minratinglevel" removes the minimum skill requirement
